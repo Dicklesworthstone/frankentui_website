@@ -7,7 +7,7 @@ export type FileChangeSummary = {
   unchanged: string[];
 };
 
-export type TextStats = { lines: number; bytes: number };
+export type TextStats = { lines: number; bytes: number; words: number };
 
 export type DiffOpKind = "equal" | "add" | "del";
 export type DiffOp = { kind: DiffOpKind; text: string };
@@ -69,10 +69,46 @@ export function buildCorpusText(files: SpecFile[], fileChoice: string): string {
 }
 
 export function computeTextStats(text: string): TextStats {
-  if (!text) return { lines: 0, bytes: 0 };
+  if (!text) return { lines: 0, bytes: 0, words: 0 };
   const lines = text.split(/\n/).length;
   const bytes = textEncoder.encode(text).length;
-  return { lines, bytes };
+  const words = text.split(/\s+/).filter(Boolean).length;
+  return { lines, bytes, words };
+}
+
+export type PerFileContribution = {
+  path: string;
+  deltaLines: number;
+  deltaBytes: number;
+};
+
+export function computePerFileContribution(
+  aFiles: SpecFile[],
+  bFiles: SpecFile[]
+): PerFileContribution[] {
+  const aMap = indexSpecFiles(aFiles);
+  const bMap = indexSpecFiles(bFiles);
+
+  const paths = new Set<string>();
+  aMap.forEach((_v, k) => paths.add(k));
+  bMap.forEach((_v, k) => paths.add(k));
+
+  const result: PerFileContribution[] = [];
+  for (const p of paths) {
+    const aContent = aMap.get(p) ?? "";
+    const bContent = bMap.get(p) ?? "";
+    const aStats = computeTextStats(aContent);
+    const bStats = computeTextStats(bContent);
+    result.push({
+      path: p,
+      deltaLines: bStats.lines - aStats.lines,
+      deltaBytes: bStats.bytes - aStats.bytes,
+    });
+  }
+
+  // Sort by absolute delta bytes descending (biggest contributor first)
+  result.sort((a, b) => Math.abs(b.deltaBytes) - Math.abs(a.deltaBytes));
+  return result;
 }
 
 export function computeEditDistanceLines(prevText: string, nextText: string, maxCost: number): number {

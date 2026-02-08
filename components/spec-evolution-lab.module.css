@@ -195,3 +195,27 @@
 .mdProse :global(.hljs-strong) {
   font-weight: 800;
 }
+
+/* Performance: defer rendering of offscreen commit rows */
+.commitRow {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 88px;
+}
+
+/* Perf diagnostics panel */
+.perfPanel {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  z-index: 9999;
+  max-height: 240px;
+  width: 340px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.92);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 8px 0 0 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgba(148, 163, 184, 0.9);
+  pointer-events: auto;
+}

@@ -25,10 +25,13 @@ import {
   buildCorpusText,
   computeEditDistanceLines,
   computeFileChangeSummary,
+  computePerFileContribution,
   computeTextStats,
   myersDiffTextLines,
   type DiffOp,
+  type PerFileContribution,
 } from "@/lib/spec-evolution-compare";
+import { LRUCache } from "@/lib/lru-cache";
 
 type BucketKey = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 type BucketMode = "day" | "hour" | "15m" | "5m";
@@ -117,6 +120,95 @@ const bucketNames: Record<BucketKey, string> = {
 
 function clampInt(n: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, n));
+}
+
+/* ------------------------------------------------------------------ */
+/*  Performance Hardening: caches + perf timing                       */
+/* ------------------------------------------------------------------ */
+
+// Module-level caches (survive re-renders, cleared on hot-reload)
+const markdownHtmlCache = new LRUCache<string>(16);
+const patchParseCache = new LRUCache<PatchFile[]>(32);
+const snapshotMdCache = new LRUCache<string>(32);
+
+type PerfEntry = { label: string; ms: number; ts: number };
+const perfLog: PerfEntry[] = [];
+const PERF_LOG_MAX = 200;
+
+function perfTime<T>(label: string, fn: () => T): T {
+  const t0 = performance.now();
+  const result = fn();
+  const ms = performance.now() - t0;
+  perfLog.push({ label, ms, ts: Date.now() });
+  if (perfLog.length > PERF_LOG_MAX) perfLog.splice(0, perfLog.length - PERF_LOG_MAX);
+  return result;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Deep-Linkable State: URL Hash Encoding / Decoding                 */
+/* ------------------------------------------------------------------ */
+
+type HashState = {
+  commitShort?: string;
+  tab?: TabKey;
+  file?: string;
+  diffFmt?: DiffFormat;
+  query?: string;
+  reviewedOnly?: boolean;
+  bucket?: BucketKey | null;
+};
+
+const VALID_TABS: readonly TabKey[] = ["diff", "snapshot", "raw", "ledger", "files"];
+const VALID_DIFF_FMTS: readonly DiffFormat[] = ["unified", "sideBySide"];
+
+function encodeHashState(state: HashState): string {
+  const params = new URLSearchParams();
+  if (state.commitShort) params.set("c", state.commitShort);
+  if (state.tab && state.tab !== "diff") params.set("tab", state.tab);
+  if (state.file && state.file !== "__ALL__") params.set("f", state.file);
+  if (state.diffFmt && state.diffFmt !== "unified") params.set("d", state.diffFmt);
+  if (state.query) params.set("q", state.query);
+  if (state.reviewedOnly) params.set("ro", "1");
+  if (state.bucket !== null && state.bucket !== undefined) params.set("b", String(state.bucket));
+  const str = params.toString();
+  return str ? `#${str}` : "";
+}
+
+function decodeHashState(hash: string): HashState {
+  try {
+    const raw = hash.startsWith("#") ? hash.slice(1) : hash;
+    if (!raw) return {};
+    const params = new URLSearchParams(raw);
+    const state: HashState = {};
+
+    const c = params.get("c");
+    if (c) state.commitShort = c;
+
+    const tab = params.get("tab");
+    if (tab && (VALID_TABS as readonly string[]).includes(tab)) state.tab = tab as TabKey;
+
+    const f = params.get("f");
+    if (f) state.file = f;
+
+    const d = params.get("d");
+    if (d && (VALID_DIFF_FMTS as readonly string[]).includes(d)) state.diffFmt = d as DiffFormat;
+
+    const q = params.get("q");
+    if (q) state.query = q;
+
+    const ro = params.get("ro");
+    if (ro === "1") state.reviewedOnly = true;
+
+    const b = params.get("b");
+    if (b !== null) {
+      const bNum = parseInt(b, 10);
+      if (!isNaN(bNum) && bNum >= 0 && bNum <= 10) state.bucket = bNum as BucketKey;
+    }
+
+    return state;
+  } catch {
+    return {};
+  }
 }
 
 function hasBucket(mask: number, b: BucketKey) {
@@ -634,6 +726,15 @@ function MarkdownView({ markdown }: { markdown: string }) {
   useEffect(() => {
     let cancelled = false;
     setErr("");
+
+    // Check LRU cache first to avoid re-parsing identical markdown
+    const cacheKey = markdown;
+    const cached = markdownHtmlCache.get(cacheKey);
+    if (cached !== undefined) {
+      setHtml(cached);
+      return;
+    }
+
     setHtml("");
 
     (async () => {
@@ -653,7 +754,11 @@ function MarkdownView({ markdown }: { markdown: string }) {
 
         const rawHtml = await marked.parse(markdown);
         const safeHtml = DOMPurify.sanitize(String(rawHtml), { USE_PROFILES: { html: true } });
-        if (!cancelled) setHtml(String(safeHtml));
+        if (!cancelled) {
+          const result = String(safeHtml);
+          markdownHtmlCache.set(cacheKey, result);
+          setHtml(result);
+        }
       } catch (e) {
         if (!cancelled) setErr(e instanceof Error ? e.message : String(e));
       }
@@ -735,6 +840,10 @@ export default function SpecEvolutionLab() {
   const helpDialogRef = useRef<HTMLDialogElement | null>(null);
 
   const [bucketInfo, setBucketInfo] = useState<BucketKey | null>(null);
+  const [showPerfPanel, setShowPerfPanel] = useState(false);
+  const perfTickRef = useRef(0);
+
+  const hashAppliedRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -763,10 +872,25 @@ export default function SpecEvolutionLab() {
 
         setDataset(ds);
         setCommits(cv);
-        setSelectedIndex(0);
+
+        // Apply deep-link state from URL hash after data loads
+        const hs = decodeHashState(window.location.hash);
+        if (hs.commitShort) {
+          const idx = cv.findIndex((c) => c.short === hs.commitShort);
+          setSelectedIndex(idx >= 0 ? idx : 0);
+        } else {
+          setSelectedIndex(0);
+        }
+        if (hs.tab) setActiveTab(hs.tab);
+        if (hs.file) setFileChoice(hs.file);
+        else setFileChoice("__ALL__");
+        if (hs.diffFmt) setDiffFormat(hs.diffFmt);
+        if (hs.query) setSearchQuery(hs.query);
+        if (hs.reviewedOnly) setShowReviewedOnly(true);
+        if (hs.bucket !== undefined && hs.bucket !== null) setBucketFilter(hs.bucket);
         setCompareBaseIndex(null);
         setDiffSource("commitPatch");
-        setFileChoice("__ALL__");
+        hashAppliedRef.current = true;
       } catch (e) {
         if (cancelled) return;
         setLoadError(e instanceof Error ? e.message : String(e));
@@ -777,6 +901,23 @@ export default function SpecEvolutionLab() {
       cancelled = true;
     };
   }, []);
+
+  // Sync state → URL hash (replaceState to avoid history pollution)
+  const selectedCommitShort = commits[selectedIndex]?.short;
+  useEffect(() => {
+    if (!hashAppliedRef.current || !selectedCommitShort) return;
+    const hash = encodeHashState({
+      commitShort: selectedCommitShort,
+      tab: activeTab,
+      file: fileChoice,
+      diffFmt: diffFormat,
+      query: searchQuery,
+      reviewedOnly: showReviewedOnly,
+      bucket: bucketFilter,
+    });
+    const newUrl = `${window.location.pathname}${window.location.search}${hash}`;
+    window.history.replaceState(null, "", newUrl);
+  }, [selectedCommitShort, activeTab, fileChoice, diffFormat, searchQuery, showReviewedOnly, bucketFilter]);
 
   const reviewedCount = useMemo(() => commits.filter((c) => c.reviewed).length, [commits]);
 
@@ -846,38 +987,59 @@ export default function SpecEvolutionLab() {
   const patchFiles = useMemo(() => {
     if (!selectedCommit) return [];
     if (activeTab !== "diff") return [];
-    return parseGitPatch(selectedCommit.patch || "");
+    // Cache parsed patches per commit SHA to avoid re-parsing when toggling tabs
+    const cacheKey = selectedCommit.sha;
+    const cached = patchParseCache.get(cacheKey);
+    if (cached !== undefined) return cached;
+    const files = perfTime("parseGitPatch", () => parseGitPatch(selectedCommit.patch || ""));
+    patchParseCache.set(cacheKey, files);
+    return files;
   }, [activeTab, selectedCommit]);
 
   const snapshotMarkdown = useMemo(() => {
     if (!selectedCommit) return "";
-    return buildSnapshotMarkdown(selectedCommit, fileChoice);
-  }, [fileChoice, selectedCommit]);
+    // Lazy: only compute when snapshot or raw tab is active
+    if (activeTab !== "snapshot" && activeTab !== "raw") return "";
+    const cacheKey = `${selectedCommit.sha}:${fileChoice}`;
+    const cached = snapshotMdCache.get(cacheKey);
+    if (cached !== undefined) return cached;
+    const md = perfTime("buildSnapshotMarkdown", () => buildSnapshotMarkdown(selectedCommit, fileChoice));
+    snapshotMdCache.set(cacheKey, md);
+    return md;
+  }, [activeTab, fileChoice, selectedCommit]);
 
   const compareModel = useMemo(() => {
     if (!compareBaseCommit) return null;
 
-    const fileSummary = computeFileChangeSummary(compareBaseCommit.files, selectedCommit.files);
+    return perfTime("compareModel", () => {
+      const fileSummary = computeFileChangeSummary(compareBaseCommit.files, selectedCommit.files);
 
-    const baseStats =
-      fileChoice === "__ALL__" && compareBaseCommit.snapshot
-        ? { lines: compareBaseCommit.snapshot.lines, bytes: compareBaseCommit.snapshot.bytes }
-        : computeTextStats(buildCorpusText(compareBaseCommit.files, fileChoice));
+      const baseStats =
+        fileChoice === "__ALL__" && compareBaseCommit.snapshot
+          ? { lines: compareBaseCommit.snapshot.lines, bytes: compareBaseCommit.snapshot.bytes, words: computeTextStats(buildCorpusText(compareBaseCommit.files, fileChoice)).words }
+          : computeTextStats(buildCorpusText(compareBaseCommit.files, fileChoice));
 
-    const targetStats =
-      fileChoice === "__ALL__" && selectedCommit.snapshot
-        ? { lines: selectedCommit.snapshot.lines, bytes: selectedCommit.snapshot.bytes }
-        : computeTextStats(buildCorpusText(selectedCommit.files, fileChoice));
+      const targetStats =
+        fileChoice === "__ALL__" && selectedCommit.snapshot
+          ? { lines: selectedCommit.snapshot.lines, bytes: selectedCommit.snapshot.bytes, words: computeTextStats(buildCorpusText(selectedCommit.files, fileChoice)).words }
+          : computeTextStats(buildCorpusText(selectedCommit.files, fileChoice));
 
-    return {
-      base: compareBaseCommit,
-      target: selectedCommit,
-      fileSummary,
-      baseStats,
-      targetStats,
-      deltaLines: targetStats.lines - baseStats.lines,
-      deltaBytes: targetStats.bytes - baseStats.bytes,
-    };
+      const perFile = fileChoice === "__ALL__"
+        ? computePerFileContribution(compareBaseCommit.files, selectedCommit.files)
+        : [];
+
+      return {
+        base: compareBaseCommit,
+        target: selectedCommit,
+        fileSummary,
+        baseStats,
+        targetStats,
+        deltaLines: targetStats.lines - baseStats.lines,
+        deltaBytes: targetStats.bytes - baseStats.bytes,
+        deltaWords: targetStats.words - baseStats.words,
+        perFile,
+      };
+    });
   }, [compareBaseCommit, fileChoice, selectedCommit]);
 
   const corpusDiff = useMemo(() => {
@@ -897,9 +1059,35 @@ export default function SpecEvolutionLab() {
       return { error: `Corpus diff too large (${aLines + bLines} lines). Pick a smaller file.` } as const;
     }
 
-    const ops = myersDiffTextLines(aText, bText);
+    const ops = perfTime("myersDiff", () => myersDiffTextLines(aText, bText));
     return { ops } as const;
   }, [compareBaseCommit, diffSource, fileChoice, selectedCommit]);
+
+  // Auto-compute edit distance in compare mode (cached per A.short + B.short + fileChoice)
+  const compareEditDistance = useMemo(() => {
+    if (!compareBaseCommit) return null;
+
+    return perfTime("editDistance", () => {
+      const aText = buildCorpusText(compareBaseCommit.files, fileChoice);
+      const bText = buildCorpusText(selectedCommit.files, fileChoice);
+      if (!aText && !bText) return { distance: 0, timeMs: 0 };
+
+      const aLines = aText ? aText.split(/\n/).length : 0;
+      const bLines = bText ? bText.split(/\n/).length : 0;
+      const ub = Math.abs(bLines - aLines) * 4 + 200;
+
+      const t0 = performance.now();
+      const dist = computeEditDistanceLines(aText, bText, ub);
+      const timeMs = performance.now() - t0;
+
+      return {
+        distance: dist > ub ? null : dist,
+        earlyExit: dist > ub,
+        upperBound: ub,
+        timeMs,
+      };
+    });
+  }, [compareBaseCommit, fileChoice, selectedCommit]);
 
   const bucketInfoDesc = useMemo(() => {
     if (!dataset || bucketInfo === null) return "";
@@ -1004,6 +1192,11 @@ export default function SpecEvolutionLab() {
         [legendDialogRef, bucketInfoDialogRef, controlsDialogRef, commitsDialogRef, helpDialogRef].forEach((r) => {
           if (r.current?.open) r.current.close();
         });
+      }
+      // Ctrl+Shift+P: toggle perf diagnostics panel (dev-only)
+      if (e.key === "P" && e.ctrlKey && e.shiftKey) {
+        setShowPerfPanel((v) => !v);
+        e.preventDefault();
       }
     };
     window.addEventListener("keydown", onKeyDown);
@@ -1263,25 +1456,25 @@ export default function SpecEvolutionLab() {
                       .map((x) => parseInt(x, 10))
                       .filter((b) => Number.isFinite(b) && b >= 0 && b <= 10) as BucketKey[];
                     const showBuckets = (c.reviewed ? bucketKeys.filter((b) => b !== 0) : bucketKeys).slice(0, 3);
-                    
+
                     return (
-                      <motion.button
+                      <button
                         key={c.sha}
                         type="button"
                         onClick={() => selectCommit(c.idx)}
-                        whileHover={{ x: 4 }}
                         className={clsx(
-                          "w-full text-left px-6 py-5 transition-all relative group",
+                          styles.commitRow,
+                          "w-full text-left px-6 py-5 transition-all relative group hover:translate-x-1",
                           isActive ? "bg-green-500/[0.04]" : "hover:bg-white/[0.01]"
                         )}
                       >
                         {isActive && (
                           <>
                             <div className="absolute left-0 top-0 bottom-0 w-1 bg-green-500 shadow-[0_0_15px_#22c55e]" />
-                            <motion.div layoutId="node-glow" className="absolute inset-0 bg-gradient-to-r from-green-500/[0.05] to-transparent pointer-events-none" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-green-500/[0.05] to-transparent pointer-events-none" />
                           </>
                         )}
-                        
+
                         <div className="flex items-center justify-between mb-2">
                           <span className={clsx(
                             "font-mono text-[9px] font-black px-1.5 py-0.5 rounded border transition-colors",
@@ -1310,15 +1503,15 @@ export default function SpecEvolutionLab() {
                               />
                             ))}
                           </div>
-                          
+
                           <div className="flex-1 h-[1px] bg-white/5" />
-                          
+
                           <div className="flex items-center gap-2 text-[8px] font-black uppercase tracking-tighter text-slate-700">
                             <span className="text-green-500/40">+{c.totals.added}</span>
                             <span className="text-red-500/40">-{c.totals.deleted}</span>
                           </div>
                         </div>
-                      </motion.button>
+                      </button>
                     );
                   })}
                 </div>
@@ -1687,9 +1880,14 @@ export default function SpecEvolutionLab() {
                       </div>
                     </div>
 
-                    <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                      <div className="rounded-xl border border-white/5 bg-black/30 p-4">
-                        <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Δ_LINES</div>
+                    <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" data-testid="compare-metrics-grid">
+                      <div className="rounded-xl border border-white/5 bg-black/30 p-4 group/metric">
+                        <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1.5">
+                          Δ_LINES
+                          <span className="opacity-0 group-hover/metric:opacity-100 transition-opacity text-slate-700" title="Net change in line count between snapshots A and B">
+                            <HelpCircle className="h-2.5 w-2.5" />
+                          </span>
+                        </div>
                         <div className={clsx("mt-2 font-mono text-xl font-black", compareModel.deltaLines >= 0 ? "text-green-300" : "text-rose-300")}>
                           {compareModel.deltaLines >= 0 ? "+" : ""}{compareModel.deltaLines}
                         </div>
@@ -1698,8 +1896,13 @@ export default function SpecEvolutionLab() {
                         </div>
                       </div>
 
-                      <div className="rounded-xl border border-white/5 bg-black/30 p-4">
-                        <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Δ_BYTES</div>
+                      <div className="rounded-xl border border-white/5 bg-black/30 p-4 group/metric">
+                        <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1.5">
+                          Δ_BYTES
+                          <span className="opacity-0 group-hover/metric:opacity-100 transition-opacity text-slate-700" title="Net change in UTF-8 encoded byte size between A and B">
+                            <HelpCircle className="h-2.5 w-2.5" />
+                          </span>
+                        </div>
                         <div className={clsx("mt-2 font-mono text-xl font-black", compareModel.deltaBytes >= 0 ? "text-green-300" : "text-rose-300")}>
                           {compareModel.deltaBytes >= 0 ? "+" : ""}{compareModel.deltaBytes}
                         </div>
@@ -1708,8 +1911,28 @@ export default function SpecEvolutionLab() {
                         </div>
                       </div>
 
-                      <div className="rounded-xl border border-white/5 bg-black/30 p-4">
-                        <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">FILES</div>
+                      <div className="rounded-xl border border-white/5 bg-black/30 p-4 group/metric">
+                        <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1.5">
+                          Δ_WORDS
+                          <span className="opacity-0 group-hover/metric:opacity-100 transition-opacity text-slate-700" title="Net change in whitespace-tokenized word count between A and B">
+                            <HelpCircle className="h-2.5 w-2.5" />
+                          </span>
+                        </div>
+                        <div className={clsx("mt-2 font-mono text-xl font-black", compareModel.deltaWords >= 0 ? "text-green-300" : "text-rose-300")}>
+                          {compareModel.deltaWords >= 0 ? "+" : ""}{compareModel.deltaWords}
+                        </div>
+                        <div className="mt-1 text-[10px] text-slate-600 font-bold uppercase tracking-widest">
+                          {compareModel.baseStats.words} → {compareModel.targetStats.words}
+                        </div>
+                      </div>
+
+                      <div className="rounded-xl border border-white/5 bg-black/30 p-4 group/metric">
+                        <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1.5">
+                          FILES
+                          <span className="opacity-0 group-hover/metric:opacity-100 transition-opacity text-slate-700" title="File-level changes: added, removed, modified, unchanged">
+                            <HelpCircle className="h-2.5 w-2.5" />
+                          </span>
+                        </div>
                         <div className="mt-2 font-mono text-[12px] font-black text-slate-300">
                           <span className="text-green-300">+{compareModel.fileSummary.added.length}</span>{" "}
                           <span className="text-rose-300">-{compareModel.fileSummary.removed.length}</span>{" "}
@@ -1720,8 +1943,30 @@ export default function SpecEvolutionLab() {
                         </div>
                       </div>
 
-                      <div className="rounded-xl border border-white/5 bg-black/30 p-4">
-                        <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">SCOPE</div>
+                      {compareEditDistance ? (
+                        <div className="rounded-xl border border-white/5 bg-black/30 p-4 group/metric">
+                          <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1.5">
+                            EDIT_DIST
+                            <span className="opacity-0 group-hover/metric:opacity-100 transition-opacity text-slate-700" title="Line-level Levenshtein edit distance: minimum line insertions, deletions, or substitutions to transform A into B">
+                              <HelpCircle className="h-2.5 w-2.5" />
+                            </span>
+                          </div>
+                          <div className="mt-2 font-mono text-xl font-black text-cyan-300">
+                            {compareEditDistance.earlyExit ? `>${compareEditDistance.upperBound}` : compareEditDistance.distance}
+                          </div>
+                          <div className="mt-1 text-[10px] text-slate-600 font-bold uppercase tracking-widest">
+                            {compareEditDistance.timeMs.toFixed(1)}ms
+                          </div>
+                        </div>
+                      ) : null}
+
+                      <div className="rounded-xl border border-white/5 bg-black/30 p-4 group/metric">
+                        <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1.5">
+                          SCOPE
+                          <span className="opacity-0 group-hover/metric:opacity-100 transition-opacity text-slate-700" title="Which spec file(s) are being compared. Select a single file from the dropdown to narrow the scope.">
+                            <HelpCircle className="h-2.5 w-2.5" />
+                          </span>
+                        </div>
                         <div className="mt-2 font-mono text-[11px] font-black text-slate-300 truncate">
                           {fileChoice === "__ALL__" ? "CORPUS" : fileChoice}
                         </div>
@@ -1730,6 +1975,31 @@ export default function SpecEvolutionLab() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Per-file contribution breakdown (only in corpus/ALL mode) */}
+                    {compareModel.perFile.length > 0 ? (
+                      <div className="mt-4 rounded-xl border border-white/5 bg-black/20 p-4">
+                        <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                          PER_FILE_DELTA
+                          <span className="text-slate-700" title="Shows which files contributed most to the overall byte delta between A and B">
+                            <HelpCircle className="h-2.5 w-2.5" />
+                          </span>
+                        </div>
+                        <div className="space-y-1.5 max-h-40 overflow-y-auto custom-scrollbar">
+                          {compareModel.perFile.map((pf) => (
+                            <div key={pf.path} className="flex items-center gap-3 text-[10px] font-mono">
+                              <span className="text-slate-500 truncate min-w-0 flex-1">{pf.path}</span>
+                              <span className={clsx("font-black tabular-nums shrink-0", pf.deltaLines >= 0 ? "text-green-400/70" : "text-rose-400/70")}>
+                                {pf.deltaLines >= 0 ? "+" : ""}{pf.deltaLines}L
+                              </span>
+                              <span className={clsx("font-black tabular-nums shrink-0", pf.deltaBytes >= 0 ? "text-green-400/70" : "text-rose-400/70")}>
+                                {pf.deltaBytes >= 0 ? "+" : ""}{pf.deltaBytes}B
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 ) : null}
               </div>
@@ -2483,7 +2753,7 @@ export default function SpecEvolutionLab() {
                   selectCommit(c.idx);
                   commitsDialogRef.current?.close();
                 }}
-                className="w-full text-left px-6 py-5 border-b border-white/5 hover:bg-white/5 transition-colors active:bg-green-500/5 group"
+                className={clsx(styles.commitRow, "w-full text-left px-6 py-5 border-b border-white/5 hover:bg-white/5 transition-colors active:bg-green-500/5 group")}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
@@ -2542,6 +2812,51 @@ export default function SpecEvolutionLab() {
           ))}
         </div>
       </DialogShell>
+
+      {/* Perf Diagnostics Panel (Ctrl+Shift+P to toggle) */}
+      {showPerfPanel && (
+        <div className={styles.perfPanel}>
+          <div className="sticky top-0 flex items-center justify-between px-3 py-2 bg-black/95 border-b border-green-500/20">
+            <span className="text-[9px] font-black text-green-400 uppercase tracking-widest">PERF_DIAGNOSTICS</span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => { perfLog.length = 0; perfTickRef.current++; }}
+                className="text-[8px] font-black text-slate-500 uppercase tracking-wider hover:text-white"
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowPerfPanel(false)}
+                className="text-slate-500 hover:text-white"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          </div>
+          <div className="p-2 space-y-0.5">
+            <div className="flex items-center gap-2 text-[9px] text-slate-600 font-bold px-1 pb-1 border-b border-white/5">
+              <span className="w-[140px]">Operation</span>
+              <span className="w-[60px] text-right">Time</span>
+            </div>
+            {perfLog.slice(-50).reverse().map((entry, i) => (
+              <div key={`${entry.ts}-${i}`} className="flex items-center gap-2 px-1 py-0.5 rounded hover:bg-white/5">
+                <span className="w-[140px] truncate text-slate-400">{entry.label}</span>
+                <span className={clsx(
+                  "w-[60px] text-right font-mono",
+                  entry.ms > 100 ? "text-rose-400" : entry.ms > 16 ? "text-amber-400" : "text-green-400"
+                )}>
+                  {entry.ms < 1 ? `${(entry.ms * 1000).toFixed(0)}µs` : `${entry.ms.toFixed(1)}ms`}
+                </span>
+              </div>
+            ))}
+            {perfLog.length === 0 && (
+              <div className="text-[9px] text-slate-700 px-1 py-2 italic">No perf entries yet. Interact with the lab to generate timings.</div>
+            )}
+          </div>
+        </div>
+      )}
     </main>
   );
 }
