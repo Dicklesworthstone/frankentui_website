@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Clock } from "lucide-react";
-import { changelog, tweets, buildLogLines } from "@/lib/content";
+import { changelog, tweets, buildLogLines, devSessionInsights, devProcessStats } from "@/lib/content";
 import SectionShell from "@/components/section-shell";
 import Timeline from "@/components/timeline";
 import TweetWall from "@/components/tweet-wall";
@@ -122,6 +122,88 @@ export default function HowItWasBuiltPage() {
         kicker="Selected milestones timestamped from the real commit history (2026-01-31 → 2026-02-05)."
       >
         <Timeline items={changelog} />
+      </SectionShell>
+
+      {/* ── The Making Of (Grounded Highlights) ─────────────── */}
+      <SectionShell
+        id="making-of"
+        icon="bug"
+        title="The Making Of"
+        kicker="Highlights reconstructed from real sprint artifacts: git history plus archived Claude Code + Codex CLI session logs (2026-01-31 → 2026-02-05)."
+      >
+        <div className="space-y-8">
+          <dl className="grid gap-px overflow-hidden rounded-2xl border border-green-900/40 bg-green-900/20 text-sm text-slate-200 shadow-xl shadow-green-950/20 sm:grid-cols-2 lg:grid-cols-3">
+            {devProcessStats.map((stat) => (
+              <div
+                key={stat.label}
+                className="group relative bg-[#020a02]/60 px-6 py-6 backdrop-blur transition-colors hover:bg-[#020a02]/40"
+              >
+                <dt className="text-xs font-bold uppercase tracking-widest text-slate-500 transition-colors group-hover:text-green-400/70">
+                  {stat.label}
+                </dt>
+                <dd className="mt-3 text-3xl font-bold tracking-tight text-slate-100 sm:text-4xl">
+                  {stat.value}
+                </dd>
+                <p className="mt-2 text-xs font-medium leading-relaxed text-slate-400/80">
+                  {stat.detail}
+                </p>
+              </div>
+            ))}
+          </dl>
+
+          <div className="space-y-4">
+            {devSessionInsights.map((insight) => {
+              const flavorStyles: Record<string, string> = {
+                breakthrough: "border-green-500/30 bg-green-950/20",
+                decision: "border-lime-500/30 bg-lime-950/15",
+                crisis: "border-red-500/30 bg-red-950/20",
+                grind: "border-yellow-500/30 bg-yellow-950/15",
+                ship: "border-emerald-500/40 bg-emerald-950/30",
+              };
+              const flavorLabels: Record<string, string> = {
+                breakthrough: "Breakthrough",
+                decision: "Decision",
+                crisis: "Crisis",
+                grind: "Grind",
+                ship: "Ship It",
+              };
+              const flavorColors: Record<string, string> = {
+                breakthrough: "text-green-400",
+                decision: "text-lime-400",
+                crisis: "text-red-400",
+                grind: "text-yellow-400",
+                ship: "text-emerald-400",
+              };
+
+              return (
+                <div
+                  key={`${insight.date}-${insight.title}`}
+                  className={`rounded-xl border p-5 transition-colors ${flavorStyles[insight.flavor]}`}
+                >
+                  <div className="mb-3 flex flex-wrap items-center gap-3">
+                    <span className="font-mono text-[11px] text-slate-500">
+                      {insight.date}
+                    </span>
+                    <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      {insight.phase}
+                    </span>
+                    <span
+                      className={`text-[10px] font-black uppercase tracking-widest ${flavorColors[insight.flavor]}`}
+                    >
+                      {flavorLabels[insight.flavor]}
+                    </span>
+                  </div>
+                  <h3 className="mb-2 text-base font-bold text-white">
+                    {insight.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-slate-400">
+                    {insight.description}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </SectionShell>
 
       {/* ── Sprint Git Log (Selected) ───────────────────────────── */}

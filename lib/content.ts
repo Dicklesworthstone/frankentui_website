@@ -368,6 +368,98 @@ export const buildLogLines: string[] = [
   "[2026-02-05 02:34] 5383ae71  Update changelog for 0.1.1 publish",
 ];
 
+// Build-process highlights reconstructed from sprint artifacts.
+export interface DevSessionInsight {
+  date: string; // YYYY-MM-DD
+  phase: string;
+  title: string;
+  description: string;
+  flavor: "breakthrough" | "decision" | "crisis" | "grind" | "ship";
+}
+
+export const devSessionInsights: DevSessionInsight[] = [
+  {
+    date: "2026-01-31",
+    phase: "Day 1",
+    title: "Workspace Born",
+    description:
+      "The sprint started by locking an architecture plan and scaffolding a multi-crate Rust workspace early, so every new capability had a clean home (core, render, runtime, widgets, harness).",
+    flavor: "breakthrough",
+  },
+  {
+    date: "2026-02-01",
+    phase: "Day 2",
+    title: "Render Kernel Online",
+    description:
+      "The deterministic render pipeline landed fast: BufferDiff + a state-tracked Presenter that emits ANSI deltas without hidden I/O or terminal desync.",
+    flavor: "breakthrough",
+  },
+  {
+    date: "2026-02-02",
+    phase: "Day 3",
+    title: "Benchmarks + Validation",
+    description:
+      "The focus shifted from raw feature throughput to budgets and verification: benchmarks, E2E scripts, and test expansions to keep high-velocity changes safe.",
+    flavor: "decision",
+  },
+  {
+    date: "2026-02-02",
+    phase: "Day 3",
+    title: "Beads Pages Export Debug",
+    description:
+      "A report claimed `bv -pages` had deployed only a few \"test\" beads. Checking the exported bundle and deployed SQLite confirmed 266 issues were present; the apparent mismatch came from local, uncommitted beads not included in the export snapshot.",
+    flavor: "crisis",
+  },
+  {
+    date: "2026-02-03",
+    phase: "Day 4",
+    title: "Evidence Telemetry + Policy Controls",
+    description:
+      "Probabilistic pieces were made auditable: evidence structs, docs, and environment-driven policy controls for Bayesian diff, BOCPD resize coalescing, and conformal alerts.",
+    flavor: "breakthrough",
+  },
+  {
+    date: "2026-02-04",
+    phase: "Day 5",
+    title: "Crates.io Publish Prep",
+    description:
+      "Docs, metadata, and tests were hardened for a real release artifact. Publish tasks closed out in dependency order while the project graph stayed synced.",
+    flavor: "grind",
+  },
+  {
+    date: "2026-02-05",
+    phase: "Day 5",
+    title: "Publish: v0.1.1",
+    description:
+      "The initial crate set shipped to crates.io and the changelog was updated immediately after publish, closing out the sprint with a concrete release.",
+    flavor: "ship",
+  },
+];
+
+export interface DevStat {
+  value: string;
+  label: string;
+  detail: string;
+}
+
+export const devProcessStats: DevStat[] = [
+  {
+    value: "286",
+    label: "Claude Code Sessions",
+    detail: "Counted from archived session logs for /data/projects/frankentui (2026-01-31 → 2026-02-05)",
+  },
+  {
+    value: "516",
+    label: "Codex CLI Sessions",
+    detail: "Session files with cwd=/data/projects/frankentui across the 5-day window (2026-01-31 → 2026-02-05)",
+  },
+  {
+    value: "1001",
+    label: "Git Commits",
+    detail: "Commits in the FrankenTUI repo between 2026-01-31 and 2026-02-05 (inclusive)",
+  },
+];
+
 // Tweet data for the tweet wall
 export interface Tweet {
   author: string;
@@ -1366,4 +1458,3 @@ export const performanceSLAs: PerformanceSLA[] = [
   { metric: "Dirty-span overhead (dense)", target: "< 2%", hardCap: "< 5%", notes: "Overhead of dirty-span tracking vs full scan" },
   { metric: "Dirty-span improvement (sparse)", target: "> 50%", hardCap: "—", notes: "Scan cost reduction for ≤ 5% edit density" },
 ];
-
