@@ -1,118 +1,33 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 /**
- * A visceral "scramble" entrance effect that is rock-solid and layout-stable.
- * Ensures scrambled text length matches the original perfectly.
+ * A rock-solid entrance component that ensures text is 100% visible and correctly aligned.
  */
 export default function DecodingText({
   text,
   className,
   delay = 0,
-  duration = 0.8,
 }: {
   text: string;
   className?: string;
   delay?: number;
   duration?: number;
 }) {
-  const [displayText, setDisplayText] = useState("");
-  const [isDone, setIsDone] = useState(false);
-  const frameRef = useRef<number | null>(null);
-  const startTimeRef = useRef<number | null>(null);
-  
-  // Strictly numeric for guaranteed visual width consistency in most fonts with tabular-nums
-  const characters = "0123456789";
-
-  const animate = useCallback(
-    (timestamp: number) => {
-      if (!startTimeRef.current) startTimeRef.current = timestamp;
-      const progress = (timestamp - startTimeRef.current) / (duration * 1000);
-
-      if (progress >= 1) {
-        setDisplayText(text);
-        setIsDone(true);
-        frameRef.current = null;
-        return;
-      }
-
-      const iteration = Math.floor(progress * text.length);
-      
-      const scrambled = text
-        .split("")
-        .map((char, index) => {
-          if (index < iteration) return char;
-          if (char === " ") return " ";
-          return characters[Math.floor(Math.random() * characters.length)];
-        })
-        .join("");
-
-      setDisplayText(scrambled);
-      frameRef.current = requestAnimationFrame(animate);
-    },
-    [text, duration],
-  );
-
-  const scramble = useCallback(() => {
-    if (frameRef.current) cancelAnimationFrame(frameRef.current);
-    
-    const endTime = performance.now() + 500; // brief scramble on hover
-
-    function step(ts: number) {
-      if (ts >= endTime) {
-        setDisplayText(text);
-        frameRef.current = null;
-        return;
-      }
-      
-      const scrambled = text
-        .split("")
-        .map((char) => {
-          if (char === " ") return " ";
-          return characters[Math.floor(Math.random() * characters.length)];
-        })
-        .join("");
-        
-      setDisplayText(scrambled);
-      frameRef.current = requestAnimationFrame(step);
-    }
-
-    frameRef.current = requestAnimationFrame(step);
-  }, [text]);
-
-  useEffect(() => {
-    // Initial state: matches length to avoid layout jumps
-    if (!isDone) {
-      setDisplayText(text.replace(/[^ ]/g, "0"));
-    }
-
-    const timeout = setTimeout(() => {
-      startTimeRef.current = null;
-      frameRef.current = requestAnimationFrame(animate);
-    }, delay * 1000);
-
-    return () => {
-      clearTimeout(timeout);
-      if (frameRef.current) cancelAnimationFrame(frameRef.current);
-    };
-  }, [delay, animate, text, isDone]);
-
   return (
-    <span className={cn("relative inline-block whitespace-pre tabular-nums", className)}>
-      {/* Invisible ghost reserves space */}
-      <span className="invisible opacity-0 select-none" aria-hidden="true">
-        {text}
-      </span>
-
-      {/* Visible animated text */}
-      <span 
-        className="absolute inset-0" 
-        onMouseEnter={scramble}
-      >
-        {displayText}
-      </span>
-    </span>
+    <motion.span
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ 
+        duration: 0.5, 
+        delay, 
+        ease: [0.16, 1, 0.3, 1] 
+      }}
+      className={cn("inline-block", className)}
+    >
+      {text}
+    </motion.span>
   );
 }
