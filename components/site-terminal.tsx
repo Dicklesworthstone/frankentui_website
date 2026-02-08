@@ -70,7 +70,12 @@ export default function SiteTerminal() {
             output = `Navigating to ${target}...`;
             setTimeout(() => setTerminalOpen(false), 500);
           } else {
-            output = `Error: Unknown destination '${args[0]}'. Valid targets: home, ${validSlugs.join(", ")}`;
+            output = (
+              <div className="space-y-1">
+                <div className="text-red-400">Error: Unknown destination &apos;{args[0]}&apos;.</div>
+                <div className="text-[10px] text-slate-500 uppercase tracking-widest">Valid targets: home, {validSlugs.join(", ")}</div>
+              </div>
+            );
             isError = true;
             playSfx("error");
           }
@@ -135,7 +140,7 @@ export default function SiteTerminal() {
             y: { type: "spring", damping: 30, stiffness: 300 },
             opacity: { duration: 0.2, repeat: Infinity, repeatType: "reverse" }
           }}
-          className="fixed top-0 left-0 right-0 z-[100] h-[45vh] bg-black/95 border-b border-green-500/30 backdrop-blur-xl shadow-2xl flex flex-col font-mono overflow-hidden"
+          className="fixed top-0 left-0 right-0 z-[100] h-[60vh] md:h-[45vh] bg-black/95 border-b border-green-500/30 backdrop-blur-xl shadow-2xl flex flex-col font-mono overflow-hidden"
           onClick={() => inputRef.current?.focus()}
         >
           <NeuralPulse className="opacity-30" />

@@ -196,6 +196,28 @@ body::before {
   box-shadow: 0 0 40px rgba(34, 197, 94, 0.15);
 }
 
+/* ── Accessibility Skip Link ───────────────────────────────────────── */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-green-prime);
+  color: black;
+  padding: 1rem 2rem;
+  z-index: 9999;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  border-radius: 0 0 1rem 1rem;
+  transition: top 0.3s var(--ease-stripe);
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: none;
+}
+
 :focus-visible {
   outline: 2px solid var(--color-green-prime);
   outline-offset: 4px;

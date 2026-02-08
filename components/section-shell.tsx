@@ -64,6 +64,7 @@ type Props = {
   children: React.ReactNode;
   className?: string;
   headingLevel?: 1 | 2;
+  forceReveal?: boolean;
 };
 
 export default function SectionShell({
@@ -75,6 +76,7 @@ export default function SectionShell({
   children,
   className,
   headingLevel = 2,
+  forceReveal = false,
 }: Props) {
   const Icon = icon ? sectionIcons[icon] : undefined;
   const HeadingTag = `h${headingLevel}` as const;
@@ -82,8 +84,8 @@ export default function SectionShell({
   const prefersReducedMotion = useReducedMotion();
 
   const headingId = id ? `${id}-heading` : undefined;
-  // Important: reduced-motion users must still see content (no "animate-in" gating).
-  const reveal = prefersReducedMotion ? true : isIntersecting;
+  // Important: reduced-motion users or forced-reveal sections must still see content.
+  const reveal = forceReveal || prefersReducedMotion ? true : isIntersecting;
 
   return (
     <section
@@ -140,9 +142,9 @@ export default function SectionShell({
             </div>
           </motion.div>
 
-          {/* Decorative monster-tech elements */}
-          <div className="hidden lg:block opacity-20 pointer-events-none">
-             <FrankenStitch orientation="vertical" className="h-32" />
+          {/* Decorative monster-tech elements - Now visible on mobile with adjusted scale */}
+          <div className="opacity-20 pointer-events-none">
+             <FrankenStitch orientation="vertical" className="h-24 md:h-32" />
           </div>
         </div>
 

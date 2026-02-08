@@ -3,8 +3,7 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import type { Stat } from "@/lib/content";
 import { AnimatedNumber } from "@/components/animated-number";
-import { FrankenContainer, NeuralPulse } from "./franken-elements";
-import { Magnetic } from "./motion-wrapper";
+import { FrankenBolt, FrankenContainer, NeuralPulse } from "./franken-elements";
 import FrankenGlitch from "./franken-glitch";
 
 function parseStatValue(value: string): {
@@ -74,6 +73,9 @@ export default function StatsGrid({ stats }: { stats: Stat[] }) {
 
             <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
+            <FrankenBolt className="absolute top-2 right-2 opacity-10 group-hover:opacity-100 transition-opacity scale-75" />
+            <FrankenBolt className="absolute bottom-2 left-2 opacity-10 group-hover:opacity-100 transition-opacity scale-75" />
+
             <dt className="relative z-10">
               <FrankenGlitch trigger="hover" intensity="low">
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 transition-colors group-hover:text-green-400/70">
@@ -104,4 +106,3 @@ export default function StatsGrid({ stats }: { stats: Stat[] }) {
     </FrankenContainer>
   );
 }
-

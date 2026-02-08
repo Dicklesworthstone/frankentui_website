@@ -30,7 +30,7 @@ export default function ClientShell({ children }: { children: React.ReactNode })
           
           <SiteHeader />
           
-          <AnimatePresence mode="wait">
+          <AnimatePresence>
             <motion.div
               key={pathname}
               initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 10 }}

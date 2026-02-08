@@ -71,9 +71,9 @@ export default function GlowOrbits() {
       style={prefersReducedMotion ? undefined : { x: parallaxX, y: parallaxY }}
       className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
     >
-      <div className="glow-ring absolute -top-32 -left-10 h-72 w-72 rounded-[999px] bg-gradient-to-tr from-green-500/40 via-emerald-500/20 to-transparent blur-2xl md:blur-3xl" />
-      <div className="glow-ring absolute -bottom-40 -right-4 h-80 w-80 rounded-[999px] bg-gradient-to-tr from-lime-400/40 via-green-500/20 to-transparent blur-2xl md:blur-3xl" />
-      <div className="glow-ring absolute top-1/2 left-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-[999px] bg-gradient-to-tr from-emerald-500/35 via-green-500/15 to-transparent blur-2xl md:blur-3xl" />
+      <div className="glow-ring absolute -top-32 -left-10 h-96 w-96 md:h-72 md:w-72 rounded-[999px] bg-gradient-to-tr from-green-500/40 via-emerald-500/20 to-transparent blur-3xl" />
+      <div className="glow-ring absolute -bottom-40 -right-4 h-[500px] w-[500px] md:h-80 md:w-80 rounded-[999px] bg-gradient-to-tr from-lime-400/40 via-green-500/20 to-transparent blur-3xl" />
+      <div className="glow-ring absolute top-1/2 left-1/2 h-[600px] w-[600px] md:h-96 md:w-96 -translate-x-1/2 -translate-y-1/2 rounded-[999px] bg-gradient-to-tr from-emerald-500/35 via-green-500/15 to-transparent blur-3xl" />
     </motion.div>
   );
 }
