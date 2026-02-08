@@ -7,8 +7,13 @@ import { optimizations, performanceSLAs } from "@/lib/content";
 import SectionShell from "@/components/section-shell";
 import OptimizationCard from "@/components/optimization-card";
 import FrankenEye from "@/components/franken-eye";
-import WarStoriesMap from "@/components/war-stories-map";
 import FrankenGlitch from "@/components/franken-glitch";
+import dynamic from "next/dynamic";
+
+const WarStoriesMap = dynamic(() => import("@/components/war-stories-map"), {
+  ssr: false,
+  loading: () => <div className="w-full aspect-[21/9] bg-slate-950/50 rounded-[2rem] border border-red-900/20 animate-pulse flex items-center justify-center text-red-500/20 font-black tracking-widest text-xs">LOADING_TACTICAL_MAP...</div>
+});
 
 /**
  * War Stories Page - High-octane battle reports from the engineering front.
@@ -54,9 +59,9 @@ export default function WarStoriesPage() {
           </motion.div>
         </div>
 
-        {/* Floating Peeking Eye */}
-        <div className="absolute top-48 right-[12%] hidden lg:block opacity-35 hover:opacity-100 transition-opacity">
-          <FrankenEye className="scale-[1.8] rotate-[-10deg]" />
+        {/* Floating Peeking Eye - Now visible on mobile */}
+        <div className="absolute top-24 right-4 md:top-48 md:right-[12%] opacity-35 hover:opacity-100 transition-opacity">
+          <FrankenEye className="scale-[1.2] md:scale-[1.8] rotate-[-10deg]" />
         </div>
       </header>
 
@@ -66,6 +71,7 @@ export default function WarStoriesPage() {
         eyebrow="Visualized Intelligence"
         title="Tactical Map"
         kicker="Select an active conflict node to extract a detailed battle report from the core logs."
+        forceReveal={true}
       >
         <div className="w-full relative group/map-container">
           <WarStoriesMap />

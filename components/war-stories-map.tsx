@@ -43,11 +43,12 @@ export default function WarStoriesMap() {
         {allStories.map((story, i) => {
           const isSelected = selectedId === story.title;
           const isCritical = i < warStories.length;
+          const storyId = story.title.replace(/\s+/g, "_");
           
           return (
             <motion.div
-              key={story.title}
-              layoutId={`map-node-${story.title}`}
+              key={storyId}
+              layoutId={`map-node-${storyId}`}
               className="relative"
             >
               <motion.button
