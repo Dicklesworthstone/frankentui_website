@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
-import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
+import { motion, useTransform, useSpring, useMotionValue, useReducedMotion } from "framer-motion";
 
 export default function GlowOrbits() {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -10,6 +10,7 @@ export default function GlowOrbits() {
     threshold: 0,
     triggerOnce: false,
   });
+  const prefersReducedMotion = useReducedMotion();
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -21,19 +22,21 @@ export default function GlowOrbits() {
   const parallaxY = useTransform(springY, [0, 1000], [20, -20]);
 
   useEffect(() => {
+    if (prefersReducedMotion) return undefined;
+    if (!isIntersecting) return undefined;
+
     const handleMouseMove = (e: MouseEvent) => {
       mouseX.set(e.clientX);
       mouseY.set(e.clientY);
     };
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [mouseX, mouseY]);
+  }, [mouseX, mouseY, isIntersecting, prefersReducedMotion]);
 
   useEffect(() => {
     if (!rootRef.current) return;
-    
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (mediaQuery.matches) return;
+    if (prefersReducedMotion) return;
+    if (!isIntersecting) return;
 
     const rings = rootRef.current.querySelectorAll<HTMLElement>(".glow-ring");
     if (rings.length === 0) return;
@@ -57,7 +60,7 @@ export default function GlowOrbits() {
     });
 
     return () => animations.forEach(a => a.cancel());
-  }, []);
+  }, [prefersReducedMotion, isIntersecting]);
 
   return (
     <motion.div
@@ -65,7 +68,7 @@ export default function GlowOrbits() {
         rootRef.current = node as HTMLDivElement;
         observerRef.current = node as HTMLDivElement;
       }}
-      style={{ x: parallaxX, y: parallaxY }}
+      style={prefersReducedMotion ? undefined : { x: parallaxX, y: parallaxY }}
       className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
     >
       <div className="glow-ring absolute -top-32 -left-10 h-72 w-72 rounded-[999px] bg-gradient-to-tr from-green-500/40 via-emerald-500/20 to-transparent blur-2xl md:blur-3xl" />
