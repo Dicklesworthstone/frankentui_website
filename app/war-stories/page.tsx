@@ -8,12 +8,7 @@ import SectionShell from "@/components/section-shell";
 import OptimizationCard from "@/components/optimization-card";
 import FrankenEye from "@/components/franken-eye";
 import FrankenGlitch from "@/components/franken-glitch";
-import dynamic from "next/dynamic";
-
-const WarStoriesMap = dynamic(() => import("@/components/war-stories-map"), {
-  ssr: false,
-  loading: () => <div className="w-full aspect-[21/9] bg-slate-950/50 rounded-[2rem] border border-red-900/20 animate-pulse flex items-center justify-center text-red-500/20 font-black tracking-widest text-xs">LOADING_TACTICAL_MAP...</div>
-});
+import WarStoriesMap from "@/components/war-stories-map";
 
 /**
  * War Stories Page - High-octane battle reports from the engineering front.
