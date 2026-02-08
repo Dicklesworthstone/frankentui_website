@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { Activity, Cpu, Shield, Zap } from "lucide-react";
-import { AnimatedNumber } from "./animated-number";
 
 export default function BeadHUD() {
   return (
@@ -64,4 +63,3 @@ export default function BeadHUD() {
     </div>
   );
 }
-

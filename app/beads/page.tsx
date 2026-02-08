@@ -2,9 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, Network, Share2, Binary, GitBranch, CheckCircle2, AlertTriangle, Clock } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { FrankenContainer, NeuralPulse } from "@/components/franken-elements";
+import { ArrowRight, Network } from "lucide-react";
 import FrankenEye from "@/components/franken-eye";
 import dynamic from "next/dynamic";
 
@@ -16,15 +14,6 @@ const BeadsView = dynamic(() => import("@/components/beads/beads-view"), {
     </div>
   )
 });
-
-const VIEWER_REPO = "https://github.com/Dicklesworthstone/beads-for-frankentui";
-
-const graphStats = [
-  { label: "Total Beads", value: "60+", icon: Binary },
-  { label: "Epics", value: "8", icon: GitBranch },
-  { label: "Completed", value: "95%", icon: CheckCircle2 },
-  { label: "Sprint Duration", value: "5 Days", icon: Clock },
-];
 
 export default function BeadsPage() {
   return (
