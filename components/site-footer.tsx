@@ -6,7 +6,7 @@ import { siteConfig, navItems } from "@/lib/content";
 import { FrankenContainer } from "./franken-elements";
 import { Magnetic } from "./motion-wrapper";
 import FrankenGlitch from "./franken-glitch";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 const socialLinks = [
   { href: siteConfig.social.github, icon: Github, label: "GitHub" },
@@ -14,8 +14,10 @@ const socialLinks = [
 ];
 
 export default function SiteFooter() {
+  const prefersReducedMotion = useReducedMotion();
+
   const handleBackToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: prefersReducedMotion ? "auto" : "smooth" });
   };
 
   return (
@@ -49,16 +51,18 @@ export default function SiteFooter() {
 
               <div className="flex flex-col gap-3">
                  <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-green-500/60">
-                    <motion.div 
-                      animate={{ 
-                        scale: [1, 1.5, 1],
-                        opacity: [0.3, 1, 0.3]
-                      }}
-                      transition={{ 
-                        duration: 1.5, 
-                        repeat: Infinity 
-                      }}
-                      className="h-1.5 w-1.5 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]" 
+                    <motion.div
+                      animate={
+                        prefersReducedMotion
+                          ? { scale: 1, opacity: 0.6 }
+                          : { scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }
+                      }
+                      transition={
+                        prefersReducedMotion
+                          ? { duration: 0 }
+                          : { duration: 1.5, repeat: Infinity }
+                      }
+                      className="h-1.5 w-1.5 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"
                     />
                     <span>All Systems Operational</span>
                  </div>
@@ -117,8 +121,12 @@ export default function SiteFooter() {
               >
                 <span className="group-hover:tracking-[0.4em] transition-all duration-300">Back to top</span>
                 <motion.div
-                  animate={{ y: [0, -4, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                  animate={prefersReducedMotion ? { y: 0 } : { y: [0, -4, 0] }}
+                  transition={
+                    prefersReducedMotion
+                      ? { duration: 0 }
+                      : { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
+                  }
                 >
                   <ArrowUp className="h-3 w-3" />
                 </motion.div>
@@ -129,7 +137,7 @@ export default function SiteFooter() {
 
           <div className="mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
              <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">
-               &copy; {new Date().getFullYear()} Jeffrey Emanuel. MIT License.
+               &copy; <span suppressHydrationWarning>{new Date().getFullYear()}</span> Jeffrey Emanuel. MIT License.
              </p>
              <div className="flex gap-8">
                 <span className="text-[10px] font-black text-white/5 uppercase tracking-[0.5em] select-none">MADE IN 5 DAYS</span>

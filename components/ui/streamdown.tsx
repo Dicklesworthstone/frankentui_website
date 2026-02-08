@@ -25,7 +25,7 @@ export default function Streamdown({ content, className }: StreamdownProps) {
     const regex = new RegExp("```(\\w+)?\\n([\\s\\S]*?)```", "g");
     const result: StreamPart[] = [];
     let lastIndex = 0;
-    let match;
+    let match: RegExpExecArray | null;
 
     while ((match = regex.exec(content)) !== null) {
       // Push text before code block
@@ -58,7 +58,10 @@ export default function Streamdown({ content, className }: StreamdownProps) {
   }, [content]);
 
   return (
-    <div className={cn("space-y-6", className)}>
+    <div className={cn(
+      "prose-franken space-y-6 text-slate-300 leading-relaxed font-medium text-lg",
+      className
+    )}>
       {parts.map((part, i) => {
         if (part.type === "code") {
           // We can reuse RustCodeBlock if the language is rust
@@ -71,7 +74,7 @@ export default function Streamdown({ content, className }: StreamdownProps) {
         }
 
         return (
-          <div key={i} className="prose-franken text-slate-300 leading-relaxed font-medium text-lg space-y-6">
+          <div key={i} className="space-y-6">
             {renderMarkdownLite(part.content, `stream-${i}`)}
           </div>
         );
@@ -186,7 +189,7 @@ function renderMarkdownLite(text: string, keyPrefix: string): React.ReactNode[] 
     }
 
     blocks.push(
-      <p key={`${keyPrefix}-p-${blockIndex}`} className="text-slate-300">
+      <p key={`${keyPrefix}-p-${blockIndex}`}>
         {paragraphLines.map((line, lineIdx) => (
           <Fragment key={`${keyPrefix}-p-${blockIndex}-ln-${lineIdx}`}>
             {renderInline(line, `${keyPrefix}-p-${blockIndex}-ln-${lineIdx}`)}
@@ -255,7 +258,7 @@ function tokenizeInline(text: string): React.ReactNode[] {
 
     if (token.startsWith("`") && token.endsWith("`")) {
       nodes.push(
-        <code className="bg-white/5 border border-white/10 rounded px-1.5 py-0.5 font-mono text-sm text-green-300">
+        <code className="bg-white/5 border border-white/10 rounded px-1.5 py-0.5 font-mono text-[0.95em] text-green-300">
           {token.slice(1, -1)}
         </code>
       );

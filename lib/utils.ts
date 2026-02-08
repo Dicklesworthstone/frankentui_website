@@ -12,7 +12,7 @@ export function formatDate(isoString: string) {
   if (!isoString) return "";
   try {
     const date = new Date(isoString);
-    if (isNaN(date.getTime())) return isoString;
+    if (Number.isNaN(date.getTime())) return isoString;
 
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -53,7 +53,7 @@ export function formatDateFull(isoString: string) {
   if (!isoString) return "";
   try {
     const date = new Date(isoString);
-    if (isNaN(date.getTime())) return isoString;
+    if (Number.isNaN(date.getTime())) return isoString;
     return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",

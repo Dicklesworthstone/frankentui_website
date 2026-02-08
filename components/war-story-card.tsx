@@ -70,10 +70,10 @@ export default function WarStoryCard({ story }: { story: WarStory }) {
 
         <div className="mt-auto relative group/debug">
           <div className="absolute -inset-2 bg-red-500/5 rounded-xl opacity-0 group-hover/debug:opacity-100 transition-opacity" />
-          <div className="relative rounded-xl bg-black/40 border border-white/5 p-6">
+            <div className="relative rounded-xl bg-black/40 border border-white/5 p-6">
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-red-500 mb-3">Root Cause Analysis</p>
             <div className="text-xs leading-relaxed text-slate-500 font-mono group-hover:text-slate-400 transition-colors">
-              <Streamdown content={story.technicalDetails} />
+              <Streamdown content={story.technicalDetails} className="text-xs font-mono font-normal text-slate-500 leading-relaxed space-y-2" />
             </div>
           </div>
         </div>

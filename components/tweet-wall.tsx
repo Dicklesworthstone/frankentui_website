@@ -12,6 +12,7 @@ import { motion } from "framer-motion";
 
 function FallbackContent({ tweet }: { tweet: Tweet }) {
   const hasLink = typeof tweet.tweetUrl === "string";
+  const hasMetrics = typeof tweet.likes === "number";
 
   return (
     <div className="flex flex-col p-8">
@@ -29,19 +30,19 @@ function FallbackContent({ tweet }: { tweet: Tweet }) {
 
       <p className="text-base leading-relaxed text-slate-300 mb-6">{tweet.content}</p>
 
-      {(tweet.likes != null) && (
+      {hasMetrics && (
         <div className="flex items-center gap-5 text-slate-500 text-[11px] font-bold mb-6">
-          {tweet.replies != null && (
+          {typeof tweet.replies === "number" && (
             <span className="flex items-center gap-1.5"><MessageSquare className="h-3.5 w-3.5" />{tweet.replies}</span>
           )}
-          {tweet.reposts != null && (
+          {typeof tweet.reposts === "number" && (
             <span className="flex items-center gap-1.5"><Repeat2 className="h-3.5 w-3.5" />{tweet.reposts}</span>
           )}
           <span className="flex items-center gap-1.5"><Heart className="h-3.5 w-3.5" />{tweet.likes}</span>
-          {tweet.views != null && (
+          {typeof tweet.views === "number" && (
             <span className="flex items-center gap-1.5"><Eye className="h-3.5 w-3.5" />{(tweet.views / 1000).toFixed(1)}K</span>
           )}
-          {tweet.bookmarks != null && tweet.bookmarks > 0 && (
+          {typeof tweet.bookmarks === "number" && tweet.bookmarks > 0 && (
             <span className="flex items-center gap-1.5"><Bookmark className="h-3.5 w-3.5" />{tweet.bookmarks}</span>
           )}
         </div>

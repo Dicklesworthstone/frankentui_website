@@ -120,12 +120,16 @@ export default function ScreenshotGallery({
   }, [goNext, goPrev]);
 
   const variants = prefersReduced ? reducedVariants : slideVariants;
+  const imageSizes =
+    columns === 3
+      ? "(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+      : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw";
 
   return (
     <>
       <div className={cn(
         "grid gap-6 lg:gap-8",
-        columns === 3 ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"
+        columns === 3 ? "sm:grid-cols-2 md:grid-cols-3" : "sm:grid-cols-2"
       )}>
         {screenshots.map((screenshot, index) => (
           <motion.div
@@ -149,7 +153,7 @@ export default function ScreenshotGallery({
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-105 saturate-[0.8] group-hover:saturate-100"
                     loading="lazy"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    sizes={imageSizes}
                   />
 
                   {/* Overlay Detail */}

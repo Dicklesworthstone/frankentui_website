@@ -289,7 +289,6 @@ export default function HowItWasBuiltPage() {
         </SectionShell>
       </motion.div>
 
-
       {/* ── What People Said ──────────────────────────────────── */}
       <SectionShell
         id="reactions"

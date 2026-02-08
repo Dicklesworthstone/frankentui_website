@@ -233,7 +233,7 @@ export default function GlossaryPage() {
                             </h3>
                           </FrankenGlitch>
                           <div className="text-base font-medium leading-relaxed text-slate-400 group-hover:text-slate-300 transition-colors line-clamp-3 mb-8 flex-1">
-                            <Streamdown content={term.short} />
+                            {term.short}
                           </div>
                           <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 group-hover:text-green-500 transition-colors">
                             <span>Inspect Spec</span>

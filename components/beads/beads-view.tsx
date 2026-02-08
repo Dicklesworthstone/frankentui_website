@@ -118,7 +118,7 @@ const STATUS_COLORS: Record<string, string> = {
 type StatusStats = Record<string, number> & { total: number };
 
 function asString(value: unknown): string {
-  if (value == null) return "";
+  if (value === null || value === undefined) return "";
   return typeof value === "string" ? value : String(value);
 }
 
@@ -139,9 +139,9 @@ function normalizeIssueRow(row: Record<string, unknown>): Issue {
     labels: asString(row.labels),
     created_at: asString(row.created_at),
     updated_at: asString(row.updated_at),
-    blocks_count: row.blocks_count == null ? undefined : asNumber(row.blocks_count),
-    blocked_by_count: row.blocked_by_count == null ? undefined : asNumber(row.blocked_by_count),
-    triage_score: row.triage_score == null ? undefined : asNumber(row.triage_score),
+    blocks_count: row.blocks_count === null || row.blocks_count === undefined ? undefined : asNumber(row.blocks_count),
+    blocked_by_count: row.blocked_by_count === null || row.blocked_by_count === undefined ? undefined : asNumber(row.blocked_by_count),
+    triage_score: row.triage_score === null || row.triage_score === undefined ? undefined : asNumber(row.triage_score),
   };
 }
 
