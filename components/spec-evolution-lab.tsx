@@ -11,6 +11,8 @@ import {
   HelpCircle,
   Info,
   Link2,
+  Pause,
+  Play,
   Search,
   Terminal,
   X,
@@ -39,6 +41,14 @@ import {
   type SearchScope,
   type IndexProgress,
 } from "@/lib/spec-evolution-search";
+import {
+  buildTimelineData,
+  playbackIntervalMs,
+  positionToCommitIndex,
+  commitIndexToPosition,
+  PLAYBACK_SPEEDS,
+  type PlaybackSpeed,
+} from "@/lib/spec-evolution-timeline";
 
 type BucketKey = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 type BucketMode = "day" | "hour" | "15m" | "5m";
@@ -848,6 +858,12 @@ export default function SpecEvolutionLab() {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const searchResultsRef = useRef<HTMLDivElement | null>(null);
 
+  // Timeline playback state
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState<PlaybackSpeed>(1);
+  const prefersReducedMotion = useRef(false);
+  const timelineRef = useRef<HTMLDivElement | null>(null);
+
   const legendDialogRef = useRef<HTMLDialogElement | null>(null);
   const bucketInfoDialogRef = useRef<HTMLDialogElement | null>(null);
   const controlsDialogRef = useRef<HTMLDialogElement | null>(null);
@@ -1091,6 +1107,67 @@ export default function SpecEvolutionLab() {
     snapshotMdCache.set(cacheKey, md);
     return md;
   }, [activeTab, fileChoice, selectedCommit]);
+
+  /* ------------------------------------------------------------------ */
+  /*  Timeline Mini-map + Playback                                       */
+  /* ------------------------------------------------------------------ */
+
+  // Detect prefers-reduced-motion once on mount
+  useEffect(() => {
+    prefersReducedMotion.current =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }, []);
+
+  // Timeline sparkline data (recomputed when metric or filter changes)
+  const timelineData = useMemo(
+    () => buildTimelineData(commits, metric, bucketFilter),
+    [commits, metric, bucketFilter],
+  );
+
+  // Playback: advance commit at interval
+  useEffect(() => {
+    if (!isPlaying || commits.length <= 1) return;
+
+    const ms = playbackIntervalMs(playbackSpeed);
+    const id = setInterval(() => {
+      setSelectedIndex((prev) => {
+        // If we're filtering, walk through filtered commits only
+        if (filteredCommits.length > 0) {
+          const pos = filteredCommits.findIndex((c) => c.idx === prev);
+          const next = pos + 1;
+          if (next >= filteredCommits.length) {
+            // Reached end — stop playback
+            requestAnimationFrame(() => setIsPlaying(false));
+            return prev;
+          }
+          return filteredCommits[next].idx;
+        }
+        // Unfiltered: simple increment
+        if (prev >= commits.length - 1) {
+          requestAnimationFrame(() => setIsPlaying(false));
+          return prev;
+        }
+        return prev + 1;
+      });
+    }, ms);
+
+    return () => clearInterval(id);
+  }, [isPlaying, playbackSpeed, commits.length, filteredCommits]);
+
+  // Stop playback when user manually changes commit
+  const playbackStopOnManualRef = useRef(false);
+  const togglePlayback = useCallback(() => {
+    if (prefersReducedMotion.current) return; // respect a11y preference
+    setIsPlaying((prev) => !prev);
+  }, []);
+
+  const cyclePlaybackSpeed = useCallback(() => {
+    setPlaybackSpeed((prev) => {
+      const idx = PLAYBACK_SPEEDS.indexOf(prev);
+      return PLAYBACK_SPEEDS[(idx + 1) % PLAYBACK_SPEEDS.length];
+    });
+  }, []);
 
   const compareModel = useMemo(() => {
     if (!compareBaseCommit) return null;
@@ -2165,6 +2242,145 @@ export default function SpecEvolutionLab() {
                 ) : null}
               </div>
             </FrankenContainer>
+
+            {/* Timeline Mini-map + Playback */}
+            {commits.length > 1 && (
+              <div
+                ref={timelineRef}
+                data-testid="timeline-minimap"
+                className="rounded-3xl border border-white/10 bg-black/40 backdrop-blur-xl shadow-2xl overflow-hidden"
+              >
+                <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-white/[0.03]">
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">TIMELINE_MAP</span>
+                    <span className="text-[9px] font-bold text-slate-700 uppercase tracking-widest">
+                      {metric === "groups" ? "Review Groups" : metric === "lines" ? "Lines Changed" : "Patch Bytes"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {!prefersReducedMotion.current && (
+                      <>
+                        <button
+                          type="button"
+                          data-testid="playback-toggle"
+                          onClick={togglePlayback}
+                          className={clsx(
+                            "rounded-lg border p-1.5 transition-all active:scale-90",
+                            isPlaying
+                              ? "border-green-500/40 bg-green-500/10 text-green-400 shadow-[0_0_12px_rgba(34,197,94,0.3)]"
+                              : "border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white",
+                          )}
+                          title={isPlaying ? "Pause playback" : "Play through commits"}
+                        >
+                          {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                        </button>
+                        <button
+                          type="button"
+                          data-testid="playback-speed"
+                          onClick={cyclePlaybackSpeed}
+                          className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[9px] font-black font-mono text-slate-400 hover:bg-white/10 hover:text-white transition-all active:scale-95"
+                          title="Cycle playback speed"
+                        >
+                          {playbackSpeed}x
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Sparkline heat strip */}
+                <div
+                  className="relative h-16 mx-4 my-3 cursor-pointer group/timeline"
+                  onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const fraction = (e.clientX - rect.left) / rect.width;
+                    const idx = positionToCommitIndex(fraction, commits.length);
+                    selectCommit(idx);
+                    setIsPlaying(false);
+                  }}
+                  role="slider"
+                  aria-label="Timeline mini-map"
+                  aria-valuemin={0}
+                  aria-valuemax={commits.length - 1}
+                  aria-valuenow={selectedIndex}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowRight") { selectCommit(selectedIndex + 1); e.preventDefault(); }
+                    if (e.key === "ArrowLeft") { selectCommit(selectedIndex - 1); e.preventDefault(); }
+                    if (e.key === " ") { togglePlayback(); e.preventDefault(); }
+                  }}
+                >
+                  {/* Background bars */}
+                  <div className="absolute inset-0 flex items-end gap-px">
+                    {timelineData.points.map((pt) => {
+                      const isActive = pt.idx === selectedIndex;
+                      const dimmed = !pt.matchesBucketFilter;
+                      return (
+                        <div
+                          key={pt.idx}
+                          className="flex-1 relative group/bar"
+                          style={{ height: "100%" }}
+                        >
+                          <div
+                            className={clsx(
+                              "absolute bottom-0 w-full rounded-t-sm transition-all duration-75",
+                              isActive && "ring-1 ring-green-400/60",
+                              dimmed && "opacity-30",
+                            )}
+                            style={{
+                              height: `${Math.max(4, pt.value * 100)}%`,
+                              background: isActive
+                                ? "rgba(34,197,94,0.7)"
+                                : pt.reviewed
+                                  ? "rgba(96,165,250,0.5)"
+                                  : "rgba(148,163,184,0.25)",
+                            }}
+                          />
+                          {/* Reviewed dot indicator */}
+                          {pt.reviewed && (
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-blue-400/60" />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Playhead indicator */}
+                  <div
+                    className="absolute top-0 bottom-0 w-px bg-green-400 shadow-[0_0_8px_rgba(34,197,94,0.6)] pointer-events-none z-10 transition-[left] duration-75"
+                    style={{ left: `${commitIndexToPosition(selectedIndex, commits.length) * 100}%` }}
+                  />
+
+                  {/* Compare base marker */}
+                  {compareBaseIndex !== null && (
+                    <div
+                      className="absolute top-0 bottom-0 w-px bg-rose-400/70 shadow-[0_0_6px_rgba(251,113,133,0.4)] pointer-events-none z-10"
+                      style={{ left: `${commitIndexToPosition(compareBaseIndex, commits.length) * 100}%` }}
+                    />
+                  )}
+
+                  {/* Hover hint */}
+                  <div className="absolute inset-0 bg-white/[0.02] opacity-0 group-hover/timeline:opacity-100 transition-opacity pointer-events-none" />
+                </div>
+
+                {/* Legend row */}
+                <div className="flex items-center justify-between px-6 pb-3 text-[9px] font-bold text-slate-700 uppercase tracking-widest">
+                  <span>{commits[0]?.dateShort.split(" ")[0] || ""}</span>
+                  <div className="flex items-center gap-4">
+                    <span className="flex items-center gap-1.5">
+                      <div className="h-1.5 w-3 rounded-sm bg-slate-500/25" /> unreviewed
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <div className="h-1.5 w-3 rounded-sm bg-blue-400/50" /> reviewed
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <div className="h-1.5 w-3 rounded-sm bg-green-500/70" /> selected
+                    </span>
+                  </div>
+                  <span>{commits[commits.length - 1]?.dateShort.split(" ")[0] || ""}</span>
+                </div>
+              </div>
+            )}
 
             {/* Inspector */}
             <FrankenContainer withBolts={true} withPulse={true} className="bg-black/60 backdrop-blur-2xl border-white/10 shadow-3xl p-0 overflow-hidden flex flex-col min-h-[600px] group/inspector">
