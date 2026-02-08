@@ -73,7 +73,22 @@ export default function FrankenEye({ className }: { className?: string }) {
     );
     observer.observe(el);
 
-    // Reliable blinking logic
+    updateRect();
+    window.addEventListener("scroll", updateRect, { passive: true });
+    window.addEventListener("resize", updateRect, { passive: true });
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("scroll", updateRect);
+      window.removeEventListener("resize", updateRect);
+      if (frameRef.current) cancelAnimationFrame(frameRef.current);
+    };
+  }, [updateRect]);
+
+  // Separate effect for blinking to avoid listener thrashing
+  useEffect(() => {
     const blinkInterval = setInterval(() => {
       if (Math.random() > 0.8 && !isBlinking) {
         setIsBlinking(true);
@@ -82,21 +97,11 @@ export default function FrankenEye({ className }: { className?: string }) {
       }
     }, 2500);
 
-    updateRect();
-    window.addEventListener("scroll", updateRect, { passive: true });
-    window.addEventListener("resize", updateRect, { passive: true });
-    window.addEventListener("mousemove", handleMouseMove, { passive: true });
-    
     return () => {
-      observer.disconnect();
       clearInterval(blinkInterval);
       if (blinkTimeoutRef.current) clearTimeout(blinkTimeoutRef.current);
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("scroll", updateRect);
-      window.removeEventListener("resize", updateRect);
-      if (frameRef.current) cancelAnimationFrame(frameRef.current);
     };
-  }, [updateRect, isBlinking]);
+  }, [isBlinking]);
 
   return (
     <div
