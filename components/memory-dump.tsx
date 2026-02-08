@@ -21,20 +21,22 @@ export default function MemoryDump() {
 
     const hexChars = "0123456789ABCDEF";
     const fontSize = 14;
-    let columns = Math.floor(width / fontSize);
-    let drops: number[] = [];
+    const drops = useRef<number[]>([]);
+    const columns = useRef<number>(0);
 
-    const initDrops = (cols: number, existingDrops: number[] = []) => {
-      const newDrops = [...existingDrops];
+    const initDrops = (cols: number) => {
+      const newDrops = [...drops.current];
       for (let i = 0; i < cols; i++) {
         if (newDrops[i] === undefined) {
           newDrops[i] = Math.random() * -100;
         }
       }
-      return newDrops.slice(0, cols);
+      drops.current = newDrops.slice(0, cols);
+      columns.current = cols;
     };
 
-    drops = initDrops(columns);
+    const newColumns = Math.floor(width / fontSize);
+    initDrops(newColumns);
 
     let animationFrameId: number;
 
@@ -45,14 +47,14 @@ export default function MemoryDump() {
       ctx.fillStyle = "rgba(34, 197, 94, 0.12)";
       ctx.font = `${fontSize}px monospace`;
 
-      for (let i = 0; i < drops.length; i++) {
+      for (let i = 0; i < drops.current.length; i++) {
         const text = hexChars[Math.floor(Math.random() * hexChars.length)];
-        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+        ctx.fillText(text, i * fontSize, drops.current[i] * fontSize);
 
-        if (drops[i] * fontSize > height && Math.random() > 0.975) {
-          drops[i] = 0;
+        if (drops.current[i] * fontSize > height && Math.random() > 0.975) {
+          drops.current[i] = 0;
         }
-        drops[i]++;
+        drops.current[i]++;
       }
       animationFrameId = requestAnimationFrame(draw);
     };
@@ -60,10 +62,9 @@ export default function MemoryDump() {
     const handleResize = () => {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
-      const newColumns = Math.floor(width / fontSize);
-      if (newColumns !== columns) {
-        drops = initDrops(newColumns, drops);
-        columns = newColumns;
+      const nextCols = Math.floor(width / fontSize);
+      if (nextCols !== columns.current) {
+        initDrops(nextCols);
       }
     };
 

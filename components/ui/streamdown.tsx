@@ -242,8 +242,13 @@ function sanitizeHref(rawHref: string): { href: string; isExternal: boolean } | 
 }
 
 function tokenizeInline(text: string): React.ReactNode[] {
-  const re =
-    /(`[^`]+?`|\[[^\]]+?\]\([^)]+?\)|\*\*\*[^*]+?\*\*\*|\*\*[^*]+?\*\*|\*[^*]+?\*)/g;
+  // Regex for inline tokens: 
+  // 1. Triple asterisks (bold-italic)
+  // 2. Double asterisks (bold)
+  // 3. Single asterisk (italic)
+  // 4. Backticks (inline code)
+  // 5. Links [label](url)
+  const re = /(`[^`]+`|\[[^\]]+\]\([^)]+\)|\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*]+\*)/g;
 
   const nodes: React.ReactNode[] = [];
   let lastIndex = 0;
@@ -254,15 +259,15 @@ function tokenizeInline(text: string): React.ReactNode[] {
       nodes.push(text.slice(lastIndex, match.index));
     }
 
-    const token = match[0] ?? "";
+    const token = match[0];
 
-    if (token.startsWith("`") && token.endsWith("`")) {
+    if (token.startsWith("`")) {
       nodes.push(
-        <code className="bg-white/5 border border-white/10 rounded px-1.5 py-0.5 font-mono text-[0.95em] text-green-300">
+        <code key={match.index} className="bg-white/5 border border-white/10 rounded px-1.5 py-0.5 font-mono text-[0.95em] text-green-300">
           {token.slice(1, -1)}
         </code>
       );
-    } else if (token.startsWith("[") && token.includes("](") && token.endsWith(")")) {
+    } else if (token.startsWith("[") && token.includes("](")) {
       const sep = token.indexOf("](");
       const label = token.slice(1, sep);
       const hrefRaw = token.slice(sep + 2, -1);
@@ -273,6 +278,7 @@ function tokenizeInline(text: string): React.ReactNode[] {
       } else {
         nodes.push(
           <a
+            key={match.index}
             href={safe.href}
             target={safe.isExternal ? "_blank" : undefined}
             rel={safe.isExternal ? "noopener noreferrer" : undefined}
@@ -282,17 +288,16 @@ function tokenizeInline(text: string): React.ReactNode[] {
           </a>
         );
       }
-    } else if (token.startsWith("***") && token.endsWith("***")) {
-      const inner = token.slice(3, -3);
+    } else if (token.startsWith("***")) {
       nodes.push(
-        <strong className="text-white font-black italic">
-          <em>{inner}</em>
+        <strong key={match.index} className="text-white font-black">
+          <em className="italic">{token.slice(3, -3)}</em>
         </strong>
       );
-    } else if (token.startsWith("**") && token.endsWith("**")) {
-      nodes.push(<strong className="text-white font-black">{token.slice(2, -2)}</strong>);
-    } else if (token.startsWith("*") && token.endsWith("*")) {
-      nodes.push(<em className="italic text-slate-200">{token.slice(1, -1)}</em>);
+    } else if (token.startsWith("**")) {
+      nodes.push(<strong key={match.index} className="text-white font-black">{token.slice(2, -2)}</strong>);
+    } else if (token.startsWith("*")) {
+      nodes.push(<em key={match.index} className="italic text-slate-200">{token.slice(1, -1)}</em>);
     } else {
       nodes.push(token);
     }
