@@ -9,7 +9,6 @@ import Timeline from "@/components/timeline";
 import TweetWall from "@/components/tweet-wall";
 import FrankenEye from "@/components/franken-eye";
 import { FrankenContainer, NeuralPulse } from "@/components/franken-elements";
-import DecodingText from "@/components/decoding-text";
 import FrankenGlitch from "@/components/franken-glitch";
 
 const keyStats = [

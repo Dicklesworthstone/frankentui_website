@@ -17,7 +17,6 @@ import SectionShell from "@/components/section-shell";
 import RustCodeBlock from "@/components/rust-code-block";
 import FrankenEye from "@/components/franken-eye";
 import { FrankenContainer } from "@/components/franken-elements";
-import DecodingText from "@/components/decoding-text";
 import FrankenGlitch from "@/components/franken-glitch";
 
 export default function GettingStartedPage() {

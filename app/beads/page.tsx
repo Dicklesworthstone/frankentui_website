@@ -6,10 +6,7 @@ import { ArrowRight, Network, Share2, Binary, GitBranch, CheckCircle2, AlertTria
 import { cn } from "@/lib/utils";
 import { FrankenContainer, NeuralPulse } from "@/components/franken-elements";
 import FrankenEye from "@/components/franken-eye";
-import BeadHUD from "@/components/bead-hud";
-import DecodingText from "@/components/decoding-text";
 import dynamic from "next/dynamic";
-import FrankenGlitch from "@/components/franken-glitch";
 
 const BeadsView = dynamic(() => import("@/components/beads/beads-view"), {
   ssr: false,

@@ -7,7 +7,6 @@ import { getAllJargon, searchJargon, type JargonTerm } from "@/lib/jargon";
 import BottomSheet from "@/components/ui/bottom-sheet";
 import FrankenEye from "@/components/franken-eye";
 import { FrankenContainer } from "@/components/franken-elements";
-import DecodingText from "@/components/decoding-text";
 import FrankenGlitch from "@/components/franken-glitch";
 import Streamdown from "@/components/ui/streamdown";
 

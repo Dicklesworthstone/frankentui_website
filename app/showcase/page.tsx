@@ -9,7 +9,6 @@ import SectionShell from "@/components/section-shell";
 import ScreenshotGallery from "@/components/screenshot-gallery";
 import VideoPlayer from "@/components/video-player";
 import FrankenEye from "@/components/franken-eye";
-import DecodingText from "@/components/decoding-text";
 import FrankenGlitch from "@/components/franken-glitch";
 
 export default function ShowcasePage() {

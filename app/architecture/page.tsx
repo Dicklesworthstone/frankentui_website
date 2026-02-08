@@ -22,7 +22,6 @@ import SectionShell from "@/components/section-shell";
 import AlgorithmCard from "@/components/algorithm-card";
 import FrankenEye from "@/components/franken-eye";
 import { FrankenContainer, FrankenStitch } from "@/components/franken-elements";
-import DecodingText from "@/components/decoding-text";
 import FrankenGlitch from "@/components/franken-glitch";
 
 /* ── Pipeline stage data ─────────────────────────────────── */

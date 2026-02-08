@@ -26,7 +26,6 @@ import FrankenEye from "@/components/franken-eye";
 import FrankenGlitch from "@/components/franken-glitch";
 import { FrankenContainer } from "@/components/franken-elements";
 import { Magnetic, BorderBeam } from "@/components/motion-wrapper";
-import DecodingText from "@/components/decoding-text";
 import {
   siteConfig,
   heroStats,
