@@ -2,21 +2,17 @@
 
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
+import { Terminal, Activity } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
 interface TerminalLine {
-  /** The full text to display for this line */
   text: string;
-  /** Style variant for rendering */
   style: "command" | "dim" | "green" | "dashboard-border" | "dashboard-bar" | "dashboard-mixed";
-  /** Delay (ms) before this line starts typing */
   delay: number;
-  /** Characters typed per interval tick (higher = faster) */
   speed: number;
-  /** If true, the line is typed character-by-character; otherwise it appears instantly */
   typed: boolean;
 }
 
@@ -33,7 +29,6 @@ const LINES: TerminalLine[] = [
   { text: "    Compiling ftui v0.1.1", style: "dim", delay: 500, speed: 2, typed: false },
   { text: "     Running target/debug/examples/dashboard", style: "dim", delay: 400, speed: 2, typed: false },
   { text: "", style: "dim", delay: 300, speed: 1, typed: false },
-  // ASCII dashboard -- each line appears as a block
   { text: "┌─ Metrics ──────┐┌─ Events ──────────┐", style: "dashboard-border", delay: 200, speed: 3, typed: false },
   { text: "│ CPU    ██▓░  54%││ 14:32 task.done   │", style: "dashboard-mixed", delay: 100, speed: 3, typed: false },
   { text: "│ Memory ███░  71%││ 14:31 deploy.ok   │", style: "dashboard-mixed", delay: 100, speed: 3, typed: false },
@@ -41,74 +36,43 @@ const LINES: TerminalLine[] = [
   { text: "└────────────────┘└───────────────────┘", style: "dashboard-border", delay: 100, speed: 3, typed: false },
 ];
 
-const TYPING_INTERVAL = 45; // ms per character for typed lines
+const TYPING_SPEED_BASE = 30; // ms per char
 
 /* ------------------------------------------------------------------ */
 /*  Render helpers                                                     */
 /* ------------------------------------------------------------------ */
 
-/** Render a fully-visible line with appropriate colours. */
 function renderLine(line: TerminalLine, partial?: string) {
   const content = partial ?? line.text;
 
   switch (line.style) {
     case "command": {
-      // "$ command" -- green prompt, white command text
       if (content.startsWith("$ ")) {
         return (
           <>
-            <span className="text-green-400 select-none">$ </span>
-            <span className="text-white">{content.slice(2)}</span>
+            <span className="text-green-500 select-none mr-2">$</span>
+            <span className="text-white font-bold">{content.slice(2)}</span>
           </>
         );
       }
       return <span className="text-white">{content}</span>;
     }
-    case "dim":
-      return <span className="text-slate-500">{content}</span>;
-    case "green":
-      return <span className="text-green-400">{content}</span>;
-    case "dashboard-border":
-      return <span className="text-green-400">{content}</span>;
-    case "dashboard-bar":
-      return <span className="text-lime-400">{content}</span>;
+    case "dim": return <span className="text-slate-600">{content}</span>;
+    case "green": return <span className="text-green-400/80">{content}</span>;
+    case "dashboard-border": return <span className="text-green-500/60">{content}</span>;
     case "dashboard-mixed": {
-      // Colourize bar characters and box-drawing differently
       return (
         <span>
           {[...content].map((ch, i) => {
-            if ("│┌┐└┘├┤┬┴┼─".includes(ch)) {
-              return (
-                <span key={i} className="text-green-400">
-                  {ch}
-                </span>
-              );
-            }
-            if ("█▓▒░".includes(ch)) {
-              return (
-                <span key={i} className="text-lime-400">
-                  {ch}
-                </span>
-              );
-            }
-            if (/\d/.test(ch) || ch === "%") {
-              return (
-                <span key={i} className="text-white">
-                  {ch}
-                </span>
-              );
-            }
-            return (
-              <span key={i} className="text-slate-400">
-                {ch}
-              </span>
-            );
+            if ("│┌┐└┘├┤┬┴┼─".includes(ch)) return <span key={i} className="text-green-500/60">{ch}</span>;
+            if ("█▓▒░".includes(ch)) return <span key={i} className="text-green-400">{ch}</span>;
+            if (/\d/.test(ch) || ch === "%") return <span key={i} className="text-white font-bold">{ch}</span>;
+            return <span key={i} className="text-slate-500">{ch}</span>;
           })}
         </span>
       );
     }
-    default:
-      return <span className="text-slate-400">{content}</span>;
+    default: return <span className="text-slate-400">{content}</span>;
   }
 }
 
@@ -122,187 +86,117 @@ export default function TerminalDemo() {
     triggerOnce: true,
   });
 
-  // Detect prefers-reduced-motion
-  const prefersReducedMotion = usePrefersReducedMotion();
-
-  // Animation state
   const [visibleLineIndex, setVisibleLineIndex] = useState(-1);
   const [currentLineChars, setCurrentLineChars] = useState(0);
   const [animationDone, setAnimationDone] = useState(false);
-
   const hasStarted = useRef(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timerRef = useRef<number | null>(null);
 
-  // If reduced motion, skip to the end
-  const showFinal = prefersReducedMotion || animationDone;
+  const advanceLine = (lineIdx: number) => {
+    if (lineIdx >= LINES.length) {
+      setAnimationDone(true);
+      return;
+    }
 
-  // Store advanceLine in a ref to avoid recursive useCallback issues
-  const advanceLineRef = useRef<(lineIdx: number) => void>(() => {});
+    const line = LINES[lineIdx];
+    
+    setTimeout(() => {
+      setVisibleLineIndex(lineIdx);
+      setCurrentLineChars(0);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, []);
-
-  // Install the line-advancer once. It uses per-line delays as "time before this line starts".
-  useEffect(() => {
-    advanceLineRef.current = (lineIdx: number) => {
-      if (lineIdx >= LINES.length) {
-        setAnimationDone(true);
+      if (!line.typed || line.text.length === 0) {
+        setCurrentLineChars(line.text.length);
+        advanceLine(lineIdx + 1);
         return;
       }
 
-      const line = LINES[lineIdx];
+      let charIdx = 0;
+      const typeChar = () => {
+        charIdx = Math.min(charIdx + line.speed, line.text.length);
+        setCurrentLineChars(charIdx);
 
-      // Wait before starting this line (keeps the cursor on the prior line)
-      timerRef.current = setTimeout(() => {
-        // Show this line (starts with 0 visible chars)
-        setVisibleLineIndex(lineIdx);
-        setCurrentLineChars(0);
-
-        if (!line.typed || line.text.length === 0) {
-          // Instant reveal -- show full line, then advance immediately
-          setCurrentLineChars(line.text.length);
-          advanceLineRef.current(lineIdx + 1);
-          return;
+        if (charIdx < line.text.length) {
+          timerRef.current = window.setTimeout(typeChar, TYPING_SPEED_BASE);
+        } else {
+          advanceLine(lineIdx + 1);
         }
-
-        // Type character by character
-        let charIdx = 0;
-        const type = () => {
-          charIdx = Math.min(charIdx + line.speed, line.text.length);
-          setCurrentLineChars(charIdx);
-
-          if (charIdx >= line.text.length) {
-            advanceLineRef.current(lineIdx + 1);
-            return;
-          }
-
-          timerRef.current = setTimeout(type, TYPING_INTERVAL);
-        };
-
-        timerRef.current = setTimeout(type, TYPING_INTERVAL);
-      }, line.delay);
-    };
-  }, []);
+      };
+      timerRef.current = window.setTimeout(typeChar, TYPING_SPEED_BASE);
+    }, line.delay);
+  };
 
   useEffect(() => {
-    if (!isIntersecting || hasStarted.current) return;
-    hasStarted.current = true;
-
-    if (prefersReducedMotion) {
-      // Defer state updates to avoid synchronous setState in effect body
-      const raf = requestAnimationFrame(() => {
-        setVisibleLineIndex(LINES.length - 1);
-        setCurrentLineChars(LINES[LINES.length - 1].text.length);
-        setAnimationDone(true);
-      });
-      return () => cancelAnimationFrame(raf);
+    if (isIntersecting && !hasStarted.current) {
+      hasStarted.current = true;
+      advanceLine(0);
     }
-
-    // Kick off the sequence (line delays are handled per-line)
-    advanceLineRef.current(0);
-  }, [isIntersecting, prefersReducedMotion]);
-
-  /* ---------------------------------------------------------------- */
-  /*  Build rendered lines                                             */
-  /* ---------------------------------------------------------------- */
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [isIntersecting]);
 
   const renderedLines = useMemo(() => {
-    if (showFinal) {
-      // Show everything
-      return LINES.map((line, i) => (
-        <div key={i} className="leading-relaxed whitespace-pre">
-          {renderLine(line)}
-        </div>
-      ));
-    }
-
     const result: React.ReactNode[] = [];
-
     for (let i = 0; i <= visibleLineIndex && i < LINES.length; i++) {
       const line = LINES[i];
       const isCurrentLine = i === visibleLineIndex;
-
-      if (isCurrentLine && line.typed && currentLineChars < line.text.length) {
-        // Partially typed line
-        const partial = line.text.slice(0, currentLineChars);
-        result.push(
-          <div key={i} className="leading-relaxed whitespace-pre">
+      const partial = isCurrentLine && line.typed ? line.text.slice(0, currentLineChars) : line.text;
+      
+      result.push(
+        <div key={i} className="flex gap-2 min-h-[1.5em] items-center">
+          <div className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
             {renderLine(line, partial)}
-            <span className="animate-pulse text-green-400">|</span>
-          </div>
-        );
-      } else {
-        // Fully revealed line
-        result.push(
-          <div key={i} className="leading-relaxed whitespace-pre">
-            {renderLine(line)}
-            {/* Show cursor on the current line if it is done but we haven't moved on yet */}
             {isCurrentLine && !animationDone && (
-              <span className="animate-pulse text-green-400">|</span>
+              <span className="inline-block w-1.5 h-4 bg-green-500 ml-1 animate-pulse" />
             )}
           </div>
-        );
-      }
-    }
-
-    // If nothing visible yet, show just a blinking cursor
-    if (visibleLineIndex < 0 && !animationDone) {
-      result.push(
-        <div key="cursor" className="leading-relaxed whitespace-pre">
-          <span className="animate-pulse text-green-400">|</span>
         </div>
       );
     }
-
     return result;
-  }, [showFinal, visibleLineIndex, currentLineChars, animationDone]);
-
-  /* ---------------------------------------------------------------- */
-  /*  Render                                                           */
-  /* ---------------------------------------------------------------- */
+  }, [visibleLineIndex, currentLineChars, animationDone]);
 
   return (
-    <div ref={ref} className="mx-auto w-full max-w-2xl">
-      <div className="glow-green overflow-hidden rounded-2xl border border-white/10 bg-[#0a0a0a] shadow-2xl shadow-green-950/30">
-        {/* ---- Chrome bar ---- */}
-        <div className="flex items-center gap-3 border-b border-white/5 px-4 py-3">
-          <div className="flex gap-1.5">
-            <div className="h-3 w-3 rounded-full bg-red-500/60" />
-            <div className="h-3 w-3 rounded-full bg-yellow-500/60" />
-            <div className="h-3 w-3 rounded-full bg-green-500/60" />
+    <div ref={ref} className="w-full max-w-3xl mx-auto group">
+      <div className="relative glass-modern rounded-3xl overflow-hidden shadow-2xl border border-white/5 bg-black/60 will-change-transform transition-all duration-700 hover:scale-[1.01] hover:bg-black/80">
+        {/* Terminal Header */}
+        <div className="flex items-center justify-between px-6 py-4 bg-white/5 border-b border-white/5">
+          <div className="flex items-center gap-4">
+            <div className="flex gap-1.5">
+              <div className="h-2.5 w-2.5 rounded-full bg-red-500/40" />
+              <div className="h-2.5 w-2.5 rounded-full bg-yellow-500/40" />
+              <div className="h-2.5 w-2.5 rounded-full bg-green-500/40" />
+            </div>
+            <div className="flex items-center gap-2 text-slate-500">
+              <Terminal className="h-3 w-3 text-green-500/50" />
+              <span className="text-[10px] font-black uppercase tracking-widest">ftui_kernel_stream</span>
+            </div>
           </div>
-          <span className="text-xs text-slate-600">terminal</span>
+          <div className="flex items-center gap-2">
+             <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+             <span className="text-[8px] font-black text-green-500 uppercase tracking-tighter">Live Session</span>
+          </div>
         </div>
 
-        {/* ---- Terminal body ---- */}
-        <div className="px-5 py-4 font-mono text-xs sm:text-sm min-h-[220px]">
+        {/* Terminal Body */}
+        <div className="p-8 font-mono text-sm leading-relaxed min-h-[300px] flex flex-col justify-start">
           {renderedLines}
+          {visibleLineIndex === -1 && (
+             <div className="flex items-center gap-2">
+                <span className="text-green-500 select-none">$</span>
+                <span className="inline-block w-1.5 h-4 bg-green-500 animate-pulse" />
+             </div>
+          )}
+        </div>
+
+        {/* Status Overlay */}
+        <div className="absolute bottom-4 right-6 px-3 py-1 rounded-lg bg-green-500/5 border border-green-500/10 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+           <div className="flex items-center gap-2">
+              <Activity className="h-3 w-3 text-green-500" />
+              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Process Active</span>
+           </div>
         </div>
       </div>
     </div>
   );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Hook: prefers-reduced-motion                                       */
-/* ------------------------------------------------------------------ */
-
-function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  });
-
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const handler = (e: MediaQueryListEvent) => setReduced(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-
-  return reduced;
 }

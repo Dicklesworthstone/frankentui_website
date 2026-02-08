@@ -1,64 +1,22 @@
-import type { Metadata } from "next";
-import Link from "next/link";
-import {
-  Package,
-  Terminal,
-  Layers,
-  ArrowRight,
-  Github,
-  BookOpen,
-} from "lucide-react";
-import {
-  codeExample, dashboardExample, inlineModeExample, faq, siteConfig,
-  widgets, featureFlags, screenModes, troubleshooting, envVars,
-  glyphOverrides, visualFxExample, keybindingExample,
-  type Widget, type FeatureFlag, type ScreenModeRow, type TroubleshootItem, type EnvVar,
-  type GlyphOverride,
-} from "@/lib/content";
-import SectionShell from "@/components/section-shell";
-import RustCodeBlock from "@/components/rust-code-block";
-import CrateGrid from "@/components/crate-grid";
-import FrankenEye from "@/components/franken-eye";
-import { FrankenContainer } from "@/components/franken-elements";
-
-export const metadata: Metadata = {
-  title: "Get Started",
-  description:
-    "Install FrankenTUI and build your first terminal UI application in Rust",
-};
-
 "use client";
 
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
-  Package,
   Terminal,
   Layers,
   ArrowRight,
-  Github,
-  BookOpen,
   Rocket,
-  Shield,
-  Binary,
   Activity,
-  Box,
   Copy,
   Check,
 } from "lucide-react";
 import { useState } from "react";
-import {
-  codeExample, dashboardExample, inlineModeExample, faq, siteConfig,
-  widgets, featureFlags, screenModes, troubleshooting, envVars,
-  glyphOverrides, visualFxExample, keybindingExample,
-  type Widget, type FeatureFlag, type ScreenModeRow, type TroubleshootItem, type EnvVar,
-  type GlyphOverride,
-} from "@/lib/content";
+import { codeExample, faq } from "@/lib/content";
 import SectionShell from "@/components/section-shell";
 import RustCodeBlock from "@/components/rust-code-block";
-import CrateGrid from "@/components/crate-grid";
 import FrankenEye from "@/components/franken-eye";
-import { FrankenBolt, FrankenContainer } from "@/components/franken-elements";
+import { FrankenContainer } from "@/components/franken-elements";
 
 export default function GettingStartedPage() {
   const [copied, setCopied] = useState(false);

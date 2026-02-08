@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import {
   BarChart3,
   Blocks,
+  Bug,
   Clock,
   Cpu,
   Eye,
@@ -30,6 +31,7 @@ import { FrankenStitch } from "./franken-elements";
 const sectionIcons = {
   barChart3: BarChart3,
   blocks: Blocks,
+  bug: Bug,
   clock: Clock,
   cpu: Cpu,
   eye: Eye,
