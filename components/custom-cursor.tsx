@@ -80,7 +80,10 @@ export default function CustomCursor() {
   useEffect(() => {
     if (prefersReducedMotion) return undefined;
 
-    const media = window.matchMedia("(min-width: 768px)");
+    const media = window.matchMedia("(min-width: 768px)") as MediaQueryList & {
+      addListener?: (listener: (this: MediaQueryList, ev: MediaQueryListEvent) => void) => void;
+      removeListener?: (listener: (this: MediaQueryList, ev: MediaQueryListEvent) => void) => void;
+    };
     let enabled = false;
     let rafId: number | null = null;
     let last: { clientX: number; clientY: number; target: HTMLElement | null } | null = null;
@@ -189,12 +192,16 @@ export default function CustomCursor() {
     onMediaChange();
 
     // Safari fallback: matchMedia uses addListener/removeListener
-    if ("addEventListener" in media) {
+    if (typeof media.addEventListener === "function") {
       media.addEventListener("change", onMediaChange);
       return () => {
         media.removeEventListener("change", onMediaChange);
         disable();
       };
+    }
+
+    if (typeof media.addListener !== "function") {
+      return () => disable();
     }
 
     media.addListener(onMediaChange);
