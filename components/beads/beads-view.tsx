@@ -79,9 +79,6 @@ function StatusPill({ status }: { status: string }) {
   );
 }
 
-/**
- * Portal component for Modals to avoid parent transform issues
- */
 function Portal({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -163,7 +160,6 @@ export default function BeadsView() {
     }
   }, [sqlLoaded, db]);
 
-  // Initial load check
   useEffect(() => {
     // @ts-ignore
     if (window.initSqlJs && !sqlLoaded) {
@@ -223,7 +219,7 @@ export default function BeadsView() {
 
   const renderGraph = useCallback(() => {
     // @ts-ignore
-    if (!db || !containerRef.current || !forceGraphLoaded || !window.ForceGraph) return;
+    if (!db || !containerRef.current || !forceGraphLoaded || !d3Loaded || !window.ForceGraph) return;
 
     try {
       containerRef.current.innerHTML = "";
@@ -259,11 +255,10 @@ export default function BeadsView() {
         .linkDirectionalParticleWidth(2)
         .backgroundColor("rgba(0,0,0,0)")
         .width(containerRef.current.clientWidth)
-        .height(containerRef.current.clientHeight || 600)
+        .height(containerRef.current.clientHeight || 650)
         .nodeCanvasObject((node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
           const size = (5 - node.priority) * 2 + 4;
           
-          // Glow
           ctx.shadowColor = STATUS_COLORS[node.status] || THEME.green;
           ctx.shadowBlur = 10 / globalScale;
           
@@ -307,20 +302,18 @@ export default function BeadsView() {
 
       graphRef.current = Graph;
 
-      // Handle Resize
       const resizeObserver = new ResizeObserver(() => {
         if (containerRef.current && Graph) {
           Graph.width(containerRef.current.clientWidth);
-          Graph.height(containerRef.current.clientHeight || 600);
+          Graph.height(containerRef.current.clientHeight || 650);
         }
       });
       resizeObserver.observe(containerRef.current);
-
       return () => resizeObserver.disconnect();
     } catch (err) {
       console.error("Graph render error:", err);
     }
-  }, [db, forceGraphLoaded]);
+  }, [db, forceGraphLoaded, d3Loaded]);
 
   useEffect(() => {
     if (!loading && db && forceGraphLoaded && d3Loaded) {
@@ -339,304 +332,172 @@ export default function BeadsView() {
     );
   }, [issues, searchQuery]);
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[600px] w-full bg-black/40 rounded-3xl border border-green-500/10 backdrop-blur-xl overflow-hidden relative">
-        <Script 
-          src="/beads-viewer/vendor/sql-wasm.js" 
-          onLoad={() => setSqlLoaded(true)}
-        />
-        <Script 
-          src="/beads-viewer/vendor/d3.v7.min.js" 
-          onLoad={() => setD3Loaded(true)}
-        />
-        <Script 
-          src="/beads-viewer/vendor/force-graph.min.js" 
-          onLoad={() => setForceGraphLoaded(true)}
-        />
-        <NeuralPulse />
-        <motion.div 
-          animate={{ scale: [1, 1.1, 1], opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="relative h-24 w-24 mb-8"
-        >
-          <div className="absolute inset-0 border-4 border-green-500/20 rounded-full" />
-          <div className="absolute inset-0 border-t-4 border-green-500 rounded-full animate-spin" />
-          <Binary className="absolute inset-0 m-auto h-8 w-8 text-green-500" />
-        </motion.div>
-        <p className={cn("text-sm font-black uppercase tracking-[0.4em]", error ? "text-red-500" : "text-green-500 animate-pulse")}>
-          {loadingMessage}
-        </p>
-        {error && (
-          <div className="mt-6 flex flex-col items-center gap-4">
-            <p className="text-xs text-red-400 font-mono max-w-md text-center bg-red-500/10 p-4 rounded-xl border border-red-500/20">{error}</p>
-            <button onClick={() => window.location.reload()} className="px-6 py-2 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all">Retry_System_Load</button>
-          </div>
-        )}
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col gap-12 w-full">
-      <Script 
-        src="/beads-viewer/vendor/sql-wasm.js" 
-        onLoad={() => setSqlLoaded(true)}
-      />
-      <Script 
-        src="/beads-viewer/vendor/d3.v7.min.js" 
-        onLoad={() => setD3Loaded(true)}
-      />
-      <Script 
-        src="/beads-viewer/vendor/force-graph.min.js" 
-        onLoad={() => setForceGraphLoaded(true)}
-      />
+    <div className="flex flex-col gap-12 w-full min-h-[800px] relative">
+      <Script src="/beads-viewer/vendor/sql-wasm.js" onLoad={() => setSqlLoaded(true)} />
+      <Script src="/beads-viewer/vendor/d3.v7.min.js" onLoad={() => setD3Loaded(true)} />
+      <Script src="/beads-viewer/vendor/force-graph.min.js" onLoad={() => setForceGraphLoaded(true)} />
 
-      {/* --- 1. GLOBAL TELEMETRY --- */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: "OPEN", key: "open", color: THEME.green, icon: Activity },
-          { label: "ACTIVE", key: "in_progress", color: THEME.amber, icon: Zap },
-          { label: "BLOCKED", key: "blocked", color: THEME.red, icon: AlertTriangle },
-          { label: "RESOLVED", key: "closed", color: THEME.slate, icon: Shield }
-        ].map((stat) => (
-          <FrankenContainer key={stat.key} withPulse={true} className="p-6 bg-black/40 border-white/5 group">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 group-hover:text-white transition-colors">{stat.label}</span>
-              <stat.icon className="h-3 w-3" style={{ color: stat.color }} />
-            </div>
-            <div className="flex items-baseline gap-2">
-              <p className="text-4xl font-black text-white tabular-nums">{stats?.[stat.key] || 0}</p>
-              <span className="text-[10px] font-bold text-slate-700">/ {stats?.total || 0}</span>
-            </div>
-            <div className="mt-6 h-1 w-full rounded-full overflow-hidden bg-white/5">
-              <motion.div 
-                initial={{ width: 0 }}
-                animate={{ width: `${((stats?.[stat.key] || 0) / (stats?.total || 1)) * 100}%` }}
-                className="h-full shadow-[0_0_8px_currentColor]"
-                style={{ backgroundColor: stat.color, color: stat.color }}
-              />
-            </div>
-          </FrankenContainer>
-        ))}
-      </div>
-
-      {/* --- 2. MAIN VISTA (GRAPH + LOG) --- */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-stretch">
-        <div className="xl:col-span-2 min-h-[650px] relative rounded-[2.5rem] border border-green-500/10 overflow-hidden bg-[#010501] shadow-2xl">
-          <NeuralPulse className="opacity-20" />
-          <div ref={containerRef} className="w-full h-full min-h-[650px]" />
-          
-          <BeadHUD />
-
-          {/* Graph Controls */}
-          <div className="absolute top-8 right-8 flex flex-col gap-3 pointer-events-auto">
-            <button 
-              onClick={() => graphRef.current?.zoom(graphRef.current.zoom() * 1.5, 400)}
-              className="h-12 w-12 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 text-slate-400 flex items-center justify-center hover:bg-green-500 hover:text-black hover:border-green-400 transition-all shadow-2xl group"
-              title="Zoom In"
-            >
-              <Maximize2 className="h-5 w-5 group-hover:scale-110 transition-transform" />
-            </button>
-            <button 
-              onClick={() => graphRef.current?.zoomToFit(600, 80)}
-              className="h-12 w-12 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 text-slate-400 flex items-center justify-center hover:bg-green-500 hover:text-black hover:border-green-400 transition-all shadow-2xl group"
-              title="Reset View"
-            >
-              <Network className="h-5 w-5 group-hover:rotate-180 transition-transform duration-700" />
-            </button>
-          </div>
-
-          {/* Legend Overlay */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-8 px-8 py-4 rounded-full bg-black/80 backdrop-blur-2xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
-            {Object.entries(STATUS_COLORS).map(([status, color]) => (
-              <div key={status} className="flex items-center gap-3 text-white">
-                <div className="h-2 w-2 rounded-full shadow-[0_0_10px_currentColor] animate-pulse" style={{ backgroundColor: color, color }} />
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{status}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Synaptic Activity Log */}
-        <div className="space-y-6 flex flex-col h-full">
-          <div className="flex items-center gap-3 text-slate-500 px-2">
-            <Clock className="h-5 w-5" />
-            <h3 className="text-lg font-black text-white uppercase tracking-widest">Neural_Activity</h3>
-          </div>
-          <div className="flex-1 rounded-[2.5rem] border border-white/5 bg-black/40 relative overflow-hidden group p-8">
-            <NeuralPulse className="opacity-0 group-hover:opacity-20 transition-opacity" />
-            <div className="space-y-8 relative z-10">
-              {issues.slice(0, 8).map((issue) => (
-                <div 
-                  key={issue.id} 
-                  className="relative pl-8 border-l border-white/10 group/item cursor-pointer"
-                  onClick={() => setSelectedIssue(issue)}
-                >
-                  <div className="absolute left-[-4.5px] top-0 h-2 w-2 rounded-full bg-green-500/20 group-hover/item:bg-green-500 group-hover/item:shadow-[0_0_10px_#22c55e] transition-all" />
-                  <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2 group-hover/item:text-green-500/60 transition-colors">{formatDate(issue.updated_at)}</p>
-                  <h5 className="text-sm font-bold text-slate-400 group-hover/item:text-white transition-colors leading-relaxed line-clamp-2">{issue.title}</h5>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* --- 3. SEARCH & LEDGER --- */}
-      <div className="space-y-8">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-6 border-b border-white/5 pb-8">
-          <div className="flex items-center gap-3">
-            <ListIcon className="h-5 w-5 text-green-500" />
-            <FrankenGlitch trigger="hover" intensity="low">
-              <h3 className="text-xl font-black text-white uppercase tracking-widest">Priority_Ledger</h3>
-            </FrankenGlitch>
-          </div>
-
-          <div className="relative group w-full lg:w-96">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600 group-focus-within:text-green-500 transition-colors" />
-            <input 
-              type="text"
-              placeholder="SCAN_ARCHIVE_DATA..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 pr-6 py-4 bg-black/60 border border-white/10 rounded-2xl text-[11px] font-black text-white placeholder-slate-700 focus:outline-none focus:border-green-500/50 w-full transition-all"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredIssues.map((issue) => (
-            <button 
-              key={issue.id}
-              onClick={() => setSelectedIssue(issue)}
-              className="w-full text-left group focus:outline-none"
-            >
-              <FrankenContainer withStitches={false} withPulse={true} className="p-6 bg-black/40 border-white/5 hover:border-green-500/20 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                <div className="flex items-center gap-8 relative z-10">
-                  <span className="font-mono text-[11px] font-black text-slate-700 group-hover:text-green-500/60 transition-colors w-20 tracking-tighter">
-                    {issue.id}
-                  </span>
-                  <div className="h-10 w-px bg-white/5 hidden sm:block" />
-                  <div>
-                    <h4 className="text-base font-black text-white group-hover:text-green-400 transition-colors leading-tight line-clamp-1">
-                      {issue.title}
-                    </h4>
-                    <div className="flex items-center gap-4 mt-2">
-                      <StatusPill status={issue.status} />
-                      <div className="flex items-center gap-2 text-[9px] font-black text-slate-600 uppercase tracking-widest">
-                         <Binary className="h-3 w-3" />
-                         {issue.issue_type}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-8 relative z-10 sm:text-right">
-                  <div className="flex flex-col sm:items-end">
-                    <span className="text-[8px] font-black text-slate-700 uppercase tracking-[0.3em] mb-1">Assigned_To</span>
-                    <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
-                      <User className="h-3.5 w-3.5 text-slate-600" />
-                      {issue.assignee || "UNASSIGNED"}
-                    </div>
-                  </div>
-                  <ChevronRight className="h-6 w-6 text-slate-800 group-hover:text-green-500 transition-all group-hover:translate-x-1" />
-                </div>
-              </FrankenContainer>
-            </button>
-          ))}
-          
-          {filteredIssues.length === 0 && (
-            <div className="col-span-full py-24 text-center opacity-30">
-               <AlertTriangle className="h-16 w-16 mx-auto mb-6" />
-               <p className="text-xl font-black uppercase tracking-widest">No matching synapses found</p>
+      {loading ? (
+        <div className="flex flex-col items-center justify-center min-h-[600px] w-full bg-black/40 rounded-3xl border border-green-500/10 backdrop-blur-xl overflow-hidden relative">
+          <NeuralPulse />
+          <motion.div animate={{ scale: [1, 1.1, 1], opacity: [0.5, 1, 0.5] }} transition={{ duration: 2, repeat: Infinity }} className="relative h-24 w-24 mb-8">
+            <div className="absolute inset-0 border-4 border-green-500/20 rounded-full" />
+            <div className="absolute inset-0 border-t-4 border-green-500 rounded-full animate-spin" />
+            <Binary className="absolute inset-0 m-auto h-8 w-8 text-green-500" />
+          </motion.div>
+          <p className={cn("text-sm font-black uppercase tracking-[0.4em]", error ? "text-red-500" : "text-green-500 animate-pulse")}>{loadingMessage}</p>
+          {error && (
+            <div className="mt-6 flex flex-col items-center gap-4">
+              <p className="text-xs text-red-400 font-mono max-w-md text-center bg-red-500/10 p-4 rounded-xl border border-red-500/20">{error}</p>
+              <button onClick={() => window.location.reload()} className="px-6 py-2 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all">Retry_System_Load</button>
             </div>
           )}
         </div>
-      </div>
+      ) : (
+        <>
+          {/* --- 1. GLOBAL TELEMETRY --- */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { label: "OPEN", key: "open", color: THEME.green, icon: Activity },
+              { label: "ACTIVE", key: "in_progress", color: THEME.amber, icon: Zap },
+              { label: "BLOCKED", key: "blocked", color: THEME.red, icon: AlertTriangle },
+              { label: "RESOLVED", key: "closed", color: THEME.slate, icon: Shield }
+            ].map((stat) => (
+              <FrankenContainer key={stat.key} withPulse={true} className="p-6 bg-black/40 border-white/5 group">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 group-hover:text-white transition-colors">{stat.label}</span>
+                  <stat.icon className="h-3 w-3" style={{ color: stat.color }} />
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-4xl font-black text-white tabular-nums">{stats?.[stat.key] || 0}</p>
+                  <span className="text-[10px] font-bold text-slate-700">/ {stats?.total || 0}</span>
+                </div>
+                <div className="mt-6 h-1 w-full rounded-full overflow-hidden bg-white/5">
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${((stats?.[stat.key] || 0) / (stats?.total || 1)) * 100}%` }} className="h-full shadow-[0_0_8px_currentColor]" style={{ backgroundColor: stat.color, color: stat.color }} />
+                </div>
+              </FrankenContainer>
+            ))}
+          </div>
+
+          {/* --- 2. MAIN VISTA --- */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-stretch">
+            <div className="xl:col-span-2 min-h-[650px] relative rounded-[2.5rem] border border-green-500/10 overflow-hidden bg-[#010501] shadow-2xl">
+              <NeuralPulse className="opacity-20" />
+              <div ref={containerRef} className="w-full h-full min-h-[650px]" />
+              <BeadHUD />
+              <div className="absolute top-8 right-8 flex flex-col gap-3 pointer-events-auto">
+                <button onClick={() => graphRef.current?.zoom(graphRef.current.zoom() * 1.5, 400)} className="h-12 w-12 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 text-slate-400 flex items-center justify-center hover:bg-green-500 hover:text-black hover:border-green-400 transition-all shadow-2xl group"><Maximize2 className="h-5 w-5 group-hover:scale-110 transition-transform" /></button>
+                <button onClick={() => graphRef.current?.zoomToFit(600, 80)} className="h-12 w-12 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 text-slate-400 flex items-center justify-center hover:bg-green-500 hover:text-black hover:border-green-400 transition-all shadow-2xl group"><Network className="h-5 w-5 group-hover:rotate-180 transition-transform duration-700" /></button>
+              </div>
+              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-8 px-8 py-4 rounded-full bg-black/80 backdrop-blur-2xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                {Object.entries(STATUS_COLORS).map(([status, color]) => (
+                  <div key={status} className="flex items-center gap-3 text-white">
+                    <div className="h-2 w-2 rounded-full shadow-[0_0_10px_currentColor] animate-pulse" style={{ backgroundColor: color, color }} />
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{status}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-6 flex flex-col h-full text-left">
+              <div className="flex items-center gap-3 text-slate-500 px-2">
+                <Clock className="h-5 w-5" />
+                <h3 className="text-lg font-black text-white uppercase tracking-widest">Neural_Activity</h3>
+              </div>
+              <div className="flex-1 rounded-[2.5rem] border border-white/5 bg-black/40 relative overflow-hidden group p-8">
+                <NeuralPulse className="opacity-0 group-hover:opacity-20 transition-opacity" />
+                <div className="space-y-8 relative z-10">
+                  {issues.slice(0, 8).map((issue) => (
+                    <div key={issue.id} className="relative pl-8 border-l border-white/10 group/item cursor-pointer" onClick={() => setSelectedIssue(issue)}>
+                      <div className="absolute left-[-4.5px] top-0 h-2 w-2 rounded-full bg-green-500/20 group-hover/item:bg-green-500 group-hover/item:shadow-[0_0_10px_#22c55e] transition-all" />
+                      <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2 group-hover/item:text-green-500/60 transition-colors">{formatDate(issue.updated_at)}</p>
+                      <h5 className="text-sm font-bold text-slate-400 group-hover/item:text-white transition-colors leading-relaxed line-clamp-2">{issue.title}</h5>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* --- 3. SEARCH & LEDGER --- */}
+          <div className="space-y-8">
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-6 border-b border-white/5 pb-8">
+              <div className="flex items-center gap-3">
+                <ListIcon className="h-5 w-5 text-green-500" />
+                <FrankenGlitch trigger="hover" intensity="low">
+                  <h3 className="text-xl font-black text-white uppercase tracking-widest">Priority_Ledger</h3>
+                </FrankenGlitch>
+              </div>
+              <div className="relative group w-full lg:w-96">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600 group-focus-within:text-green-500 transition-colors" />
+                <input type="text" placeholder="SCAN_ARCHIVE_DATA..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-12 pr-6 py-4 bg-black/60 border border-white/10 rounded-2xl text-[11px] font-black text-white placeholder-slate-700 focus:outline-none focus:border-green-500/50 w-full transition-all" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredIssues.map((issue) => (
+                <button key={issue.id} onClick={() => setSelectedIssue(issue)} className="w-full text-left group focus:outline-none">
+                  <FrankenContainer withStitches={false} withPulse={true} className="p-6 bg-black/40 border-white/5 hover:border-green-500/20 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                    <div className="flex items-center gap-8 relative z-10 text-left">
+                      <span className="font-mono text-[11px] font-black text-slate-700 group-hover:text-green-500/60 transition-colors w-20 tracking-tighter">{issue.id}</span>
+                      <div className="h-10 w-px bg-white/5 hidden sm:block" />
+                      <div>
+                        <h4 className="text-base font-black text-white group-hover:text-green-400 transition-colors leading-tight line-clamp-1">{issue.title}</h4>
+                        <div className="flex items-center gap-4 mt-2">
+                          <StatusPill status={issue.status} />
+                          <div className="flex items-center gap-2 text-[9px] font-black text-slate-600 uppercase tracking-widest"><Binary className="h-3 w-3" />{issue.issue_type}</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-8 relative z-10 sm:text-right">
+                      <div className="flex flex-col sm:items-end">
+                        <span className="text-[8px] font-black text-slate-700 uppercase tracking-[0.3em] mb-1">Assigned_To</span>
+                        <div className="flex items-center gap-2 text-xs font-bold text-slate-400"><User className="h-3.5 w-3.5 text-slate-600" />{issue.assignee || "UNASSIGNED"}</div>
+                      </div>
+                      <div className="h-10 w-px bg-white/5 hidden sm:block" />
+                      <ChevronRight className="h-6 w-6 text-slate-800 group-hover:text-green-500 transition-all group-hover:translate-x-1" />
+                    </div>
+                  </FrankenContainer>
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* --- Detailed Synapse Portal (Modal) --- */}
       <AnimatePresence>
         {selectedIssue && (
           <Portal>
             <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-12">
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setSelectedIssue(null)}
-                className="absolute inset-0 bg-black/95 backdrop-blur-2xl"
-              />
-              
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95, y: 40 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 40 }}
-                className="relative w-full max-w-5xl max-h-full overflow-hidden shadow-[0_0_100px_rgba(34,197,94,0.15)]"
-              >
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedIssue(null)} className="absolute inset-0 bg-black/95 backdrop-blur-2xl" />
+              <motion.div initial={{ opacity: 0, scale: 0.95, y: 40 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 40 }} className="relative w-full max-w-5xl max-h-full overflow-hidden shadow-[0_0_100px_rgba(34,197,94,0.15)] text-left">
                 <FrankenContainer withPulse={true} className="bg-[#020a02] border-green-500/20 overflow-hidden flex flex-col max-h-[90vh]">
-                  {/* Protocol Header */}
                   <div className="p-10 border-b border-white/5 flex items-start justify-between bg-white/[0.02] relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-2 opacity-5 pointer-events-none">
-                       <Binary className="h-64 w-64 rotate-12" />
-                    </div>
-                    
+                    <div className="absolute top-0 right-0 p-2 opacity-5 pointer-events-none"><Binary className="h-64 w-64 rotate-12" /></div>
                     <div className="space-y-6 relative z-10">
                       <div className="flex items-center gap-4">
                         <span className="px-4 py-1.5 rounded-xl bg-green-500 text-black text-[11px] font-black uppercase tracking-widest shadow-lg shadow-green-500/20">{selectedIssue.id}</span>
                         <StatusPill status={selectedIssue.status} />
-                        <div className="flex items-center gap-2 text-[10px] font-black text-slate-600 uppercase tracking-widest border-l border-white/10 pl-4 ml-2">
-                           <Activity className="h-3 w-3" />
-                           Priority_P{selectedIssue.priority}
-                        </div>
+                        <div className="flex items-center gap-2 text-[10px] font-black text-slate-600 uppercase tracking-widest border-l border-white/10 pl-4 ml-2"><Activity className="h-3 w-3" />Priority_P{selectedIssue.priority}</div>
                       </div>
-                      <FrankenGlitch trigger="always" intensity="low">
-                        <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-tight max-w-3xl">{selectedIssue.title}</h2>
-                      </FrankenGlitch>
+                      <FrankenGlitch trigger="always" intensity="low"><h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-tight max-w-3xl">{selectedIssue.title}</h2></FrankenGlitch>
                     </div>
-                    <button 
-                      onClick={() => setSelectedIssue(null)}
-                      className="h-14 w-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-500 hover:bg-white/10 hover:text-white transition-all group"
-                    >
-                      <X className="h-7 w-7 group-hover:rotate-90 transition-transform duration-500" />
-                    </button>
+                    <button onClick={() => setSelectedIssue(null)} className="h-14 w-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-500 hover:bg-white/10 hover:text-white transition-all group"><X className="h-7 w-7 group-hover:rotate-90 transition-transform duration-500" /></button>
                   </div>
-
-                  {/* Substrate Body */}
                   <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-16">
                       <div className="xl:col-span-2 space-y-12">
                         <div className="space-y-6">
-                          <div className="flex items-center gap-3">
-                             <Info className="h-4 w-4 text-green-500/60" />
-                             <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em]">Synapse_Descriptor</h4>
-                          </div>
-                          <div className="text-slate-300 text-xl leading-relaxed font-medium">
-                            {selectedIssue.description || "System log empty. Descriptor required for complete synchronization."}
-                          </div>
+                          <div className="flex items-center gap-3"><Info className="h-4 w-4 text-green-500/60" /><h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em]">Synapse_Descriptor</h4></div>
+                          <div className="text-slate-300 text-xl leading-relaxed font-medium">{selectedIssue.description || "System log empty. Descriptor required for complete synchronization."}</div>
                         </div>
-
-                        {/* Technical Blueprint Table */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/5 rounded-[2rem] overflow-hidden border border-white/5">
-                          <div className="p-6 bg-black/40">
-                            <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Type</span>
-                            <p className="text-sm font-bold text-white mt-2 capitalize">{selectedIssue.issue_type}</p>
-                          </div>
-                          <div className="p-6 bg-black/40">
-                            <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Impact</span>
-                            <p className="text-sm font-bold text-green-400 mt-2">+{selectedIssue.blocks_count || 0} Nodes</p>
-                          </div>
-                          <div className="p-6 bg-black/40">
-                            <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Born</span>
-                            <p className="text-sm font-bold text-slate-400 mt-2">{formatDate(selectedIssue.created_at)}</p>
-                          </div>
-                          <div className="p-6 bg-black/40">
-                            <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Updated</span>
-                            <p className="text-sm font-bold text-slate-400 mt-2">{formatDate(selectedIssue.updated_at)}</p>
-                          </div>
+                          <div className="p-6 bg-black/40"><span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Type</span><p className="text-sm font-bold text-white mt-2 capitalize">{selectedIssue.issue_type}</p></div>
+                          <div className="p-6 bg-black/40"><span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Impact</span><p className="text-sm font-bold text-green-400 mt-2">+{selectedIssue.blocks_count || 0} Nodes</p></div>
+                          <div className="p-6 bg-black/40"><span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Born</span><p className="text-sm font-bold text-slate-400 mt-2">{formatDate(selectedIssue.created_at)}</p></div>
+                          <div className="p-6 bg-black/40"><span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Updated</span><p className="text-sm font-bold text-slate-400 mt-2">{formatDate(selectedIssue.updated_at)}</p></div>
                         </div>
-                        
-                        {/* Labels / Fragments */}
                         {selectedIssue.labels && (
                           <div className="space-y-4">
                              <h4 className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em]">Neural_Fragments</h4>
@@ -653,57 +514,33 @@ export default function BeadsView() {
                           </div>
                         )}
                       </div>
-
                       <div className="space-y-10">
-                        {/* Custodian Detail */}
-                        <div className="space-y-8">
-                          <div className="p-8 rounded-[2.5rem] border border-white/5 bg-white/[0.02] group">
-                            <span className="text-[9px] font-black text-slate-600 uppercase tracking-[0.4em] block mb-6">Neural_Custodian</span>
-                            <div className="flex items-center gap-5">
-                              <div className="h-14 w-14 rounded-[1.25rem] bg-gradient-to-tr from-green-600 via-green-400 to-emerald-300 flex items-center justify-center text-black font-black text-xl uppercase shadow-[0_0_30px_rgba(34,197,94,0.3)]">
-                                {selectedIssue.assignee ? selectedIssue.assignee[0] : "?"}
-                              </div>
-                              <div>
-                                <p className="text-lg font-black text-white">{selectedIssue.assignee || "UNASSIGNED"}</p>
-                                <div className="flex items-center gap-2 mt-1">
-                                   <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-                                   <p className="text-[9px] font-black text-green-500/60 uppercase tracking-widest uppercase">Validated_Engineer</p>
-                                </div>
-                              </div>
+                        <div className="p-8 rounded-[2.5rem] border border-white/5 bg-white/[0.02] group">
+                          <span className="text-[9px] font-black text-slate-600 uppercase tracking-[0.4em] block mb-6">Neural_Custodian</span>
+                          <div className="flex items-center gap-5">
+                            <div className="h-14 w-14 rounded-[1.25rem] bg-gradient-to-tr from-green-600 via-green-400 to-emerald-300 flex items-center justify-center text-black font-black text-xl uppercase shadow-[0_0_30px_rgba(34,197,94,0.3)]">{selectedIssue.assignee ? selectedIssue.assignee[0] : "?"}</div>
+                            <div>
+                              <p className="text-lg font-black text-white">{selectedIssue.assignee || "UNASSIGNED"}</p>
+                              <div className="flex items-center gap-2 mt-1"><div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" /><p className="text-[9px] font-black text-green-500/60 uppercase tracking-widest">Validated_Engineer</p></div>
                             </div>
                           </div>
-
-                          <div className="p-8 rounded-[2.5rem] border border-white/5 bg-white/[0.02]">
-                            <span className="text-[9px] font-black text-slate-600 uppercase tracking-[0.4em] block mb-6">Downstream_Cascade</span>
-                            <div className="space-y-5">
-                              <div className="flex items-center justify-between p-4 rounded-2xl bg-black/20 border border-white/5">
-                                <span className="text-xs font-bold text-slate-500">Unlocks</span>
-                                <span className="text-sm font-mono font-black text-green-500">{selectedIssue.blocks_count || 0}</span>
-                              </div>
-                              <div className="flex items-center justify-between p-4 rounded-2xl bg-black/20 border border-white/5">
-                                <span className="text-xs font-bold text-slate-500">Blockers</span>
-                                <span className="text-sm font-mono font-black text-red-500">{selectedIssue.blocked_by_count || 0}</span>
-                              </div>
-                            </div>
+                        </div>
+                        <div className="p-8 rounded-[2.5rem] border border-white/5 bg-white/[0.02]">
+                          <span className="text-[9px] font-black text-slate-600 uppercase tracking-[0.4em] block mb-6">Downstream_Cascade</span>
+                          <div className="space-y-5">
+                            <div className="flex items-center justify-between p-4 rounded-2xl bg-black/20 border border-white/5"><span className="text-xs font-bold text-slate-500">Unlocks</span><span className="text-sm font-mono font-black text-green-500">{selectedIssue.blocks_count || 0}</span></div>
+                            <div className="flex items-center justify-between p-4 rounded-2xl bg-black/20 border border-white/5"><span className="text-xs font-bold text-slate-500">Blockers</span><span className="text-sm font-mono font-black text-red-500">{selectedIssue.blocked_by_count || 0}</span></div>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-
-                  {/* Secure Protocol Footer */}
                   <div className="p-8 border-t border-white/5 bg-white/[0.01] flex items-center justify-between">
                     <div className="flex items-center gap-3 text-[10px] font-black text-slate-700 uppercase tracking-widest text-left">
                       <Shield className="h-4 w-4 text-green-500/40" />
                       <span>Integrity_Verified_v1.0.4 <br/> <span className="opacity-40">System_Secure</span></span>
                     </div>
-                    <button 
-                      onClick={() => setSelectedIssue(null)}
-                      data-magnetic="true"
-                      className="px-10 py-4 rounded-2xl bg-green-500 text-black text-[11px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-[0_0_40px_rgba(34,197,94,0.3)] active:scale-95"
-                    >
-                      CLOSE_PORTAL
-                    </button>
+                    <button onClick={() => setSelectedIssue(null)} data-magnetic="true" className="px-10 py-4 rounded-2xl bg-green-500 text-black text-[11px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-[0_0_40px_rgba(34,197,94,0.3)] active:scale-95">CLOSE_PORTAL</button>
                   </div>
                 </FrankenContainer>
               </motion.div>
