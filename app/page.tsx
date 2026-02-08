@@ -44,7 +44,7 @@ export default function HomePage() {
       {/* ================================================================
           1. LIVING HERO (Stripe-Grade Visuals)
           ================================================================ */}
-      <section className="relative flex flex-col items-center pt-24 pb-10 overflow-hidden text-left">
+      <section className="relative flex flex-col items-center pt-24 pb-32 overflow-hidden text-left">
         {/* Living Background Layers */}
         <div className="absolute inset-0 z-0">
           <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-green-500/10 rounded-full blur-[80px]" />
@@ -52,7 +52,7 @@ export default function HomePage() {
           <GlowOrbits />
         </div>
 
-        <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8 w-full mt-12 md:mt-0">
+        <div className="relative z-10 mx-auto max-w-screen-2xl px-6 lg:px-8 w-full mt-12 md:mt-0">
           {/* Hero Text & CTAs */}
           <div className="flex flex-col items-start max-w-4xl">
             <motion.div
@@ -144,7 +144,7 @@ export default function HomePage() {
             </FrankenContainer>
 
             {/* Embedded Stats Card */}
-            <div className="absolute -bottom-10 left-6 glass-modern p-6 rounded-2xl border border-green-500/20 shadow-2xl animate-float hidden md:flex">
+            <div className="absolute -bottom-10 left-6 z-30 glass-modern p-6 rounded-2xl border border-green-500/20 shadow-2xl animate-float hidden md:flex">
               <div className="flex flex-col text-left">
                 <span className="text-4xl font-black text-green-400 tabular-nums tracking-tighter">100h</span>
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Build Time</span>
