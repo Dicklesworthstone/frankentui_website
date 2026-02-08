@@ -49,13 +49,13 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
         osc.stop(now + 0.1);
         break;
       case "zap":
-        osc.type = "sawtooth";
-        osc.frequency.setValueAtTime(2000, now);
-        osc.frequency.exponentialRampToValueAtTime(50, now + 0.2);
-        gain.gain.setValueAtTime(0.05, now);
-        gain.gain.linearRampToValueAtTime(0, now + 0.2);
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.exponentialRampToValueAtTime(80, now + 0.15);
+        gain.gain.setValueAtTime(0.04, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.15);
         osc.start(now);
-        osc.stop(now + 0.2);
+        osc.stop(now + 0.15);
         break;
       case "hum":
         osc.type = "triangle";
@@ -80,7 +80,6 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
 
   const toggleAnatomyMode = useCallback(() => {
     setIsAnatomyMode(prev => !prev);
-    playSfx("zap");
     playSfx("click");
   }, [playSfx]);
 
@@ -128,18 +127,15 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
       </div>
       
       <style jsx global>{`
-        .anatomy-mode {
-          filter: contrast(1.1) brightness(1.05) grayscale(0.1);
-        }
         .anatomy-mode [class*="FrankenContainer"],
         .anatomy-mode [class*="glass-modern"],
-        .anatomy-mode section,
-        .anatomy-mode header {
-          outline: 1px solid rgba(34, 197, 94, 0.3) !important;
+        .anatomy-mode section {
+          outline: 1px solid rgba(34, 197, 94, 0.2) !important;
           outline-offset: 4px;
         }
         .anatomy-mode img, .anatomy-mode video {
-          filter: grayscale(1) opacity(0.6);
+          filter: grayscale(0.4) opacity(0.8);
+          transition: filter 0.5s ease;
         }
         @keyframes scanline {
           0% { transform: translateY(-100%); }
@@ -150,11 +146,12 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
           position: fixed;
           inset: 0;
           background-image: 
-            linear-gradient(rgba(34, 197, 94, 0.05) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(34, 197, 94, 0.05) 1px, transparent 1px);
-          background-size: 20px 20px;
+            linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+          background-size: 30px 30px;
           pointer-events: none;
-          z-index: 9998;
+          z-index: 50; /* Lower z-index so it doesn't cover interactive elements */
+          opacity: 0.5;
         }
         .anatomy-mode::after {
           content: "";
@@ -166,15 +163,16 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
           background: linear-gradient(
             to bottom,
             transparent 0%,
-            rgba(34, 197, 94, 0.08) 50%,
+            rgba(34, 197, 94, 0.03) 50%,
             transparent 100%
           );
-          background-size: 100% 8px;
+          background-size: 100% 12px;
           pointer-events: none;
-          z-index: 9999;
-          animation: scanline 10s linear infinite;
+          z-index: 51;
+          animation: scanline 15s linear infinite;
         }
       `}</style>
+
     </SiteContext.Provider>
   );
 }
