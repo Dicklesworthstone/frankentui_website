@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
+import { isTextInputLike } from "./utils";
 
 interface SiteContextType {
   isAnatomyMode: boolean;
@@ -13,15 +14,6 @@ interface SiteContextType {
 }
 
 const SiteContext = createContext<SiteContextType | undefined>(undefined);
-
-function isTextInputLike(el: Element | null): boolean {
-  if (!el) return false;
-  if (!(el instanceof HTMLElement)) return false;
-  const tag = el.tagName.toLowerCase();
-  if (tag === "input" || tag === "textarea" || tag === "select") return true;
-  if (el.isContentEditable) return true;
-  return Boolean(el.closest("[contenteditable='true']"));
-}
 
 export function SiteProvider({ children }: { children: React.ReactNode }) {
   const [isAnatomyMode, setIsAnatomyMode] = useState(false);
