@@ -8,8 +8,17 @@ import { FrankenContainer, NeuralPulse } from "@/components/franken-elements";
 import FrankenEye from "@/components/franken-eye";
 import BeadHUD from "@/components/bead-hud";
 import DecodingText from "@/components/decoding-text";
+import dynamic from "next/dynamic";
 import FrankenGlitch from "@/components/franken-glitch";
-import BeadsView from "@/components/beads/beads-view";
+
+const BeadsView = dynamic(() => import("@/components/beads/beads-view"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex flex-col items-center justify-center min-h-[600px] w-full bg-black/40 rounded-3xl border border-green-500/10 backdrop-blur-xl">
+      <div className="h-12 w-12 border-4 border-green-500/20 border-t-green-500 rounded-full animate-spin" />
+    </div>
+  )
+});
 
 const VIEWER_REPO = "https://github.com/Dicklesworthstone/beads-for-frankentui";
 
