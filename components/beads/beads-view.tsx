@@ -161,15 +161,24 @@ export default function BeadsView() {
     }
   }, [db]);
 
+  // Handle global variable availability
   useEffect(() => {
-    // Check if already loaded
-    // @ts-ignore
-    if (window.initSqlJs) setSqlLoaded(true);
-    // @ts-ignore
-    if (window.d3) setD3Loaded(true);
-    // @ts-ignore
-    if (window.ForceGraph) setForceGraphLoaded(true);
-  }, []);
+    const checkInterval = setInterval(() => {
+      // @ts-ignore
+      if (window.initSqlJs && !sqlLoaded) setSqlLoaded(true);
+      // @ts-ignore
+      if (window.d3 && !d3Loaded) setD3Loaded(true);
+      // @ts-ignore
+      if (window.ForceGraph && !forceGraphLoaded) setForceGraphLoaded(true);
+      
+      // @ts-ignore
+      if (window.initSqlJs && window.d3 && window.ForceGraph) {
+        clearInterval(checkInterval);
+      }
+    }, 100);
+    
+    return () => clearInterval(checkInterval);
+  }, [sqlLoaded, d3Loaded, forceGraphLoaded]);
 
   useEffect(() => {
     if (sqlLoaded && !db) {
@@ -239,7 +248,7 @@ export default function BeadsView() {
         title: row[1],
         status: row[2],
         priority: row[3],
-        val: 5 - row[3]
+        val: (5 - row[3]) * 2 + 2
       }));
 
       const links = linksRes[0].values.map((row: any) => ({
@@ -259,23 +268,28 @@ export default function BeadsView() {
         .linkDirectionalParticleWidth(2)
         .backgroundColor("rgba(0,0,0,0)")
         .width(containerRef.current.clientWidth)
-        .height(650)
+        .height(containerRef.current.clientHeight || 650)
         .nodeCanvasObject((node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
-          const size = (5 - node.priority) * 2 + 4;
+          const size = (5 - node.priority) * 1.5 + 3;
           
-          ctx.fillStyle = STATUS_COLORS[node.status] || THEME.green;
           ctx.beginPath(); 
           ctx.arc(node.x, node.y, size, 0, 2 * Math.PI, false); 
+          ctx.fillStyle = STATUS_COLORS[node.status] || THEME.green;
           ctx.fill();
           
-          if (globalScale > 1.5) {
+          // Glow effect
+          ctx.shadowColor = STATUS_COLORS[node.status] || THEME.green;
+          ctx.shadowBlur = 10 / globalScale;
+          
+          if (globalScale > 1.2) {
             const label = node.id;
-            const fontSize = 12 / globalScale;
+            const fontSize = 10 / globalScale;
             ctx.font = `${fontSize}px JetBrains Mono`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillStyle = "rgba(255,255,255,0.8)";
-            ctx.fillText(label, node.x, node.y + size + 5 / globalScale);
+            ctx.fillStyle = "rgba(255,255,255,0.7)";
+            ctx.shadowBlur = 0;
+            ctx.fillText(label, node.x, node.y + size + (4 / globalScale));
           }
         })
         .onNodeClick((node: any) => {
@@ -304,6 +318,7 @@ export default function BeadsView() {
       const resizeObserver = new ResizeObserver(() => {
         if (containerRef.current && Graph) {
           Graph.width(containerRef.current.clientWidth);
+          Graph.height(containerRef.current.clientHeight || 650);
         }
       });
       resizeObserver.observe(containerRef.current);
@@ -330,138 +345,139 @@ export default function BeadsView() {
     );
   }, [issues, searchQuery]);
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[600px] w-full bg-black/40 rounded-3xl border border-green-500/10 backdrop-blur-xl overflow-hidden relative">
-        <NeuralPulse />
-        <motion.div animate={{ scale: [1, 1.1, 1], opacity: [0.5, 1, 0.5] }} transition={{ duration: 2, repeat: Infinity }} className="relative h-24 w-24 mb-8">
-          <div className="absolute inset-0 border-4 border-green-500/20 rounded-full" />
-          <div className="absolute inset-0 border-t-4 border-green-500 rounded-full animate-spin" />
-          <Binary className="absolute inset-0 m-auto h-8 w-8 text-green-500" />
-        </motion.div>
-        <p className={cn("text-sm font-black uppercase tracking-[0.4em]", error ? "text-red-500" : "text-green-500 animate-pulse")}>{loadingMessage}</p>
-        {error && (
-          <div className="mt-6 flex flex-col items-center gap-4">
-            <p className="text-xs text-red-400 font-mono max-w-md text-center bg-red-500/10 p-4 rounded-xl border border-red-500/20">{error}</p>
-            <button onClick={() => window.location.reload()} className="px-6 py-2 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all">Retry_System_Load</button>
-          </div>
-        )}
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col gap-12 w-full min-h-[800px] relative">
+      {/* Scripts rendered once at top level to avoid hydration mismatch */}
       <Script src="/beads-viewer/vendor/sql-wasm.js" onLoad={() => setSqlLoaded(true)} />
       <Script src="/beads-viewer/vendor/d3.v7.min.js" onLoad={() => setD3Loaded(true)} />
       <Script src="/beads-viewer/vendor/force-graph.min.js" onLoad={() => setForceGraphLoaded(true)} />
 
-      {/* --- 1. GLOBAL TELEMETRY --- */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: "OPEN", key: "open", color: THEME.green, icon: Activity },
-          { label: "ACTIVE", key: "in_progress", color: THEME.amber, icon: Zap },
-          { label: "BLOCKED", key: "blocked", color: THEME.red, icon: AlertTriangle },
-          { label: "RESOLVED", key: "closed", color: THEME.slate, icon: Shield }
-        ].map((stat) => (
-          <FrankenContainer key={stat.key} withPulse={true} className="p-6 bg-black/40 border-white/5 group">
-            <div className="flex items-center justify-between mb-4 relative z-10">
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 group-hover:text-white transition-colors">{stat.label}</span>
-              <stat.icon className="h-3 w-3" style={{ color: stat.color }} />
+      {loading ? (
+        <div className="flex flex-col items-center justify-center min-h-[600px] w-full bg-black/40 rounded-3xl border border-green-500/10 backdrop-blur-xl overflow-hidden relative">
+          <NeuralPulse />
+          <motion.div animate={{ scale: [1, 1.1, 1], opacity: [0.5, 1, 0.5] }} transition={{ duration: 2, repeat: Infinity }} className="relative h-24 w-24 mb-8">
+            <div className="absolute inset-0 border-4 border-green-500/20 rounded-full" />
+            <div className="absolute inset-0 border-t-4 border-green-500 rounded-full animate-spin" />
+            <Binary className="absolute inset-0 m-auto h-8 w-8 text-green-500" />
+          </motion.div>
+          <p className={cn("text-sm font-black uppercase tracking-[0.4em]", error ? "text-red-500" : "text-green-500 animate-pulse")}>{loadingMessage}</p>
+          {error && (
+            <div className="mt-6 flex flex-col items-center gap-4">
+              <p className="text-xs text-red-400 font-mono max-w-md text-center bg-red-500/10 p-4 rounded-xl border border-red-500/20">{error}</p>
+              <button onClick={() => window.location.reload()} className="px-6 py-2 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all">Retry_System_Load</button>
             </div>
-            <div className="flex items-baseline gap-2 relative z-10">
-              <p className="text-4xl font-black text-white tabular-nums">{stats?.[stat.key] || 0}</p>
-              <span className="text-[10px] font-bold text-slate-700">/ {stats?.total || 0}</span>
-            </div>
-            <div className="mt-6 h-1 w-full rounded-full overflow-hidden bg-white/5 relative z-10">
-              <motion.div initial={{ width: 0 }} animate={{ width: `${((stats?.[stat.key] || 0) / (stats?.total || 1)) * 100}%` }} className="h-full shadow-[0_0_8px_currentColor]" style={{ backgroundColor: stat.color, color: stat.color }} />
-            </div>
-          </FrankenContainer>
-        ))}
-      </div>
-
-      {/* --- 2. MAIN VISTA --- */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-stretch text-left">
-        <div className="xl:col-span-2 min-h-[650px] relative rounded-[2.5rem] border border-green-500/10 overflow-hidden bg-[#010501] shadow-2xl">
-          <NeuralPulse className="opacity-20" />
-          <div ref={containerRef} className="w-full h-full min-h-[650px]" />
-          <BeadHUD />
-          <div className="absolute top-8 right-8 flex flex-col gap-3 pointer-events-auto">
-            <button onClick={() => graphRef.current?.zoom(graphRef.current.zoom() * 1.5, 400)} className="h-12 w-12 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 text-slate-400 flex items-center justify-center hover:bg-green-500 hover:text-black hover:border-green-400 transition-all shadow-2xl group"><Maximize2 className="h-5 w-5 group-hover:scale-110 transition-transform" /></button>
-            <button onClick={() => graphRef.current?.zoomToFit(600, 80)} className="h-12 w-12 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 text-slate-400 flex items-center justify-center hover:bg-green-500 hover:text-black hover:border-green-400 transition-all shadow-2xl group"><Network className="h-5 w-5 group-hover:rotate-180 transition-transform duration-700" /></button>
-          </div>
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-8 px-8 py-4 rounded-full bg-black/80 backdrop-blur-2xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
-            {Object.entries(STATUS_COLORS).map(([status, color]) => (
-              <div key={status} className="flex items-center gap-3 text-white">
-                <div className="h-2 w-2 rounded-full shadow-[0_0_10px_currentColor] animate-pulse" style={{ backgroundColor: color, color }} />
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{status}</span>
-              </div>
+          )}
+        </div>
+      ) : (
+        <>
+          {/* --- 1. GLOBAL TELEMETRY --- */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { label: "OPEN", key: "open", color: THEME.green, icon: Activity },
+              { label: "ACTIVE", key: "in_progress", color: THEME.amber, icon: Zap },
+              { label: "BLOCKED", key: "blocked", color: THEME.red, icon: AlertTriangle },
+              { label: "RESOLVED", key: "closed", color: THEME.slate, icon: Shield }
+            ].map((stat) => (
+              <FrankenContainer key={stat.key} withPulse={true} className="p-6 bg-black/40 border-white/5 group">
+                <div className="flex items-center justify-between mb-4 relative z-10">
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 group-hover:text-white transition-colors">{stat.label}</span>
+                  <stat.icon className="h-3 w-3" style={{ color: stat.color }} />
+                </div>
+                <div className="flex items-baseline gap-2 relative z-10 text-left">
+                  <p className="text-4xl font-black text-white tabular-nums">{stats?.[stat.key] || 0}</p>
+                  <span className="text-[10px] font-bold text-slate-700">/ {stats?.total || 0}</span>
+                </div>
+                <div className="mt-6 h-1 w-full rounded-full overflow-hidden bg-white/5 relative z-10">
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${((stats?.[stat.key] || 0) / (stats?.total || 1)) * 100}%` }} className="h-full shadow-[0_0_8px_currentColor]" style={{ backgroundColor: stat.color, color: stat.color }} />
+                </div>
+              </FrankenContainer>
             ))}
           </div>
-        </div>
 
-        <div className="space-y-6 flex flex-col h-full">
-          <div className="flex items-center gap-3 text-slate-500 px-2">
-            <Clock className="h-5 w-5" />
-            <h3 className="text-lg font-black text-white uppercase tracking-widest">Neural_Activity</h3>
-          </div>
-          <div className="flex-1 rounded-[2.5rem] border border-white/5 bg-black/40 relative overflow-hidden group p-8">
-            <NeuralPulse className="opacity-0 group-hover:opacity-20 transition-opacity" />
-            <div className="space-y-8 relative z-10">
-              {issues.slice(0, 8).map((issue) => (
-                <div key={issue.id} className="relative pl-8 border-l border-white/10 group/item cursor-pointer text-left" onClick={() => setSelectedIssue(issue)}>
-                  <div className="absolute left-[-4.5px] top-0 h-2 w-2 rounded-full bg-green-500/20 group-hover/item:bg-green-500 group-hover/item:shadow-[0_0_10px_#22c55e] transition-all" />
-                  <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2 group-hover/item:text-green-500/60 transition-colors">{formatDate(issue.updated_at)}</p>
-                  <h5 className="text-sm font-bold text-slate-400 group-hover/item:text-white transition-colors leading-relaxed line-clamp-2">{issue.title}</h5>
+          {/* --- 2. MAIN VISTA --- */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-stretch text-left">
+            <div className="xl:col-span-2 min-h-[650px] relative rounded-[2.5rem] border border-green-500/10 overflow-hidden bg-[#010501] shadow-2xl">
+              <NeuralPulse className="opacity-20" />
+              <div ref={containerRef} className="w-full h-full min-h-[650px]" />
+              <BeadHUD />
+              <div className="absolute top-8 right-8 flex flex-col gap-3 pointer-events-auto">
+                <button onClick={() => graphRef.current?.zoom(graphRef.current.zoom() * 1.5, 400)} className="h-12 w-12 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 text-slate-400 flex items-center justify-center hover:bg-green-500 hover:text-black hover:border-green-400 transition-all shadow-2xl group"><Maximize2 className="h-5 w-5 group-hover:scale-110 transition-transform" /></button>
+                <button onClick={() => graphRef.current?.zoomToFit(600, 80)} className="h-12 w-12 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 text-slate-400 flex items-center justify-center hover:bg-green-500 hover:text-black hover:border-green-400 transition-all shadow-2xl group"><Network className="h-5 w-5 group-hover:rotate-180 transition-transform duration-700" /></button>
+              </div>
+              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-8 px-8 py-4 rounded-full bg-black/80 backdrop-blur-2xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                {Object.entries(STATUS_COLORS).map(([status, color]) => (
+                  <div key={status} className="flex items-center gap-3 text-white">
+                    <div className="h-2 w-2 rounded-full shadow-[0_0_10px_currentColor] animate-pulse" style={{ backgroundColor: color, color }} />
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{status}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-6 flex flex-col h-full">
+              <div className="flex items-center gap-3 text-slate-500 px-2">
+                <Clock className="h-5 w-5" />
+                <h3 className="text-lg font-black text-white uppercase tracking-widest">Neural_Activity</h3>
+              </div>
+              <div className="flex-1 rounded-[2.5rem] border border-white/5 bg-black/40 relative overflow-hidden group p-8">
+                <NeuralPulse className="opacity-0 group-hover:opacity-20 transition-opacity" />
+                <div className="space-y-8 relative z-10">
+                  {issues.slice(0, 8).map((issue) => (
+                    <div key={issue.id} className="relative pl-8 border-l border-white/10 group/item cursor-pointer text-left" onClick={() => setSelectedIssue(issue)}>
+                      <div className="absolute left-[-4.5px] top-0 h-2 w-2 rounded-full bg-green-500/20 group-hover/item:bg-green-500 group-hover/item:shadow-[0_0_10px_#22c55e] transition-all" />
+                      <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2 group-hover/item:text-green-500/60 transition-colors">{formatDate(issue.updated_at)}</p>
+                      <h5 className="text-sm font-bold text-slate-400 group-hover/item:text-white transition-colors leading-relaxed line-clamp-2">{issue.title}</h5>
+                    </div>
+                  ))}
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* --- 3. SEARCH & LEDGER --- */}
+          <div className="space-y-8">
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-6 border-b border-white/5 pb-8">
+              <div className="flex items-center gap-3 text-left">
+                <ListIcon className="h-5 w-5 text-green-500" />
+                <FrankenGlitch trigger="hover" intensity="low">
+                  <h3 className="text-xl font-black text-white uppercase tracking-widest">Priority_Ledger</h3>
+                </FrankenGlitch>
+              </div>
+              <div className="relative group w-full lg:w-96">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600 group-focus-within:text-green-500 transition-colors" />
+                <input type="text" placeholder="SCAN_ARCHIVE_DATA..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-12 pr-6 py-4 bg-black/60 border border-white/10 rounded-2xl text-[11px] font-black text-white placeholder-slate-700 focus:outline-none focus:border-green-500/50 w-full transition-all" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredIssues.map((issue) => (
+                <button key={issue.id} onClick={() => setSelectedIssue(issue)} className="w-full text-left group focus:outline-none">
+                  <FrankenContainer withStitches={false} withPulse={true} className="p-6 bg-black/40 border-white/5 hover:border-green-500/20 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                    <div className="flex items-center gap-8 relative z-10 text-left">
+                      <span className="font-mono text-[11px] font-black text-slate-700 group-hover:text-green-500/60 transition-colors w-20 tracking-tighter">{issue.id}</span>
+                      <div className="h-10 w-px bg-white/5 hidden sm:block" />
+                      <div>
+                        <h4 className="text-base font-black text-white group-hover:text-green-400 transition-colors leading-tight line-clamp-1">{issue.title}</h4>
+                        <div className="flex items-center gap-4 mt-2">
+                          <StatusPill status={issue.status} />
+                          <div className="flex items-center gap-2 text-[9px] font-black text-slate-600 uppercase tracking-widest"><Binary className="h-3 w-3" />{issue.issue_type}</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-8 relative z-10 sm:text-right">
+                      <div className="flex flex-col sm:items-end">
+                        <span className="text-[8px] font-black text-slate-700 uppercase tracking-[0.3em] mb-1">Assigned_To</span>
+                        <div className="flex items-center gap-2 text-xs font-bold text-slate-400"><User className="h-3.5 w-3.5 text-slate-600" />{issue.assignee || "UNASSIGNED"}</div>
+                      </div>
+                      <div className="h-10 w-px bg-white/5 hidden sm:block" />
+                      <ChevronRight className="h-6 w-6 text-slate-800 group-hover:text-green-500 transition-all group-hover:translate-x-1" />
+                    </div>
+                  </FrankenContainer>
+                </button>
               ))}
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* --- 3. SEARCH & LEDGER --- */}
-      <div className="space-y-8">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-6 border-b border-white/5 pb-8">
-          <div className="flex items-center gap-3">
-            <ListIcon className="h-5 w-5 text-green-500" />
-            <FrankenGlitch trigger="hover" intensity="low">
-              <h3 className="text-xl font-black text-white uppercase tracking-widest">Priority_Ledger</h3>
-            </FrankenGlitch>
-          </div>
-          <div className="relative group w-full lg:w-96">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600 group-focus-within:text-green-500 transition-colors" />
-            <input type="text" placeholder="SCAN_ARCHIVE_DATA..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-12 pr-6 py-4 bg-black/60 border border-white/10 rounded-2xl text-[11px] font-black text-white placeholder-slate-700 focus:outline-none focus:border-green-500/50 w-full transition-all" />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredIssues.map((issue) => (
-            <button key={issue.id} onClick={() => setSelectedIssue(issue)} className="w-full text-left group focus:outline-none">
-              <FrankenContainer withStitches={false} withPulse={true} className="p-6 bg-black/40 border-white/5 hover:border-green-500/20 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                <div className="flex items-center gap-8 relative z-10 text-left">
-                  <span className="font-mono text-[11px] font-black text-slate-700 group-hover:text-green-500/60 transition-colors w-20 tracking-tighter">{issue.id}</span>
-                  <div className="h-10 w-px bg-white/5 hidden sm:block" />
-                  <div>
-                    <h4 className="text-base font-black text-white group-hover:text-green-400 transition-colors leading-tight line-clamp-1">{issue.title}</h4>
-                    <div className="flex items-center gap-4 mt-2">
-                      <StatusPill status={issue.status} />
-                      <div className="flex items-center gap-2 text-[9px] font-black text-slate-600 uppercase tracking-widest"><Binary className="h-3 w-3" />{issue.issue_type}</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-8 relative z-10 sm:text-right">
-                  <div className="flex flex-col sm:items-end">
-                    <span className="text-[8px] font-black text-slate-700 uppercase tracking-[0.3em] mb-1">Assigned_To</span>
-                    <div className="flex items-center gap-2 text-xs font-bold text-slate-400"><User className="h-3.5 w-3.5 text-slate-600" />{issue.assignee || "UNASSIGNED"}</div>
-                  </div>
-                  <div className="h-10 w-px bg-white/5 hidden sm:block" />
-                  <ChevronRight className="h-6 w-6 text-slate-800 group-hover:text-green-500 transition-all group-hover:translate-x-1" />
-                </div>
-              </FrankenContainer>
-            </button>
-          ))}
-        </div>
-      </div>
+        </>
+      )}
 
       {/* --- Detailed Synapse Portal (Modal) --- */}
       <AnimatePresence>
@@ -487,14 +503,10 @@ export default function BeadsView() {
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-16">
                       <div className="xl:col-span-2 space-y-12">
                         <div className="space-y-6 text-left">
-                                                  <div className="flex items-center gap-3">
-                                                     <Info className="h-4 w-4 text-green-500/60" />
-                                                     <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em]">Synapse_Descriptor</h4>
-                                                  </div>
-                                                  <div className="text-slate-300 text-xl leading-relaxed font-medium">
-                                                    <Streamdown content={selectedIssue.description || "System log empty. Descriptor required for complete synchronization."} />
-                                                  </div>
-                          
+                          <div className="flex items-center gap-3"><Info className="h-4 w-4 text-green-500/60" /><h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em]">Synapse_Descriptor</h4></div>
+                          <div className="text-slate-300 text-xl leading-relaxed font-medium">
+                            <Streamdown content={selectedIssue.description || "System log empty. Descriptor required for complete synchronization."} />
+                          </div>
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/5 rounded-[2rem] overflow-hidden border border-white/5">
                           <div className="p-6 bg-black/40"><span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Type</span><p className="text-sm font-bold text-white mt-2 capitalize">{selectedIssue.issue_type}</p></div>
