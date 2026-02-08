@@ -111,14 +111,14 @@ export default function HomePage() {
 
 
           {/* Full-Width Video — the centrepiece */}
-          <div className="relative mt-16 w-full max-w-[1200px] group">
+          <div className="relative mt-16 w-full max-w-[1200px] mx-auto group">
             {/* Floating Peeking Eye - Now visible on mobile with adjusted positioning */}
             <div className="absolute -top-12 right-4 md:top-[-80px] md:right-[10%] z-20 animate-bounce transition-all duration-1000">
               <FrankenEye className="scale-100 md:scale-150 rotate-12 drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]" />
             </div>
 
             <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-[2rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
-            <FrankenContainer withBolts={false} className="relative glass-modern p-2 lg:p-0 overflow-hidden shadow-2xl w-full">
+            <FrankenContainer withBolts={false} className="relative glass-modern p-2 md:p-0 overflow-hidden shadow-2xl w-full">
               <BorderBeam />
 
               {/* Auto-playing Rio Recording */}
@@ -129,7 +129,7 @@ export default function HomePage() {
                   loop
                   playsInline
                   poster="/screenshots/visual_effects_clifford_attractor.webp"
-                  className="absolute inset-0 block w-full h-full object-cover"
+                  className="absolute inset-0 block w-full h-full object-cover scale-[1.08]"
                  >
                   <source src="/videos/frankentui-rio-crt.webm" type="video/webm" />
                   <source src="/videos/frankentui-rio-crt.mp4" type="video/mp4" />
