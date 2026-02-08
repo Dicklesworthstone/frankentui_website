@@ -18,8 +18,7 @@ export default function Streamdown({ content, className }: StreamdownProps) {
     if (!content) return [];
 
     // Split by code blocks first
-    const regex = /```(\w+)?
-([\s\S]*?)```/g;
+    const regex = new RegExp("```(\\w+)?\\n([\\s\\S]*?)```", "g");
     const result = [];
     let lastIndex = 0;
     let match;
@@ -104,12 +103,9 @@ function parseMarkdown(text: string): string {
     
     // Lists
     .replace(/^\s*-\s+(.*$)/gm, '<li class="flex gap-3 mb-2"><span class="mt-2.5 h-1 w-1 shrink-0 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></span><span>$1</span></li>')
-    .replace(/(<li.*<\/li>)/s, '<ul class="my-6 space-y-2">$1</ul>')
+    .replace(/((?:<li[\s\S]*?<\/li>\s*)+)/g, '<ul class="my-6 space-y-2">$1</ul>')
     
     // Newlines to breaks
-    .replace(/
-
-/g, '</div><div class="mt-6">')
-    .replace(/
-/g, "<br />");
+    .replace(/\n\n/g, '</div><div class="mt-6">')
+    .replace(/\n/g, "<br />");
 }
