@@ -6,6 +6,7 @@ import { useSite } from "@/lib/site-state";
 import { warStories, warStoriesExtended } from "@/lib/content";
 import WarStoryCard from "./war-story-card";
 import { Skull, AlertCircle, ShieldAlert, X } from "lucide-react";
+import { Portal } from "./motion-wrapper";
 
 export default function WarStoriesMap() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -78,32 +79,34 @@ export default function WarStoriesMap() {
       {/* Detail Overlay */}
       <AnimatePresence>
         {selectedId && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[999] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md"
-            onClick={() => { setSelectedId(null); playSfx("click"); }}
-          >
+          <Portal>
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="max-w-3xl w-full"
-              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[999] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md"
+              onClick={() => { setSelectedId(null); playSfx("click"); }}
             >
-              {(() => {
-                const story = allStories.find(s => s.title === selectedId);
-                return story ? <WarStoryCard story={story} /> : null;
-              })()}
-              <button
-                onClick={() => { setSelectedId(null); playSfx("click"); }}
-                className="mt-8 mx-auto flex items-center gap-2 px-8 py-3 rounded-full bg-red-500 text-white font-black text-xs hover:bg-red-400 transition-all shadow-[0_0_30px_rgba(239,68,68,0.3)] active:scale-95"
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="max-w-3xl w-full"
+                onClick={(e) => e.stopPropagation()}
               >
-                <X className="h-4 w-4" /> CLOSE_BATTLE_REPORT
-              </button>
+                {(() => {
+                  const story = allStories.find(s => s.title === selectedId);
+                  return story ? <WarStoryCard story={story} /> : null;
+                })()}
+                <button
+                  onClick={() => { setSelectedId(null); playSfx("click"); }}
+                  className="mt-8 mx-auto flex items-center gap-2 px-8 py-3 rounded-full bg-red-500 text-white font-black text-xs hover:bg-red-400 transition-all shadow-[0_0_30px_rgba(239,68,68,0.3)] active:scale-95"
+                >
+                  <X className="h-4 w-4" /> CLOSE_BATTLE_REPORT
+                </button>
+              </motion.div>
             </motion.div>
-          </motion.div>
+          </Portal>
         )}
       </AnimatePresence>
 
