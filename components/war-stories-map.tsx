@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSite } from "@/lib/site-state";
 import { warStories, warStoriesExtended } from "@/lib/content";
@@ -8,10 +8,9 @@ import type { WarStory } from "@/lib/content";
 import WarStoryCard from "./war-story-card";
 import { Skull, AlertCircle, ShieldAlert, X } from "lucide-react";
 import { createPortal } from "react-dom";
-import { useEffect, useState as useReactState } from "react";
 
 function Portal({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useReactState(false);
+  const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   return mounted ? createPortal(children, document.body) : null;
 }
