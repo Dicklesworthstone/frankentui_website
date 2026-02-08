@@ -65,13 +65,14 @@ export default function HomePage() {
               V0.1.1 Alive on Crates.io
             </motion.div>
 
-            <h1 className="text-[clamp(3.5rem,10vw,7rem)] font-black tracking-tight leading-[0.85] text-white mb-10">
+            <h1 className="text-[clamp(3.5rem,10vw,7rem)] font-black tracking-tight leading-[0.85] text-white mb-10 text-left">
+              <DecodingText text="The" delay={0.2} /> <br />
               <FrankenGlitch trigger="random" intensity="low">
-                <DecodingText text="The" delay={0.2} /> <span className="text-animate-green">
+                <span className="text-red-500">
                   <DecodingText text="Monster" delay={0.6} />
-                </span> <br />
-                <DecodingText text="Terminal Kernel." delay={1} />
-              </FrankenGlitch>
+                </span>
+              </FrankenGlitch> <br />
+              <DecodingText text="Terminal Kernel." delay={1} />
             </h1>
 
             <p className="text-lg md:text-xl text-slate-400 font-medium leading-relaxed max-w-2xl mb-12">
