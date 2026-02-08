@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
 import { Terminal, Cpu, Lock, Shield, Blocks, Sparkles, Activity } from "lucide-react";
 import type { Feature } from "@/lib/content";
 import { FrankenBolt } from "./franken-elements";
+import { motion, useMotionValue, useMotionTemplate } from "framer-motion";
 
 const iconMap: Record<string, React.ElementType> = {
   terminal: Terminal,
@@ -15,35 +15,37 @@ const iconMap: Record<string, React.ElementType> = {
 };
 
 export default function FeatureCard({ feature }: { feature: Feature }) {
-  const divRef = useRef<HTMLDivElement>(null);
-  const [opacity, setOpacity] = useState(0);
-  const [position, setMousePosition] = useState({ x: 0, y: 0 });
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!divRef.current) return;
-    const rect = divRef.current.getBoundingClientRect();
-    setMousePosition({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    });
-  };
+  function handleMouseMove({
+    currentTarget,
+    clientX,
+    clientY,
+  }: React.MouseEvent) {
+    let { left, top } = currentTarget.getBoundingClientRect();
+    mouseX.set(clientX - left);
+    mouseY.set(clientY - top);
+  }
 
   const Icon = iconMap[feature.icon] || Sparkles;
 
   return (
     <article
-      ref={divRef}
       onMouseMove={handleMouseMove}
-      onMouseEnter={() => setOpacity(1)}
-      onMouseLeave={() => setOpacity(0)}
       className="group relative h-full rounded-[2rem] border border-white/5 bg-white/[0.02] p-8 md:p-10 transition-all duration-500 hover:bg-white/[0.04] hover:border-green-500/20 hover:-translate-y-2 overflow-hidden kinetic-card"
     >
-      {/* Monster-Tech Glow Overlay */}
-      <div
-        className="pointer-events-none absolute -inset-px transition-opacity duration-500 rounded-[2rem]"
+      {/* Monster-Tech Glow Overlay - Hardware Accelerated */}
+      <motion.div
+        className="pointer-events-none absolute -inset-px rounded-[2rem] opacity-0 group-hover:opacity-100 transition-opacity duration-500"
         style={{
-          opacity,
-          background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, rgba(34, 197, 94, 0.1), transparent 40%)`,
+          background: useMotionTemplate`
+            radial-gradient(
+              600px circle at ${mouseX}px ${mouseY}px,
+              rgba(34, 197, 94, 0.1),
+              transparent 80%
+            )
+          `,
         }}
       />
 

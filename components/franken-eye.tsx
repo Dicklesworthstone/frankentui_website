@@ -1,23 +1,36 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 
 export default function FrankenEye({ className }: { className?: string }) {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const eyeRef = useRef<HTMLDivElement>(null);
+  const rectRef = useRef<DOMRect | null>(null);
   const frameRef = useRef<number | null>(null);
 
+  // Cache the position to avoid getBoundingClientRect during mousemove
+  const updateRect = useCallback(() => {
+    if (eyeRef.current) {
+      rectRef.current = eyeRef.current.getBoundingClientRect();
+    }
+  }, []);
+
   useEffect(() => {
+    updateRect();
+    window.addEventListener("scroll", updateRect, { passive: true });
+    window.addEventListener("resize", updateRect, { passive: true });
+    
     const handleMouseMove = (e: MouseEvent) => {
       if (frameRef.current) return;
 
       frameRef.current = requestAnimationFrame(() => {
-        if (!eyeRef.current) {
+        if (!rectRef.current) {
           frameRef.current = null;
           return;
         }
-        const rect = eyeRef.current.getBoundingClientRect();
+        
+        const rect = rectRef.current;
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
         
@@ -35,9 +48,11 @@ export default function FrankenEye({ className }: { className?: string }) {
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("scroll", updateRect);
+      window.removeEventListener("resize", updateRect);
       if (frameRef.current) cancelAnimationFrame(frameRef.current);
     };
-  }, []);
+  }, [updateRect]);
 
   return (
     <div

@@ -19,7 +19,10 @@ export default function SiteHeader() {
   useBodyScrollLock(open);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
+    const handleScroll = () => {
+      const isScrolled = window.scrollY > 20;
+      setScrolled(isScrolled);
+    };
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
@@ -27,128 +30,130 @@ export default function SiteHeader() {
 
   useEffect(() => {
     if (!open) return undefined;
-
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
     };
-
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open]);
 
   return (
     <>
-      {/* ── DESKTOP FLOATING NAVBAR ──────────────────────────────────── */}
-      <header
-        className={cn(
-          "fixed top-6 left-1/2 -translate-x-1/2 z-50 hidden md:flex items-center transition-all duration-500 ease-[cubic-bezier(0.19,1,0.22,1)]",
-          scrolled 
-            ? "w-[90%] lg:w-[1000px] py-2 px-6 glass-modern rounded-full" 
-            : "w-[95%] lg:w-[1200px] py-4 px-8 bg-transparent"
-        )}
-      >
-        <div className="flex items-center justify-between w-full">
-          {/* Logo with "Life" Indicator */}
+      {/* ── DESKTOP NAVBAR ──────────────────────────────────── */}
+      <div className="fixed top-0 left-0 right-0 z-50 hidden md:block pointer-events-none h-24">
+        <header
+          className={cn(
+            "absolute top-6 left-1/2 -translate-x-1/2 flex items-center transition-all duration-500 ease-[cubic-bezier(0.19,1,0.22,1)] pointer-events-auto",
+            "w-[95%] lg:w-[1100px] h-16 px-8 rounded-full border border-white/5 will-change-[transform,background-color,backdrop-filter]",
+            scrolled ? "glass-modern shadow-2xl scale-[0.98]" : "bg-transparent border-transparent"
+          )}
+        >
+          <div className="flex items-center justify-between w-full">
+            {/* Logo */}
+            <Link
+              href="/"
+              className="group flex items-center gap-4 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+            >
+              <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-green-600 via-green-400 to-lime-400 shadow-[0_0_20px_rgba(34,197,94,0.3)] transition-transform group-hover:scale-110 active:scale-95">
+                <FrankenBolt className="absolute -left-1 -top-1 z-20 scale-50" />
+                <FrankenBolt className="absolute -right-1 -bottom-1 z-20 scale-50" />
+                <span className="text-xl font-black text-black select-none">F</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-black tracking-tight text-white uppercase leading-none">
+                  {siteConfig.name}
+                </span>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <div className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500"></span>
+                  </div>
+                  <span className="text-[8px] font-black text-green-500 uppercase tracking-widest leading-none">ALIVE</span>
+                </div>
+              </div>
+            </Link>
+
+            {/* Navigation */}
+            <nav className="flex items-center gap-1">
+              {navItems.map((item) => {
+                const active = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onMouseEnter={() => setHoveredItem(item.href)}
+                    onMouseLeave={() => setHoveredItem(null)}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(
+                      "relative px-4 py-2 text-[10px] font-black transition-all duration-300 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black uppercase tracking-[0.2em]",
+                      active ? "text-green-400" : "text-slate-400 hover:text-white"
+                    )}
+                  >
+                    <AnimatePresence>
+                      {hoveredItem === item.href && (
+                        <motion.div
+                          layoutId="nav-hover"
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.9 }}
+                          className="absolute inset-0 bg-green-500/10 rounded-full -z-10"
+                          transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                        />
+                      )}
+                    </AnimatePresence>
+                    {active && !hoveredItem && (
+                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-green-500" />
+                    )}
+                    <span className="relative z-10">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {/* Primary CTA */}
+            <div className="flex items-center gap-4">
+              <a
+                href={siteConfig.github}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center gap-2 px-5 py-2 rounded-full bg-white text-black text-[10px] font-black hover:bg-green-400 transition-all hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              >
+                <Github className="h-3.5 w-3.5" />
+                <span>GITHUB</span>
+              </a>
+            </div>
+          </div>
+        </header>
+      </div>
+
+      {/* ── MOBILE NAVBAR ───────────────────────────────────── */}
+      <div className="fixed top-0 left-0 right-0 z-50 md:hidden p-4 pointer-events-none">
+        <header className="flex items-center justify-between glass-modern h-14 px-4 rounded-2xl pointer-events-auto shadow-2xl border border-white/5">
           <Link
             href="/"
-            className="group flex items-center gap-4 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+            className="flex items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           >
-            <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-green-600 via-green-400 to-lime-400 shadow-[0_0_20px_rgba(34,197,94,0.3)] transition-transform group-hover:scale-110 active:scale-95">
-              <FrankenBolt className="absolute -left-1 -top-1 z-20 scale-50" />
-              <FrankenBolt className="absolute -right-1 -bottom-1 z-20 scale-50" />
-              <span className="text-xl font-black text-black select-none">F</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-black tracking-tight text-white uppercase leading-none">
-                {siteConfig.name}
-              </span>
-              <div className="flex items-center gap-1.5 mt-1">
-                <div className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                </div>
-                <span className="text-[9px] font-bold text-green-500 uppercase tracking-widest">System Alive</span>
-              </div>
-            </div>
+            <div className="h-8 w-8 rounded-lg bg-green-500 flex items-center justify-center font-black text-black text-xs">F</div>
+            <span className="text-[10px] font-black tracking-[0.2em] text-white uppercase">{siteConfig.name}</span>
           </Link>
-
-          {/* Centered Navigation */}
-          <nav className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1">
-            {navItems.map((item) => {
-              const active = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onMouseEnter={() => setHoveredItem(item.href)}
-                  onMouseLeave={() => setHoveredItem(null)}
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "relative px-4 py-2 text-sm font-bold transition-all duration-300 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black",
-                    active ? "text-green-400" : "text-slate-400 hover:text-white"
-                  )}
-                >
-                  {hoveredItem === item.href && (
-                    <motion.div
-                      layoutId="nav-hover"
-                      className="absolute inset-0 bg-green-500/10 rounded-full"
-                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                    />
-                  )}
-                  {active && !hoveredItem && (
-                    <motion.div
-                      layoutId="nav-active"
-                      className="absolute inset-0 border border-green-500/20 bg-green-500/5 rounded-full"
-                    />
-                  )}
-                  <span className="relative z-10">{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Primary CTA */}
-          <div className="flex items-center gap-4">
-            <a
-              href={siteConfig.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-black text-sm font-black hover:bg-green-400 transition-all hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-            >
-              <Github className="h-4 w-4" />
-              <span>GITHUB</span>
-            </a>
-          </div>
-        </div>
-      </header>
-
-      {/* ── MOBILE ADAPTIVE HEADER ───────────────────────────────────── */}
-      <header className="fixed top-0 left-0 right-0 z-[60] md:hidden px-4 py-4 flex items-center justify-between glass-modern border-b-0 m-2 rounded-2xl">
-        <Link
-          href="/"
-          className="flex items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-        >
-          <div className="h-8 w-8 rounded-lg bg-green-500 flex items-center justify-center font-black text-black">F</div>
-          <span className="text-xs font-black tracking-widest text-white uppercase">{siteConfig.name}</span>
-        </Link>
-        
-        <button
-          type="button"
-          onClick={() => setOpen(!open)}
-          aria-label={open ? "Close navigation menu" : "Open navigation menu"}
-          aria-expanded={open}
-          aria-controls="mobile-nav"
-          className="h-10 w-10 flex items-center justify-center rounded-xl bg-green-500/10 text-green-500 border border-green-500/20 active:scale-90 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-        >
-          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
-      </header>
+          
+          <button
+            type="button"
+            onClick={() => setOpen(!open)}
+            aria-label={open ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={open}
+            className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 text-green-500 active:scale-90 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+          >
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </header>
+      </div>
 
       {/* Mobile Menu (Bottom-Sheet Style) */}
       <AnimatePresence>
         {open && (
           <>
-	            <motion.div
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -160,9 +165,8 @@ export default function SiteHeader() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-	              id="mobile-nav"
-	              className="fixed bottom-0 left-0 right-0 z-[80] bg-[#051205] border-t border-green-500/20 rounded-t-[32px] p-8 pb-12 md:hidden"
-	            >
+              className="fixed bottom-0 left-0 right-0 z-[80] bg-[#051205] border-t border-green-500/20 rounded-t-[32px] p-8 pb-12 md:hidden pointer-events-auto"
+            >
               <div className="w-12 h-1.5 bg-green-500/20 rounded-full mx-auto mb-8" />
               <nav className="flex flex-col gap-4">
                 {navItems.map((item) => (
@@ -176,14 +180,14 @@ export default function SiteHeader() {
                     <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]" />
                   </Link>
                 ))}
-	                <a
-	                  href={siteConfig.github}
-	                  target="_blank"
-	                  rel="noopener noreferrer"
-	                  className="mt-4 flex items-center justify-center gap-3 p-5 rounded-2xl bg-green-500 text-black font-black text-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-	                >
-	                  <Github /> STAR ON GITHUB
-	                </a>
+                <a
+                  href={siteConfig.github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 flex items-center justify-center gap-3 p-5 rounded-2xl bg-green-500 text-black font-black text-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                >
+                  <Github /> STAR ON GITHUB
+                </a>
               </nav>
             </motion.div>
           </>

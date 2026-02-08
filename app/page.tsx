@@ -38,7 +38,7 @@ export default function HomePage() {
       <section className="relative min-h-[90vh] flex items-center justify-center pt-24 pb-20 overflow-hidden text-left">
         {/* Living Background Layers */}
         <div className="absolute inset-0 z-0">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-green-500/10 rounded-full blur-[80px] animate-pulse" />
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-green-500/10 rounded-full blur-[80px]" />
           <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-500/10 rounded-full blur-[100px]" />
           <GlowOrbits />
         </div>
@@ -89,7 +89,7 @@ export default function HomePage() {
             {/* RIGHT: High-Impact Visual */}
             <div className="hidden lg:flex lg:col-span-5 relative justify-end">
               {/* Floating Peeking Eye */}
-              <div className="absolute top-[-100px] right-[20%] z-20 animate-bounce transition-all duration-1000">
+              <div className="absolute top-[-100px] right-[20%] z-20">
                 <FrankenEye className="scale-150 rotate-12 drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]" />
               </div>
 
@@ -107,7 +107,7 @@ export default function HomePage() {
                 </FrankenContainer>
                 
                 {/* Embedded Stats Card */}
-                <div className="absolute -bottom-12 -left-12 glass-modern p-8 rounded-[2rem] border border-green-500/20 shadow-2xl animate-float">
+                <div className="absolute -bottom-12 -left-12 glass-modern p-8 rounded-[2rem] border border-green-500/20 shadow-2xl">
                   <div className="flex flex-col">
                     <span className="text-4xl font-black text-green-400 tabular-nums">100h</span>
                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Build Time</span>

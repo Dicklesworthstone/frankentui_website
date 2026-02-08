@@ -21,7 +21,7 @@
   --color-green-prime: #22c55e;
   --color-green-glow: #4ade80;
   --color-lime-prime: #a3e635;
-  
+
   /* -- Elevation & Depth -------------------------------------------------- */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
@@ -36,100 +36,9 @@
 }
 
 /* --------------------------------------------------------------------------
-   2. Base Styles
+   2. Base Styles & Resets
    -------------------------------------------------------------------------- */
 
-body {
-  background-color: var(--color-bg);
-  color: #f1f5f9;
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-  selection-background: rgba(34, 197, 94, 0.3);
-  overflow-x: hidden;
-}
-
-/* Grainy noise texture overlay */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3%3Cfilter id='noiseFilter'%3%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3%3C/filter%3%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3%3C/svg%3e");
-  opacity: 0.025;
-  pointer-events: none;
-  z-index: 9999;
-}
-
-/* --------------------------------------------------------------------------
-   3. World-Class Components
-   -------------------------------------------------------------------------- */
-
-/* Stripe-style adaptive glass */
-.glass-modern {
-  background: rgba(2, 10, 2, 0.7);
-  backdrop-filter: blur(12px) saturate(180%);
-  -webkit-backdrop-filter: blur(12px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: var(--shadow-lg);
-}
-
-/* Kinetic Hover Effect */
-.kinetic-card {
-  transition: all var(--duration-normal) var(--ease-stripe);
-}
-
-.kinetic-card:hover {
-  transform: translateY(-4px) scale(1.01);
-  border-color: rgba(34, 197, 94, 0.3);
-  box-shadow: var(--shadow-franken);
-}
-
-/* Living Gradient Text */
-.text-animate-green {
-  background: linear-gradient(
-    to right,
-    #4ade80,
-    #bef264,
-    #22c55e,
-    #4ade80
-  );
-  background-size: 300% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: textGradient 8s linear infinite;
-}
-
-@keyframes textGradient {
-  to { background-position: 300% center; }
-}
-
-/* Smooth Scrollbar */
-::-webkit-scrollbar {
-  width: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: #010501;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #1a2e1a;
-  border: 2px solid #010501;
-  border-radius: 10px;
-  transition: background 0.3s;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #22c55e;
-}
-
-/* --------------------------------------------------------------------------
-   2. Base Resets & Global Styles
-   -------------------------------------------------------------------------- */
-
-/* Smooth scrolling with reduced-motion respect */
 html {
   scroll-behavior: smooth;
 }
@@ -149,7 +58,6 @@ html {
   }
 }
 
-/* Selection color */
 ::selection {
   background: rgba(34, 197, 94, 0.2);
   color: #f1f5f9;
@@ -160,7 +68,6 @@ html {
   color: #f1f5f9;
 }
 
-/* Body */
 body {
   background-color: #020a02;
   color: #f1f5f9;
@@ -203,7 +110,53 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   4. Utility Classes
+   4. Components
+   -------------------------------------------------------------------------- */
+
+/* Stripe-style adaptive glass
+   NOTE: no permanent will-change here — it creates unnecessary compositor
+   layers on every glass element. Let the browser promote only when needed. */
+.glass-modern {
+  background: rgba(5, 18, 5, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Kinetic Hover Effect */
+.kinetic-card {
+  transition: all var(--duration-normal) var(--ease-stripe);
+}
+
+.kinetic-card:hover {
+  transform: translateY(-4px) scale(1.01);
+  border-color: rgba(34, 197, 94, 0.3);
+  box-shadow: var(--shadow-franken);
+}
+
+/* Living Gradient Text */
+.text-animate-green {
+  background: linear-gradient(
+    to right,
+    #4ade80,
+    #bef264,
+    #22c55e,
+    #4ade80
+  );
+  background-size: 300% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: textGradient 8s linear infinite;
+}
+
+@keyframes textGradient {
+  to { background-position: 300% center; }
+}
+
+/* --------------------------------------------------------------------------
+   5. Utility Classes
    -------------------------------------------------------------------------- */
 
 /* Green gradient text */
@@ -255,7 +208,7 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   5. Accessibility - Skip Link
+   6. Accessibility
    -------------------------------------------------------------------------- */
 
 .skip-link {
@@ -278,10 +231,6 @@ body {
   outline: 2px solid #a3e635;
   outline-offset: 2px;
 }
-
-/* --------------------------------------------------------------------------
-   6. Focus Styles
-   -------------------------------------------------------------------------- */
 
 :focus-visible {
   outline: 2px solid rgba(34, 197, 94, 0.6);
