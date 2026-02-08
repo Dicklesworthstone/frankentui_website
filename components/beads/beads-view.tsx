@@ -109,7 +109,7 @@ export default function BeadsView() {
 
   // Reassemble database chunks
   const loadDatabase = useCallback(async () => {
-    if (!sqlLoaded || db) return;
+    if (db) return;
 
     try {
       setLoading(true);
@@ -158,13 +158,16 @@ export default function BeadsView() {
       setLoadingMessage("CRITICAL_FAILURE: System corruption detected.");
       setLoading(false);
     }
-  }, [sqlLoaded, db]);
+  }, [db]);
 
   useEffect(() => {
+    // Check if already loaded
     // @ts-ignore
-    if (window.initSqlJs && !sqlLoaded) {
-      setSqlLoaded(true);
-    }
+    if (window.initSqlJs) setSqlLoaded(true);
+    // @ts-ignore
+    if (window.d3) setD3Loaded(true);
+    // @ts-ignore
+    if (window.ForceGraph) setForceGraphLoaded(true);
   }, []);
 
   useEffect(() => {
@@ -255,28 +258,23 @@ export default function BeadsView() {
         .linkDirectionalParticleWidth(2)
         .backgroundColor("rgba(0,0,0,0)")
         .width(containerRef.current.clientWidth)
-        .height(containerRef.current.clientHeight || 650)
+        .height(650)
         .nodeCanvasObject((node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
           const size = (5 - node.priority) * 2 + 4;
           
-          ctx.shadowColor = STATUS_COLORS[node.status] || THEME.green;
-          ctx.shadowBlur = 10 / globalScale;
-          
           ctx.fillStyle = STATUS_COLORS[node.status] || THEME.green;
           ctx.beginPath(); 
-          ctx.arc(node.x, node.y, size / globalScale, 0, 2 * Math.PI, false); 
+          ctx.arc(node.x, node.y, size, 0, 2 * Math.PI, false); 
           ctx.fill();
           
-          ctx.shadowBlur = 0;
-
           if (globalScale > 1.5) {
             const label = node.id;
-            const fontSize = 12/globalScale;
+            const fontSize = 12 / globalScale;
             ctx.font = `${fontSize}px JetBrains Mono`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillStyle = "rgba(255,255,255,0.8)";
-            ctx.fillText(label, node.x, node.y + (size + 5) / globalScale);
+            ctx.fillText(label, node.x, node.y + size + 5 / globalScale);
           }
         })
         .onNodeClick((node: any) => {
@@ -305,7 +303,6 @@ export default function BeadsView() {
       const resizeObserver = new ResizeObserver(() => {
         if (containerRef.current && Graph) {
           Graph.width(containerRef.current.clientWidth);
-          Graph.height(containerRef.current.clientHeight || 650);
         }
       });
       resizeObserver.observe(containerRef.current);
@@ -365,15 +362,15 @@ export default function BeadsView() {
               { label: "RESOLVED", key: "closed", color: THEME.slate, icon: Shield }
             ].map((stat) => (
               <FrankenContainer key={stat.key} withPulse={true} className="p-6 bg-black/40 border-white/5 group">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-4 relative z-10">
                   <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 group-hover:text-white transition-colors">{stat.label}</span>
                   <stat.icon className="h-3 w-3" style={{ color: stat.color }} />
                 </div>
-                <div className="flex items-baseline gap-2">
+                <div className="flex items-baseline gap-2 relative z-10">
                   <p className="text-4xl font-black text-white tabular-nums">{stats?.[stat.key] || 0}</p>
                   <span className="text-[10px] font-bold text-slate-700">/ {stats?.total || 0}</span>
                 </div>
-                <div className="mt-6 h-1 w-full rounded-full overflow-hidden bg-white/5">
+                <div className="mt-6 h-1 w-full rounded-full overflow-hidden bg-white/5 relative z-10">
                   <motion.div initial={{ width: 0 }} animate={{ width: `${((stats?.[stat.key] || 0) / (stats?.total || 1)) * 100}%` }} className="h-full shadow-[0_0_8px_currentColor]" style={{ backgroundColor: stat.color, color: stat.color }} />
                 </div>
               </FrankenContainer>
@@ -381,7 +378,7 @@ export default function BeadsView() {
           </div>
 
           {/* --- 2. MAIN VISTA --- */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-stretch">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-stretch text-left">
             <div className="xl:col-span-2 min-h-[650px] relative rounded-[2.5rem] border border-green-500/10 overflow-hidden bg-[#010501] shadow-2xl">
               <NeuralPulse className="opacity-20" />
               <div ref={containerRef} className="w-full h-full min-h-[650px]" />
@@ -400,7 +397,7 @@ export default function BeadsView() {
               </div>
             </div>
 
-            <div className="space-y-6 flex flex-col h-full text-left">
+            <div className="space-y-6 flex flex-col h-full">
               <div className="flex items-center gap-3 text-slate-500 px-2">
                 <Clock className="h-5 w-5" />
                 <h3 className="text-lg font-black text-white uppercase tracking-widest">Neural_Activity</h3>
@@ -409,7 +406,7 @@ export default function BeadsView() {
                 <NeuralPulse className="opacity-0 group-hover:opacity-20 transition-opacity" />
                 <div className="space-y-8 relative z-10">
                   {issues.slice(0, 8).map((issue) => (
-                    <div key={issue.id} className="relative pl-8 border-l border-white/10 group/item cursor-pointer" onClick={() => setSelectedIssue(issue)}>
+                    <div key={issue.id} className="relative pl-8 border-l border-white/10 group/item cursor-pointer text-left" onClick={() => setSelectedIssue(issue)}>
                       <div className="absolute left-[-4.5px] top-0 h-2 w-2 rounded-full bg-green-500/20 group-hover/item:bg-green-500 group-hover/item:shadow-[0_0_10px_#22c55e] transition-all" />
                       <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2 group-hover/item:text-green-500/60 transition-colors">{formatDate(issue.updated_at)}</p>
                       <h5 className="text-sm font-bold text-slate-400 group-hover/item:text-white transition-colors leading-relaxed line-clamp-2">{issue.title}</h5>
@@ -488,7 +485,7 @@ export default function BeadsView() {
                   <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-16">
                       <div className="xl:col-span-2 space-y-12">
-                        <div className="space-y-6">
+                        <div className="space-y-6 text-left">
                           <div className="flex items-center gap-3"><Info className="h-4 w-4 text-green-500/60" /><h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em]">Synapse_Descriptor</h4></div>
                           <div className="text-slate-300 text-xl leading-relaxed font-medium">{selectedIssue.description || "System log empty. Descriptor required for complete synchronization."}</div>
                         </div>
@@ -515,17 +512,17 @@ export default function BeadsView() {
                         )}
                       </div>
                       <div className="space-y-10">
-                        <div className="p-8 rounded-[2.5rem] border border-white/5 bg-white/[0.02] group">
+                        <div className="p-8 rounded-[2.5rem] border border-white/5 bg-white/[0.02] group text-left">
                           <span className="text-[9px] font-black text-slate-600 uppercase tracking-[0.4em] block mb-6">Neural_Custodian</span>
                           <div className="flex items-center gap-5">
                             <div className="h-14 w-14 rounded-[1.25rem] bg-gradient-to-tr from-green-600 via-green-400 to-emerald-300 flex items-center justify-center text-black font-black text-xl uppercase shadow-[0_0_30px_rgba(34,197,94,0.3)]">{selectedIssue.assignee ? selectedIssue.assignee[0] : "?"}</div>
                             <div>
                               <p className="text-lg font-black text-white">{selectedIssue.assignee || "UNASSIGNED"}</p>
-                              <div className="flex items-center gap-2 mt-1"><div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" /><p className="text-[9px] font-black text-green-500/60 uppercase tracking-widest">Validated_Engineer</p></div>
+                              <div className="flex items-center gap-2 mt-1"><div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" /><p className="text-[9px] font-black text-green-500/60 uppercase tracking-widest uppercase">Validated_Engineer</p></div>
                             </div>
                           </div>
                         </div>
-                        <div className="p-8 rounded-[2.5rem] border border-white/5 bg-white/[0.02]">
+                        <div className="p-8 rounded-[2.5rem] border border-white/5 bg-white/[0.02] text-left">
                           <span className="text-[9px] font-black text-slate-600 uppercase tracking-[0.4em] block mb-6">Downstream_Cascade</span>
                           <div className="space-y-5">
                             <div className="flex items-center justify-between p-4 rounded-2xl bg-black/20 border border-white/5"><span className="text-xs font-bold text-slate-500">Unlocks</span><span className="text-sm font-mono font-black text-green-500">{selectedIssue.blocks_count || 0}</span></div>
