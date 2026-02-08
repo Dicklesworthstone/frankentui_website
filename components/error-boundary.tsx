@@ -1,0 +1,80 @@
+"use client";
+
+import { Component, type ReactNode } from "react";
+import { AlertTriangle, RefreshCw } from "lucide-react";
+
+type ErrorBoundaryProps = {
+  children: ReactNode;
+  fallback?: ReactNode;
+};
+
+type ErrorBoundaryState = {
+  hasError: boolean;
+  error: Error | null;
+};
+
+export default class ErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("Error boundary caught error:", error, errorInfo);
+  }
+
+  reset = () => {
+    this.setState({ hasError: false, error: null });
+  };
+
+  render() {
+    if (this.state.hasError) {
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
+
+      return (
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="mx-auto flex min-h-[400px] max-w-2xl flex-col items-center justify-center px-4 py-12 text-center"
+        >
+          <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl border border-amber-500/30 bg-amber-500/10 text-amber-300">
+            <AlertTriangle className="h-8 w-8" />
+          </div>
+          <h2 className="mt-6 text-2xl font-semibold text-slate-50">
+            Something went wrong
+          </h2>
+          <p className="mt-3 text-sm text-slate-400">
+            {this.state.error?.message ||
+              "An unexpected error occurred while rendering this section."}
+          </p>
+          <div className="mt-6 flex gap-3">
+            <button
+              onClick={this.reset}
+              className="inline-flex items-center gap-2 rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-900 shadow-sm transition-colors hover:bg-white"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Try again
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-700/80 bg-slate-900/80 px-4 py-2 text-sm font-medium text-slate-100 shadow-sm hover:border-slate-500 hover:bg-slate-900"
+            >
+              Reload page
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
