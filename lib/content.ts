@@ -217,6 +217,30 @@ export const warStories: WarStory[] = [
     impact: "Stable memory usage for long-running dashboards.",
     icon: "trash",
   },
+  {
+    title: "Synchronized Output Deadlock",
+    subtitle: "Terminal Hang on Rapid Resizes",
+    description: "In synchronized output mode (DEC 2026), rapid terminal resizing caused the `Presenter` to emit sync brackets that were interleaved with kernel-level SIGWINCH reflows, occasionally leaving the terminal in a permanently locked state.",
+    technicalDetails: "The kernel was emitting SYNC_BEGIN but getting interrupted by resize signals that triggered a new frame before SYNC_END. Fixed by making the sync-bracket emission atomic and non-interruptible via a dedicated output buffer lock.",
+    impact: "Total stability during aggressive window dragging.",
+    icon: "zap",
+  },
+  {
+    title: "The Phantom Scroll Ghost",
+    subtitle: "Stale Pixels in Inline Mode",
+    description: "In 'Inline Mode', logs scrolling above the UI occasionally left 'phantom' remnants of previous UI frames because the renderer assumed the screen coordinates were static.",
+    technicalDetails: "Implemented a 'coordinate-relative' diffing system that tracks the global scroll offset. When the terminal scrolls, the renderer now invalidates the entire front-buffer, forcing a clean redraw relative to the new scroll position.",
+    impact: "Pristine UI rendering even during heavy log activity.",
+    icon: "ghost",
+  },
+  {
+    title: "Wait-Free Event Loop",
+    subtitle: "100% CPU Usage in Idle",
+    description: "The initial elm-architecture runtime used a naive busy-wait loop for events, consuming an entire CPU core even when the application was idle.",
+    technicalDetails: "Refactored the runtime to use `mio` (Metal I/O) for cross-platform event polling. The loop now sleeps efficiently and only wakes up on kernel-level events or timer expirations.",
+    impact: "Zero idle CPU usage and improved battery life for CLI tools.",
+    icon: "cpu",
+  },
 ];
 
 // Optimization Highlights
