@@ -243,11 +243,11 @@ function sanitizeHref(rawHref: string): { href: string; isExternal: boolean } | 
 
 function tokenizeInline(text: string): React.ReactNode[] {
   // Regex for inline tokens: 
-  // 1. Triple asterisks (bold-italic)
-  // 2. Double asterisks (bold)
-  // 3. Single asterisk (italic)
-  // 4. Backticks (inline code)
-  // 5. Links [label](url)
+  // 1. Triple asterisks (bold-italic) - must have content
+  // 2. Double asterisks (bold) - must have content
+  // 3. Single asterisk (italic) - must have content
+  // 4. Backticks (inline code) - must have content
+  // 5. Links [label](url) - must have both
   const re = /(`[^`]+`|\[[^\]]+\]\([^)]+\)|\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*]+\*)/g;
 
   const nodes: React.ReactNode[] = [];
@@ -261,7 +261,7 @@ function tokenizeInline(text: string): React.ReactNode[] {
 
     const token = match[0];
 
-    if (token.startsWith("`")) {
+    if (token.startsWith("`") && token.length > 2) {
       nodes.push(
         <code key={match.index} className="bg-white/5 border border-white/10 rounded px-1.5 py-0.5 font-mono text-[0.95em] text-green-300">
           {token.slice(1, -1)}
@@ -271,32 +271,36 @@ function tokenizeInline(text: string): React.ReactNode[] {
       const sep = token.indexOf("](");
       const label = token.slice(1, sep);
       const hrefRaw = token.slice(sep + 2, -1);
-      const safe = sanitizeHref(hrefRaw);
-
-      if (!safe) {
-        nodes.push(label);
+      
+      if (!label || !hrefRaw) {
+        nodes.push(token);
       } else {
-        nodes.push(
-          <a
-            key={match.index}
-            href={safe.href}
-            target={safe.isExternal ? "_blank" : undefined}
-            rel={safe.isExternal ? "noopener noreferrer" : undefined}
-            className="text-green-400 hover:text-green-300 transition-colors underline decoration-green-500/30 underline-offset-4 font-bold"
-          >
-            {label}
-          </a>
-        );
+        const safe = sanitizeHref(hrefRaw);
+        if (!safe) {
+          nodes.push(label);
+        } else {
+          nodes.push(
+            <a
+              key={match.index}
+              href={safe.href}
+              target={safe.isExternal ? "_blank" : undefined}
+              rel={safe.isExternal ? "noopener noreferrer" : undefined}
+              className="text-green-400 hover:text-green-300 transition-colors underline decoration-green-500/30 underline-offset-4 font-bold"
+            >
+              {label}
+            </a>
+          );
+        }
       }
-    } else if (token.startsWith("***")) {
+    } else if (token.startsWith("***") && token.length > 6) {
       nodes.push(
         <strong key={match.index} className="text-white font-black">
           <em className="italic">{token.slice(3, -3)}</em>
         </strong>
       );
-    } else if (token.startsWith("**")) {
+    } else if (token.startsWith("**") && token.length > 4) {
       nodes.push(<strong key={match.index} className="text-white font-black">{token.slice(2, -2)}</strong>);
-    } else if (token.startsWith("*")) {
+    } else if (token.startsWith("*") && token.length > 2) {
       nodes.push(<em key={match.index} className="italic text-slate-200">{token.slice(1, -1)}</em>);
     } else {
       nodes.push(token);
