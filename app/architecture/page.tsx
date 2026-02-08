@@ -17,9 +17,12 @@ import type { LucideIcon } from "lucide-react";
 import {
   algorithms,
   cellDiagram,
+  optimizations,
+  performanceSLAs,
 } from "@/lib/content";
 import SectionShell from "@/components/section-shell";
 import AlgorithmCard from "@/components/algorithm-card";
+import OptimizationCard from "@/components/optimization-card";
 import FrankenEye from "@/components/franken-eye";
 import { FrankenContainer, FrankenStitch } from "@/components/franken-elements";
 import FrankenGlitch from "@/components/franken-glitch";
@@ -315,6 +318,59 @@ export default function ArchitecturePage() {
               />
             </motion.div>
           ))}
+        </div>
+      </SectionShell>
+
+      {/* ── EFFICIENCY GAINS ─────────────────────────────── */}
+      <SectionShell
+        id="optimizations"
+        eyebrow="Hardware Alignment"
+        title="Efficiency Gains"
+        kicker="Key architectural decisions that ensure FrankenTUI runs at 60 FPS even on legacy hardware."
+      >
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {optimizations.map((opt, i) => (
+            <motion.div
+              key={opt.name}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              viewport={{ once: true }}
+            >
+              <OptimizationCard opt={opt} />
+            </motion.div>
+          ))}
+        </div>
+      </SectionShell>
+
+      {/* ── QUALITY GUARDS ────────────────────────────────── */}
+      <SectionShell
+        id="slas"
+        eyebrow="Runtime Invariants"
+        title="Quality Guards"
+        kicker="Hard performance targets enforced in CI. Violations are test failures, not warnings."
+      >
+        <div className="overflow-x-auto rounded-2xl border border-green-900/40 bg-green-900/20 shadow-xl shadow-green-950/20">
+          <table className="w-full text-left text-sm border-collapse min-w-[600px]">
+            <thead>
+              <tr className="border-b border-white/10 bg-white/5">
+                <th className="p-6 font-black text-white uppercase tracking-widest text-[10px]">Metric</th>
+                <th className="p-6 font-black text-green-400 uppercase tracking-widest text-[10px]">Target</th>
+                <th className="p-6 font-black text-yellow-400 uppercase tracking-widest text-[10px]">Hard Cap</th>
+                <th className="p-6 font-black text-slate-400 uppercase tracking-widest text-[10px]">Notes</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {performanceSLAs.map((sla) => (
+                <tr key={sla.metric} className="group hover:bg-white/[0.02] transition-colors">
+                  <td className="p-6 font-black text-white text-base group-hover:text-green-400 transition-colors">{sla.metric}</td>
+                  <td className="p-6 font-mono text-sm text-green-400">{sla.target}</td>
+                  <td className="p-6 font-mono text-sm text-yellow-400">{sla.hardCap}</td>
+                  <td className="p-6 text-sm text-slate-500 leading-relaxed max-w-xs">{sla.notes}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </SectionShell>
 

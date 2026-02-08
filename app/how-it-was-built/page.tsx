@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, Clock, Link2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { changelog, tweets, buildLogLines, devSessionInsights, devProcessStats } from "@/lib/content";
+import { changelog, tweets, buildLogLines, devSessionInsights, devProcessStats, warStories } from "@/lib/content";
 import SectionShell from "@/components/section-shell";
 import Timeline from "@/components/timeline";
 import TweetWall from "@/components/tweet-wall";
@@ -236,6 +236,49 @@ export default function HowItWasBuiltPage() {
               );
             })}
           </div>
+        </div>
+      </SectionShell>
+
+      {/* ── Battle Scars (War Stories) ──────────────────── */}
+      <SectionShell
+        id="battle-scars"
+        icon="skull"
+        title="Battle Scars"
+        kicker="Real bugs caught and killed during the sprint. Each fix hardened a critical invariant."
+      >
+        <div className="space-y-4">
+          {warStories.map((story, i) => (
+            <motion.div
+              key={story.title}
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.05 }}
+              className="rounded-xl border border-red-500/20 bg-red-950/15 p-5 transition-colors group relative overflow-hidden hover:border-red-500/40"
+            >
+              <NeuralPulse className="opacity-0 group-hover:opacity-40 transition-opacity" />
+              <div className="mb-3 flex flex-wrap items-center gap-3 relative z-10">
+                <span className="rounded-full border border-red-500/20 bg-red-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-400">
+                  {story.subtitle}
+                </span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-red-400">
+                  Fix
+                </span>
+              </div>
+              <h3 className="mb-2 text-base font-bold text-white relative z-10">
+                {story.title}
+              </h3>
+              <p className="text-sm leading-relaxed text-slate-400 relative z-10 mb-3">
+                {story.description}
+              </p>
+              <p className="text-xs leading-relaxed text-slate-500 relative z-10 font-mono">
+                {story.technicalDetails}
+              </p>
+              <p className="mt-2 text-xs font-bold text-green-400/80 relative z-10">
+                Impact: {story.impact}
+              </p>
+            </motion.div>
+          ))}
         </div>
       </SectionShell>
 
