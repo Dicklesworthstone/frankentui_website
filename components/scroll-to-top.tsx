@@ -8,14 +8,9 @@ const CIRCLE_RADIUS = 20;
 const CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS;
 
 export default function ScrollToTop() {
-  const [isVisible, setIsVisible] = useState(
-    () => typeof window !== "undefined" && window.scrollY > 400
-  );
-  const [progress, setProgress] = useState(() => {
-    if (typeof window === "undefined") return 0;
-    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-    return maxScroll > 0 ? Math.min(window.scrollY / maxScroll, 1) : 0;
-  });
+  // Keep the first render deterministic to avoid SSR/CSR hydration mismatches.
+  const [isVisible, setIsVisible] = useState(false);
+  const [progress, setProgress] = useState(0);
   const prefersReducedMotion = useReducedMotion();
 
   const handleScroll = useCallback(() => {
