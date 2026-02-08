@@ -2,8 +2,12 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
+/**
+ * A visceral, reactive "Monster" eye.
+ * Hyper-optimized for performance and lifelike behavior.
+ */
 export default function FrankenEye({ className }: { className?: string }) {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isBlinking, setIsBlinking] = useState(false);
@@ -23,7 +27,6 @@ export default function FrankenEye({ className }: { className?: string }) {
     }
   }, []);
 
-  // Only attach mousemove when the eye is actually visible on screen
   useEffect(() => {
     const el = eyeRef.current;
     if (!el) return;
@@ -46,15 +49,15 @@ export default function FrankenEye({ className }: { className?: string }) {
         const distance = Math.hypot(deltaX, deltaY);
         
         const angle = Math.atan2(deltaY, deltaX);
-        const moveDist = Math.min(rect.width / 4, distance / 10);
+        const moveDist = Math.min(rect.width / 4, distance / 15);
 
         setMousePos({
           x: Math.cos(angle) * moveDist,
           y: Math.sin(angle) * moveDist,
         });
 
-        // Calculate proximity for blood vessels (starts showing at 300px)
-        const prox = Math.max(0, 1 - distance / 300);
+        // Proximity for blood vessels (starts showing at 400px)
+        const prox = Math.max(0, 1 - distance / 400);
         setProximity(prox);
 
         frameRef.current = null;
@@ -70,14 +73,14 @@ export default function FrankenEye({ className }: { className?: string }) {
     );
     observer.observe(el);
 
-    // Random blinking logic
+    // Reliable blinking logic
     const blinkInterval = setInterval(() => {
-      if (Math.random() > 0.7 && !isBlinking) {
+      if (Math.random() > 0.8 && !isBlinking) {
         setIsBlinking(true);
         if (blinkTimeoutRef.current) clearTimeout(blinkTimeoutRef.current);
-        blinkTimeoutRef.current = setTimeout(() => setIsBlinking(false), 150);
+        blinkTimeoutRef.current = setTimeout(() => setIsBlinking(false), 120);
       }
-    }, 3000);
+    }, 2500);
 
     updateRect();
     window.addEventListener("scroll", updateRect, { passive: true });
@@ -145,7 +148,7 @@ export default function FrankenEye({ className }: { className?: string }) {
         <motion.div 
           className="relative h-6 w-6 rounded-full bg-green-500 border border-green-700 flex items-center justify-center shadow-[inset_0_0_10px_rgba(0,0,0,0.3)]"
           style={{ x: mousePos.x, y: mousePos.y }}
-          transition={{ type: "spring", stiffness: 200, damping: 20 }}
+          transition={{ type: "spring", stiffness: 250, damping: 20 }}
         >
           {/* Iris pattern */}
           <div className="absolute inset-0 bg-[repeating-conic-gradient(from_0deg,_transparent_0deg_10deg,_rgba(0,0,0,0.1)_10deg_20deg)] opacity-40 rounded-full" />
@@ -154,7 +157,7 @@ export default function FrankenEye({ className }: { className?: string }) {
           <motion.div 
             className="h-3 w-3 rounded-full bg-slate-950" 
             animate={{ 
-              scale: isHovered ? 1.3 : 1,
+              scale: isHovered ? 1.25 : 1,
               backgroundColor: isHovered ? "#000" : "#020617"
             }}
           />
@@ -164,24 +167,25 @@ export default function FrankenEye({ className }: { className?: string }) {
         </motion.div>
       </div>
       
-      {/* Eyelids - using a much better approach with clipPath for organic blinking */}
+      {/* Eyelids - Using scaleY for maximum reliability to prevent "black stuck" eye */}
       <motion.div 
-        className="absolute inset-0 bg-slate-950 z-20 pointer-events-none rounded-full"
-        initial={{ clipPath: "inset(0 0 100% 0)" }}
-        animate={{ clipPath: isBlinking ? "inset(0 0 0% 0)" : "inset(0 0 100% 0)" }}
-        transition={{ duration: 0.12, ease: "easeInOut" }}
-      />
-      <motion.div 
-        className="absolute inset-0 bg-slate-950 z-20 pointer-events-none rounded-full"
-        initial={{ clipPath: "inset(100% 0 0 0)" }}
-        animate={{ clipPath: isBlinking ? "inset(0% 0 0 0)" : "inset(100% 0 0 0)" }}
-        transition={{ duration: 0.12, ease: "easeInOut" }}
-      />
+        className="absolute inset-0 z-20 pointer-events-none flex flex-col"
+        initial={false}
+      >
+        <motion.div 
+          className="w-full flex-1 bg-slate-950 origin-top"
+          animate={{ scaleY: isBlinking ? 1 : 0 }}
+          transition={{ duration: 0.1, ease: "easeInOut" }}
+        />
+        <motion.div 
+          className="w-full flex-1 bg-slate-950 origin-bottom"
+          animate={{ scaleY: isBlinking ? 1 : 0 }}
+          transition={{ duration: 0.1, ease: "easeInOut" }}
+        />
+      </motion.div>
       
       {/* Surface Shadow / Depth Overlay */}
       <div className="absolute inset-0 shadow-[inset_0_4px_12px_rgba(0,0,0,0.4)] pointer-events-none rounded-full z-30" />
     </div>
   );
 }
-
-
