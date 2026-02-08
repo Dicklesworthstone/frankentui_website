@@ -8,6 +8,22 @@ import WarStoryCard from "./war-story-card";
 import { Skull, AlertCircle, ShieldAlert, X } from "lucide-react";
 import { Portal } from "./motion-wrapper";
 
+function toMotionId(title: string): string {
+  const slug = title
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+  // Ensure uniqueness even if multiple titles slugify to the same value.
+  let hash = 0;
+  for (let i = 0; i < title.length; i += 1) {
+    hash = (hash * 31 + title.charCodeAt(i)) >>> 0;
+  }
+
+  return `${slug || "story"}_${hash.toString(16)}`;
+}
+
 export default function WarStoriesMap() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { playSfx } = useSite();
@@ -33,7 +49,7 @@ export default function WarStoriesMap() {
         {allStories.map((story, i) => {
           const isSelected = selectedId === story.title;
           const isCritical = i < warStories.length;
-          const storyId = story.title.replace(/\s+/g, "_");
+          const storyId = toMotionId(story.title);
           
           return (
             <motion.div
