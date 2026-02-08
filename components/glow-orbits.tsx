@@ -18,8 +18,14 @@ export default function GlowOrbits() {
   const springX = useSpring(mouseX, { damping: 50, stiffness: 100 });
   const springY = useSpring(mouseY, { damping: 50, stiffness: 100 });
 
-  const parallaxX = useTransform(springX, [0, 1000], [20, -20]);
-  const parallaxY = useTransform(springY, [0, 1000], [20, -20]);
+  const parallaxX = useTransform(springX, (val) => {
+    if (typeof window === "undefined") return 0;
+    return (val / window.innerWidth - 0.5) * -40;
+  });
+  const parallaxY = useTransform(springY, (val) => {
+    if (typeof window === "undefined") return 0;
+    return (val / window.innerHeight - 0.5) * -40;
+  });
 
   useEffect(() => {
     if (prefersReducedMotion) return undefined;
@@ -29,7 +35,7 @@ export default function GlowOrbits() {
       mouseX.set(e.clientX);
       mouseY.set(e.clientY);
     };
-    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, [mouseX, mouseY, isIntersecting, prefersReducedMotion]);
 

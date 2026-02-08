@@ -216,15 +216,23 @@ export default function BeadsView() {
       const chunkCount = asNumber(config.chunk_count);
       if (chunkCount <= 0) throw new Error("Invalid database configuration.");
       
-      const chunks: Uint8Array[] = [];
-      for (let i = 0; i < chunkCount; i++) {
-        setLoadingMessage(`Downloading Neural Chunk ${i + 1}/${chunkCount}...`);
+      setLoadingMessage(`Downloading Neural Chunks (0/${chunkCount})...`);
+      
+      let downloadedCount = 0;
+      // Fetch all chunks in parallel with progress tracking
+      const chunkPromises = Array.from({ length: chunkCount }).map(async (_, i) => {
         const chunkPath = `/beads-viewer/chunks/${String(i).padStart(5, '0')}.bin`;
         const response = await fetch(chunkPath);
         if (!response.ok) throw new Error(`Neural Chunk ${i} extraction failed.`);
-        const buffer = await response.arrayBuffer();
-        chunks.push(new Uint8Array(buffer));
-      }
+        const data = new Uint8Array(await response.arrayBuffer());
+        
+        downloadedCount += 1;
+        setLoadingMessage(`Downloading Neural Chunks (${downloadedCount}/${chunkCount})...`);
+        
+        return data;
+      });
+
+      const chunks = await Promise.all(chunkPromises);
 
       setLoadingMessage("Stitching Synapses...");
       const totalSize = chunks.reduce((sum, c) => sum + c.length, 0);

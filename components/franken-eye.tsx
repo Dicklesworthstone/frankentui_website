@@ -95,7 +95,7 @@ export default function FrankenEye({ className }: { className?: string }) {
     if (prefersReducedMotion) return undefined;
 
     const blinkInterval = setInterval(() => {
-      if (Math.random() > 0.8 && !isBlinking) {
+      if (isVisibleRef.current && Math.random() > 0.8 && !isBlinking) {
         setIsBlinking(true);
         if (blinkTimeoutRef.current) clearTimeout(blinkTimeoutRef.current);
         blinkTimeoutRef.current = setTimeout(() => setIsBlinking(false), 120);

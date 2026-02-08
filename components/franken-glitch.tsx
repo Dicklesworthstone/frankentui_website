@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -53,7 +53,7 @@ export default function FrankenGlitch({
     (trigger === "always" ||
       (trigger === "hover" ? isHovered : isRandomGlitching));
 
-  const glitchVariants = {
+  const glitchVariants = useMemo(() => ({
     initial: { x: 0, y: 0, textShadow: "none" },
     glitch: () => {
       const offset = intensity === "low" ? 2 : intensity === "medium" ? 5 : 10;
@@ -73,7 +73,7 @@ export default function FrankenGlitch({
         },
       };
     },
-  };
+  }), [intensity]);
 
   return (
     <div
