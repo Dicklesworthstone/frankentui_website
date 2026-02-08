@@ -79,6 +79,7 @@ export default function WarStoriesPage() {
         eyebrow="Runtime Invariants"
         title="Quality Guards"
         kicker="Hard performance targets enforced in CI. Violations are test failures, not warnings."
+        forceReveal={true}
       >
         <motion.div 
           initial={{ opacity: 0, scale: 0.98 }}
@@ -115,6 +116,7 @@ export default function WarStoriesPage() {
         eyebrow="Hardware Alignment"
         title="Efficiency Gains"
         kicker="Key architectural decisions that ensure FrankenTUI runs at 60 FPS even on legacy hardware."
+        forceReveal={true}
       >
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {optimizations.map((opt, i) => (

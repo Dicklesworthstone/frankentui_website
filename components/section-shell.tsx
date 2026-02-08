@@ -99,9 +99,9 @@ export default function SectionShell({
         {/* SIDEBAR HEADER (Stripe Style) */}
         <div className="lg:col-span-4 lg:sticky lg:top-32 space-y-10">
           <motion.div
-            initial={skipAnim ? false : { opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, amount: 0.05 }}
+            initial={skipAnim ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
+            whileInView={skipAnim ? undefined : { opacity: 1, x: 0 }}
+            viewport={skipAnim ? undefined : { once: true, amount: 0.05 }}
             transition={skipAnim ? { duration: 0 } : { duration: 0.8, ease: [0.19, 1, 0.22, 1] }}
           >
             {eyebrow && (
@@ -148,9 +148,9 @@ export default function SectionShell({
         {/* CONTENT AREA */}
         <div className="lg:col-span-8">
           <motion.div
-            initial={skipAnim ? false : { opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.05 }}
+            initial={skipAnim ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
+            whileInView={skipAnim ? undefined : { opacity: 1, y: 0 }}
+            viewport={skipAnim ? undefined : { once: true, amount: 0.05 }}
             transition={
               skipAnim
                 ? { duration: 0 }
