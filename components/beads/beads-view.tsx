@@ -178,7 +178,8 @@ export default function BeadsView() {
     }, 100);
     
     return () => clearInterval(checkInterval);
-  }, [sqlLoaded, d3Loaded, forceGraphLoaded]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (sqlLoaded && !db) {
