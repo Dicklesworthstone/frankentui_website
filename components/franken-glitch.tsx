@@ -27,11 +27,11 @@ export default function FrankenGlitch({
 
     if (trigger === "random") {
       const interval = setInterval(() => {
-        if (Math.random() > 0.8) {
+        if (Math.random() > 0.85) {
           setIsGlitching(true);
-          setTimeout(() => setIsGlitching(false), 200 + Math.random() * 300);
+          setTimeout(() => setIsGlitching(false), 150 + Math.random() * 200);
         }
-      }, 2000);
+      }, 3000);
       return () => clearInterval(interval);
     }
   }, [trigger]);
