@@ -9,6 +9,15 @@ import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 import { cn } from "@/lib/utils";
 import { FrankenContainer } from "./franken-elements";
 
+import { createPortal } from "react-dom";
+
+/* ── Portal Helper ───────────────────────────────────────── */
+function Portal({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  return mounted ? createPortal(children, document.body) : null;
+}
+
 /* ── Directional slide variants (GPU-accelerated via translateX) ── */
 const SLIDE_OFFSET = 400;
 
@@ -162,102 +171,105 @@ export default function ScreenshotGallery({
         ))}
       </div>
 
-      <AnimatePresence>
-        {isLightboxOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-xl p-4 md:p-12 cursor-zoom-out"
-            onClick={closeLightbox}
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-          >
-            {/* Cinematic Background Detail */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
-               <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-green-500/10 rounded-full blur-[100px]" />
-               <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[80px]" />
-            </div>
+      <Portal>
+        <AnimatePresence>
+          {isLightboxOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+              className="fixed inset-0 z-[999] flex items-center justify-center bg-black/95 backdrop-blur-xl p-4 md:p-12 cursor-zoom-out"
+              onClick={closeLightbox}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
+              {/* Cinematic Background Detail */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
+                 <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-green-500/10 rounded-full blur-[100px]" />
+                 <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[80px]" />
+              </div>
 
-            {/* Top Bar */}
-            <div className="absolute top-8 left-8 right-8 flex items-center justify-between z-20 pointer-events-none">
-               <AnimatePresence mode="wait">
-                 <motion.div
-                   key={lightboxIndex}
-                   initial={{ opacity: 0, y: -8 }}
-                   animate={{ opacity: 1, y: 0 }}
-                   exit={{ opacity: 0, y: 8 }}
-                   transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                   className="flex flex-col"
+              {/* Top Bar */}
+              <div className="absolute top-8 left-8 right-8 flex items-center justify-between z-20 pointer-events-none">
+                 <AnimatePresence mode="wait">
+                   <motion.div
+                     key={lightboxIndex}
+                     initial={{ opacity: 0, y: -8 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     exit={{ opacity: 0, y: 8 }}
+                     transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                     className="flex flex-col"
+                   >
+                      <span className="text-[10px] font-black uppercase tracking-[0.4em] text-green-500 mb-1">Technical Snapshot</span>
+                      <h3 className="text-2xl font-black text-white tracking-tight leading-none">{screenshots[lightboxIndex].title}</h3>
+                   </motion.div>
+                 </AnimatePresence>
+                 <button
+                   type="button"
+                   onClick={closeLightbox}
+                   className="h-12 w-12 rounded-full glass-modern flex items-center justify-center text-white hover:bg-white/10 transition-colors pointer-events-auto shadow-2xl"
+                   aria-label="Close image"
                  >
-                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-green-500 mb-1">Technical Snapshot</span>
-                    <h3 className="text-2xl font-black text-white tracking-tight leading-none">{screenshots[lightboxIndex].title}</h3>
-                 </motion.div>
-               </AnimatePresence>
-               <button
-                 type="button"
-                 onClick={closeLightbox}
-                 className="h-12 w-12 rounded-full glass-modern flex items-center justify-center text-white hover:bg-white/10 transition-colors pointer-events-auto shadow-2xl"
-                 aria-label="Close image"
-               >
-                  <X className="h-6 w-6" />
-               </button>
-            </div>
+                    <X className="h-6 w-6" />
+                 </button>
+              </div>
 
-            {/* Navigation Controls */}
-            <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 flex items-center justify-between pointer-events-none z-20">
-               <button
-                 type="button"
-                 aria-label="Previous screenshot"
-                 onClick={(e) => { e.stopPropagation(); goPrev(); }}
-                 className="h-16 w-16 rounded-full glass-modern flex items-center justify-center text-white pointer-events-auto hover:bg-white/10 transition-all hover:scale-110 active:scale-95 shadow-2xl"
-               >
-                  <ChevronLeft className="h-8 w-8" />
-               </button>
-               <button
-                 type="button"
-                 aria-label="Next screenshot"
-                 onClick={(e) => { e.stopPropagation(); goNext(); }}
-                 className="h-16 w-16 rounded-full glass-modern flex items-center justify-center text-white pointer-events-auto hover:bg-white/10 transition-all hover:scale-110 active:scale-95 shadow-2xl"
-               >
-                  <ChevronRight className="h-8 w-8" />
-               </button>
-            </div>
+              {/* Navigation Controls */}
+              <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 flex items-center justify-between pointer-events-none z-20">
+                 <button
+                   type="button"
+                   aria-label="Previous screenshot"
+                   onClick={(e) => { e.stopPropagation(); goPrev(); }}
+                   className="h-16 w-16 rounded-full glass-modern flex items-center justify-center text-white pointer-events-auto hover:bg-white/10 transition-all hover:scale-110 active:scale-95 shadow-2xl"
+                 >
+                    <ChevronLeft className="h-8 w-8" />
+                 </button>
+                 <button
+                   type="button"
+                   aria-label="Next screenshot"
+                   onClick={(e) => { e.stopPropagation(); goNext(); }}
+                   className="h-16 w-16 rounded-full glass-modern flex items-center justify-center text-white pointer-events-auto hover:bg-white/10 transition-all hover:scale-110 active:scale-95 shadow-2xl"
+                 >
+                    <ChevronRight className="h-8 w-8" />
+                 </button>
+              </div>
 
-            {/* Main Image — GPU-accelerated directional slide */}
-            <AnimatePresence mode="popLayout" custom={direction} initial={false}>
-              <motion.div
-                key={lightboxIndex}
-                custom={direction}
-                variants={variants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={prefersReduced ? { duration: 0.15 } : slideTransition}
-                className="relative z-10 flex items-center justify-center will-change-transform"
-                style={{ willChange: "transform, opacity" }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Image
-                  src={screenshots[lightboxIndex].src}
-                  alt={screenshots[lightboxIndex].alt}
-                  width={1920}
-                  height={1080}
-                  className="max-h-[75vh] max-w-[90vw] w-auto h-auto object-contain drop-shadow-[0_0_60px_rgba(34,197,94,0.3)] cursor-default rounded-lg"
-                  priority
-                  sizes="90vw"
-                />
-              </motion.div>
-            </AnimatePresence>
+              {/* Main Image — GPU-accelerated directional slide */}
+              <AnimatePresence mode="popLayout" custom={direction} initial={false}>
+                <motion.div
+                  key={lightboxIndex}
+                  custom={direction}
+                  variants={variants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={prefersReduced ? { duration: 0.15 } : slideTransition}
+                  className="relative z-10 flex items-center justify-center will-change-transform"
+                  style={{ willChange: "transform, opacity" }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Image
+                    src={screenshots[lightboxIndex].src}
+                    alt={screenshots[lightboxIndex].alt}
+                    width={1920}
+                    height={1080}
+                    className="max-h-[75vh] max-w-[90vw] w-auto h-auto object-contain drop-shadow-[0_0_60px_rgba(34,197,94,0.3)] cursor-default rounded-lg"
+                    priority
+                    sizes="90vw"
+                  />
+                </motion.div>
+              </AnimatePresence>
 
-            {/* Bottom Indicator */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-full glass-modern border-white/5 text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 shadow-2xl">
-               {lightboxIndex + 1} / {screenshots.length}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              {/* Bottom Indicator */}
+              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-full glass-modern border-white/5 text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 shadow-2xl">
+                 {lightboxIndex + 1} / {screenshots.length}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Portal>
+
     </>
   );
 }
