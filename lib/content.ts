@@ -17,7 +17,6 @@ export const navItems = [
   { href: "/", label: "Home" },
   { href: "/showcase", label: "Showcase" },
   { href: "/architecture", label: "Architecture" },
-  { href: "/war-stories", label: "War Stories" },
   { href: "/beads", label: "Project Graph" },
   { href: "/how-it-was-built", label: "Built in 5 Days" },
   { href: "/glossary", label: "Glossary" },
