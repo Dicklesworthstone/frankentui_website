@@ -1054,7 +1054,7 @@ export default function SpecEvolutionLab() {
   return (
     <main
       id="main-content"
-      className="min-h-screen bg-[#020408] text-slate-100 selection:bg-green-500/30 overflow-x-hidden relative"
+      className="min-h-screen pt-20 bg-[#020408] text-slate-100 selection:bg-green-500/30 overflow-x-hidden relative"
     >
       {/* Cinematic Background Infrastructure */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
@@ -1517,7 +1517,7 @@ export default function SpecEvolutionLab() {
                   <span>EPOCH_START: {commits[0]?.dateShort.split(' ')[0] || ""}</span>
                   <span>EPOCH_END: {commits[commits.length - 1]?.dateShort.split(' ')[0] || ""}</span>
                 </div>
-                <div className="relative h-12 flex items-center group">
+                  <div className="relative h-12 flex items-center group">
                   <div className="absolute inset-x-0 h-1 bg-white/5 rounded-full" />
                   <div 
                     className="absolute h-1 bg-green-500 rounded-full shadow-[0_0_15px_#22c55e]" 
@@ -1526,7 +1526,10 @@ export default function SpecEvolutionLab() {
                   {compareBaseIndex !== null && commits.length > 1 ? (
                     <div
                       className="absolute top-0 bottom-0 pointer-events-none"
-                      style={{ left: `calc(${(compareBaseIndex / (commits.length - 1)) * 100}% - 1px)` }}
+                      style={{ 
+                        left: `calc(${(compareBaseIndex / (commits.length - 1)) * 100}% - 1px)`,
+                        opacity: compareBaseIndex === selectedIndex ? 0 : 1
+                      }}
                       aria-hidden="true"
                     >
                       <div className="absolute top-1/2 -translate-y-1/2 h-7 w-[2px] rounded-full bg-rose-400/80 shadow-[0_0_12px_rgba(251,113,133,0.6)]" />
@@ -1548,7 +1551,13 @@ export default function SpecEvolutionLab() {
                     style={{ left: `calc(${(selectedIndex / (commits.length - 1)) * 100}% - 8px)` }}
                     animate={{ scale: [1, 1.2, 1] }}
                     transition={{ repeat: Infinity, duration: 2 }}
-                  />
+                  >
+                    {compareBaseIndex === selectedIndex && (
+                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] font-black font-mono text-rose-300 bg-rose-500/20 border border-rose-500/40 px-1 py-0.5 rounded">
+                        A
+                      </div>
+                    )}
+                  </motion.div>
                 </div>
                 
                 <div className="mt-8 grid md:grid-cols-[1fr_auto] gap-6 items-start">
