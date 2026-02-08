@@ -5,10 +5,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSite } from "@/lib/site-state";
 import { useRouter } from "next/navigation";
 import { Terminal as TerminalIcon, X, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { FrankenBolt, NeuralPulse } from "./franken-elements";
+import FrankenGlitch from "./franken-glitch";
 
 interface CommandResult {
   command: string;
   output: string | React.ReactNode;
+  isError?: boolean;
 }
 
 export default function SiteTerminal() {
@@ -39,6 +43,7 @@ export default function SiteTerminal() {
     const args = parts.slice(1);
 
     let output: string | React.ReactNode = "";
+    let isError = false;
     playSfx("click");
 
     switch (command) {
@@ -64,10 +69,12 @@ export default function SiteTerminal() {
             setTimeout(() => setTerminalOpen(false), 500);
           } else {
             output = `Error: Unknown destination '${args[0]}'. Valid targets: ${validSlugs.join(", ")}`;
+            isError = true;
             playSfx("error");
           }
         } else {
           output = "Error: Missing target slug.";
+          isError = true;
           playSfx("error");
         }
         break;
@@ -98,10 +105,11 @@ export default function SiteTerminal() {
         break;
       default:
         playSfx("error");
+        isError = true;
         output = `Command not found: ${command}. Type 'help' for available commands.`;
     }
 
-    setHistory(prev => [...prev, { command: cmd, output }]);
+    setHistory(prev => [...prev, { command: cmd, output, isError }]);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -116,20 +124,31 @@ export default function SiteTerminal() {
       {isTerminalOpen && (
         <motion.div
           initial={{ y: "-100%" }}
-          animate={{ y: 0 }}
+          animate={{ 
+            y: 0,
+            opacity: [0.95, 1, 0.98, 1],
+          }}
           exit={{ y: "-100%" }}
-          transition={{ type: "spring", damping: 30, stiffness: 300 }}
-          className="fixed top-0 left-0 right-0 z-[100] h-[40vh] bg-black/95 border-b border-green-500/30 backdrop-blur-xl shadow-2xl flex flex-col font-mono"
+          transition={{ 
+            y: { type: "spring", damping: 30, stiffness: 300 },
+            opacity: { duration: 0.2, repeat: Infinity, repeatType: "reverse" }
+          }}
+          className="fixed top-0 left-0 right-0 z-[100] h-[45vh] bg-black/95 border-b border-green-500/30 backdrop-blur-xl shadow-2xl flex flex-col font-mono overflow-hidden"
           onClick={() => inputRef.current?.focus()}
         >
+          <NeuralPulse className="opacity-30" />
+          
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-2 border-b border-green-500/10 bg-green-500/5">
+          <div className="flex items-center justify-between px-6 py-2 border-b border-green-500/10 bg-green-500/5 relative z-20">
             <div className="flex items-center gap-3">
               <TerminalIcon className="h-4 w-4 text-green-500" />
-              <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">Monster_Kernel_Shell v1.0.4</span>
+              <FrankenGlitch trigger="always" intensity="low">
+                <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">Monster_Kernel_Shell v1.0.4</span>
+              </FrankenGlitch>
             </div>
             <button 
               onClick={(e) => { e.stopPropagation(); setTerminalOpen(false); }}
+              data-magnetic="true"
               className="p-1 hover:bg-white/5 rounded-md transition-colors text-slate-400 hover:text-white"
             >
               <X className="h-4 w-4" />
@@ -139,7 +158,7 @@ export default function SiteTerminal() {
           {/* History */}
           <div 
             ref={scrollRef}
-            className="flex-1 overflow-y-auto p-6 space-y-3 scrollbar-hide"
+            className="flex-1 overflow-y-auto p-6 space-y-3 scrollbar-hide relative z-20"
           >
             {history.map((item, i) => (
               <div key={i} className="space-y-1">
@@ -147,8 +166,14 @@ export default function SiteTerminal() {
                   <ChevronRight className="h-3 w-3 text-green-500/50" />
                   <span>{item.command}</span>
                 </div>
-                <div className="text-slate-300 text-sm pl-5">
-                  {item.output}
+                <div className={cn("text-sm pl-5", item.isError ? "text-red-400" : "text-slate-300")}>
+                  {item.isError ? (
+                    <FrankenGlitch trigger="always" intensity="low">
+                      {item.output}
+                    </FrankenGlitch>
+                  ) : (
+                    item.output
+                  )}
                 </div>
               </div>
             ))}
@@ -157,7 +182,7 @@ export default function SiteTerminal() {
           {/* Input Area */}
           <form 
             onSubmit={handleSubmit}
-            className="px-6 py-4 bg-green-500/5 border-t border-green-500/10 flex items-center gap-3"
+            className="px-6 py-4 bg-green-500/5 border-t border-green-500/10 flex items-center gap-3 relative z-20"
           >
             <ChevronRight className="h-4 w-4 text-green-500" />
             <input
@@ -174,7 +199,7 @@ export default function SiteTerminal() {
           </form>
 
           {/* CRT Scanline Overlay */}
-          <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03))] bg-[length:100%_2px,3px_100%] z-10" />
+          <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03))] bg-[length:100%_2px,3px_100%] z-30" />
         </motion.div>
       )}
     </AnimatePresence>

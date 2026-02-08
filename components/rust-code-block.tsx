@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { Copy, Check, Terminal } from "lucide-react";
-import { FrankenBolt } from "./franken-elements";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
+import { Copy, Check, Terminal, Activity } from "lucide-react";
+import { FrankenBolt, NeuralPulse } from "./franken-elements";
+import FrankenGlitch from "./franken-glitch";
 
 type TokenKind =
   | "plain"
@@ -205,13 +208,13 @@ function tokenClass(kind: TokenKind): string {
     case "string":
       return "text-lime-300";
     case "comment":
-      return "text-slate-600";
+      return "text-slate-600 italic";
     case "keyword":
-      return "text-green-400 font-semibold";
+      return "text-green-400 font-black";
     case "type":
-      return "text-emerald-300";
+      return "text-emerald-300 font-bold";
     case "macro":
-      return "text-yellow-300";
+      return "text-yellow-300 font-bold";
     case "number":
       return "text-amber-300";
     case "func":
@@ -261,24 +264,26 @@ export default function RustCodeBlock({ code, title }: { code: string; title?: s
   const tokenLines = useMemo(() => code.split("\n").map(tokenizeLine), [code]);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-black/40 group">
+    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#020a02]/90 group shadow-2xl">
+      <NeuralPulse className="opacity-0 group-hover:opacity-20 transition-opacity" />
+      
       {/* Corner bolts */}
-      <FrankenBolt className="absolute -left-1 -top-1 z-20 scale-75 opacity-20 transition-opacity group-hover:opacity-100" />
-      <FrankenBolt className="absolute -right-1 -top-1 z-20 scale-75 opacity-20 transition-opacity group-hover:opacity-100" />
-      <FrankenBolt className="absolute -left-1 -bottom-1 z-20 scale-75 opacity-20 transition-opacity group-hover:opacity-100" />
-      <FrankenBolt className="absolute -right-1 -bottom-1 z-20 scale-75 opacity-20 transition-opacity group-hover:opacity-100" />
+      <FrankenBolt className="absolute -left-1.5 -top-1.5 z-20 scale-75 opacity-20 transition-opacity group-hover:opacity-100" />
+      <FrankenBolt className="absolute -right-1.5 -top-1.5 z-20 scale-75 opacity-20 transition-opacity group-hover:opacity-100" />
+      <FrankenBolt className="absolute -left-1.5 -bottom-1.5 z-20 scale-75 opacity-20 transition-opacity group-hover:opacity-100" />
+      <FrankenBolt className="absolute -right-1.5 -bottom-1.5 z-20 scale-75 opacity-20 transition-opacity group-hover:opacity-100" />
 
       {/* Terminal header */}
-      <div className="flex items-center justify-between border-b border-white/5 px-4 py-3">
-        <div className="flex items-center gap-3">
-          <div className="flex gap-1.5">
-            <div className="h-3 w-3 rounded-full bg-red-500/60" />
-            <div className="h-3 w-3 rounded-full bg-yellow-500/60" />
-            <div className="h-3 w-3 rounded-full bg-green-500/60" />
+      <div className="flex items-center justify-between border-b border-white/5 px-6 py-4 bg-white/[0.02] relative z-20">
+        <div className="flex items-center gap-4">
+          <div className="flex gap-2">
+            <div className="h-2.5 w-2.5 rounded-full bg-red-500/40" />
+            <div className="h-2.5 w-2.5 rounded-full bg-yellow-500/40" />
+            <div className="h-2.5 w-2.5 rounded-full bg-green-500/40" />
           </div>
           {title && (
-            <div className="flex items-center gap-2 text-xs text-slate-500">
-              <Terminal className="h-3.5 w-3.5" />
+            <div className="flex items-center gap-3 text-[10px] font-black text-slate-500 uppercase tracking-[0.4em]">
+              <Terminal className="h-3.5 w-3.5 text-green-500/60" />
               {title}
             </div>
           )}
@@ -286,39 +291,57 @@ export default function RustCodeBlock({ code, title }: { code: string; title?: s
         <button
           type="button"
           onClick={handleCopy}
-          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-slate-500 transition-colors hover:bg-white/5 hover:text-slate-300"
+          data-magnetic="true"
+          className="flex items-center gap-2 rounded-xl bg-white/5 border border-white/5 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all hover:bg-white/10 hover:text-white"
           aria-label="Copy code"
         >
           {copied ? (
             <>
-              <Check className="h-3.5 w-3.5 text-green-400" />
-              <span className="text-green-400">Copied</span>
+              <Check className="h-3 w-3 text-green-400" />
+              <span className="text-green-400">ARCHIVED</span>
             </>
           ) : (
             <>
-              <Copy className="h-3.5 w-3.5" />
-              Copy
+              <Copy className="h-3 w-3" />
+              EXTRACT_DATA
             </>
           )}
         </button>
       </div>
 
       {/* Code content */}
-      <div className="overflow-x-auto">
-        <pre className="p-4 font-mono text-sm leading-relaxed text-slate-300">
+      <div className="overflow-x-auto relative z-10">
+        <AnimatePresence>
+          {copied && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 0.2, 0.1, 0.3, 0] }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-green-500 z-20 pointer-events-none"
+            />
+          )}
+        </AnimatePresence>
+        
+        <pre className="p-8 font-mono text-[13px] leading-relaxed text-slate-300 overflow-visible selection:bg-green-500/30">
           <code>
             {tokenLines.map((lineTokens, i) => (
-              <span key={i} className="flex">
-                <span className="mr-4 inline-block w-8 select-none text-right text-xs text-slate-700">
-                  {i + 1}
+              <span key={i} className="flex group/line">
+                <span className="mr-8 inline-block w-6 select-none text-right text-[10px] font-black text-slate-800 group-hover/line:text-green-500/40 transition-colors">
+                  {(i + 1).toString().padStart(2, '0')}
                 </span>
-                <span>
+                <span className="flex flex-wrap">
                   {lineTokens.length === 0 ? (
                     <span>&nbsp;</span>
                   ) : (
                     lineTokens.map((t, j) => (
-                      <span key={j} className={tokenClass(t.kind)}>
-                        {t.text}
+                      <span key={j} className={cn(tokenClass(t.kind), "transition-all")}>
+                        {t.kind === "keyword" ? (
+                          <FrankenGlitch trigger="hover" intensity="low">
+                            {t.text}
+                          </FrankenGlitch>
+                        ) : (
+                          t.text
+                        )}
                       </span>
                     ))
                   )}
@@ -328,6 +351,16 @@ export default function RustCodeBlock({ code, title }: { code: string; title?: s
           </code>
         </pre>
       </div>
+
+      {/* Footer Meta */}
+      <div className="px-6 py-3 border-t border-white/5 flex items-center justify-between opacity-30 group-hover:opacity-100 transition-opacity">
+         <div className="flex items-center gap-2 text-[8px] font-black text-slate-600 uppercase tracking-widest">
+            <Activity className="h-2.5 w-2.5" />
+            <span>Syntax_Validation_Active</span>
+         </div>
+         <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">UTF-8_ENCODED</span>
+      </div>
     </div>
   );
 }
+

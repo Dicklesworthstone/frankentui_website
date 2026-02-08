@@ -3,8 +3,10 @@
 import { Github, Twitter, ArrowUp, Activity } from "lucide-react";
 import Link from "next/link";
 import { siteConfig, navItems } from "@/lib/content";
-import { FrankenContainer } from "./franken-elements";
+import { FrankenContainer, NeuralPulse } from "./franken-elements";
 import { Magnetic } from "./motion-wrapper";
+import FrankenGlitch from "./franken-glitch";
+import { motion } from "framer-motion";
 
 const socialLinks = [
   { href: siteConfig.social.github, icon: Github, label: "GitHub" },
@@ -27,16 +29,18 @@ export default function SiteFooter() {
       </div>
 
       <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8">
-        <FrankenContainer withBolts={false} className="glass-modern p-12 md:p-16">
+        <FrankenContainer withBolts={false} withPulse={true} className="glass-modern p-12 md:p-16 border-green-500/10">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-12 items-start">
             
             {/* BRAND & STATUS */}
             <div className="md:col-span-5 space-y-8">
               <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-lg bg-green-500 flex items-center justify-center font-black text-black text-xs">F</div>
-                  <span className="text-xl font-black text-white uppercase tracking-tighter">{siteConfig.name}</span>
-                </div>
+                <Link href="/" className="flex items-center gap-3 group w-fit">
+                  <FrankenGlitch trigger="hover" intensity="low">
+                    <div className="h-8 w-8 rounded-lg bg-green-500 flex items-center justify-center font-black text-black text-xs transition-transform group-hover:scale-110">F</div>
+                  </FrankenGlitch>
+                  <span className="text-xl font-black text-white uppercase tracking-tighter group-hover:text-green-400 transition-colors">{siteConfig.name}</span>
+                </Link>
                 <p className="text-slate-400 font-medium leading-relaxed max-w-xs text-left">
                   The monster technical kernel for Rust. 
                   Built for architectural purity and deterministic performance.
@@ -45,7 +49,17 @@ export default function SiteFooter() {
 
               <div className="flex flex-col gap-3">
                  <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-green-500/60">
-                    <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+                    <motion.div 
+                      animate={{ 
+                        scale: [1, 1.5, 1],
+                        opacity: [0.3, 1, 0.3]
+                      }}
+                      transition={{ 
+                        duration: 1.5, 
+                        repeat: Infinity 
+                      }}
+                      className="h-1.5 w-1.5 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]" 
+                    />
                     <span>All Systems Operational</span>
                  </div>
                  <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-slate-600">
@@ -61,7 +75,7 @@ export default function SiteFooter() {
                 <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20">Library</h4>
                 <nav className="flex flex-col gap-4">
                   {navItems.slice(0, 4).map((item) => (
-                    <Link key={item.href} href={item.href} className="text-sm font-bold text-slate-500 hover:text-green-400 transition-colors uppercase tracking-widest">
+                    <Link key={item.href} href={item.href} className="text-sm font-bold text-slate-500 hover:text-green-400 transition-colors uppercase tracking-widest hover:translate-x-1 duration-200">
                       {item.label}
                     </Link>
                   ))}
@@ -71,7 +85,7 @@ export default function SiteFooter() {
                 <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20">Resources</h4>
                 <nav className="flex flex-col gap-4">
                   {navItems.slice(4).map((item) => (
-                    <Link key={item.href} href={item.href} className="text-sm font-bold text-slate-500 hover:text-green-400 transition-colors uppercase tracking-widest">
+                    <Link key={item.href} href={item.href} className="text-sm font-bold text-slate-500 hover:text-green-400 transition-colors uppercase tracking-widest hover:translate-x-1 duration-200">
                       {item.label}
                     </Link>
                   ))}
@@ -83,12 +97,13 @@ export default function SiteFooter() {
             <div className="md:col-span-3 flex flex-col items-end gap-10">
               <div className="flex items-center gap-4">
                 {socialLinks.map((social) => (
-                  <Magnetic key={social.label} strength={0.2}>
+                  <Magnetic key={social.label} strength={0.3}>
                     <a
                       href={social.href}
                       target="_blank"
                       rel="noreferrer noopener"
-                      className="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:border-green-500/40 transition-all"
+                      data-magnetic="true"
+                      className="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-green-400 hover:border-green-500/40 hover:bg-green-500/5 transition-all shadow-[0_0_20px_rgba(0,0,0,0.2)]"
                     >
                       <social.icon className="h-5 w-5" />
                     </a>
@@ -98,13 +113,19 @@ export default function SiteFooter() {
 
               <button
                 onClick={handleBackToTop}
-                className="group flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-slate-600 hover:text-white transition-colors"
+                className="group flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-slate-600 hover:text-green-400 transition-colors"
               >
-                <span>Back to top</span>
-                <ArrowUp className="h-3 w-3 group-hover:-translate-y-1 transition-transform" />
+                <span className="group-hover:tracking-[0.4em] transition-all duration-300">Back to top</span>
+                <motion.div
+                  animate={{ y: [0, -4, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <ArrowUp className="h-3 w-3" />
+                </motion.div>
               </button>
             </div>
           </div>
+
 
           <div className="mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
              <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">

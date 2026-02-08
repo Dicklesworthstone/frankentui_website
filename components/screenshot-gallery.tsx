@@ -128,7 +128,7 @@ export default function ScreenshotGallery({
               aria-label={`View larger version of ${screenshot.title}`}
               className="group relative w-full text-left focus:outline-none rounded-2xl"
             >
-              <FrankenContainer withBolts={false} className="overflow-hidden glass-modern group-hover:border-green-500/30 transition-all duration-500 group-hover:shadow-[0_0_40px_rgba(34,197,94,0.15)] group-hover:-translate-y-1">
+              <FrankenContainer withBolts={false} withPulse={true} className="overflow-hidden glass-modern group-hover:border-green-500/30 transition-all duration-500 group-hover:shadow-[0_0_40px_rgba(34,197,94,0.15)] group-hover:-translate-y-1">
                 <div className="relative aspect-[16/10] overflow-hidden">
                   <Image
                     src={screenshot.src}

@@ -27,6 +27,7 @@ import {
 import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
 import { cn } from "@/lib/utils";
 import { FrankenStitch } from "./franken-elements";
+import FrankenGlitch from "./franken-glitch";
 
 const sectionIcons = {
   barChart3: BarChart3,
@@ -115,15 +116,20 @@ export default function SectionShell({
 
             <div className="space-y-6">
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-500/5 border border-green-500/20 text-green-400">
+                <div 
+                  data-magnetic="true"
+                  className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-500/5 border border-green-500/20 text-green-400"
+                >
                   {Icon ? <Icon className="h-5 w-5" /> : <Activity className="h-5 w-5" />}
                 </div>
-                <HeadingTag
-                  id={headingId}
-                  className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight"
-                >
-                  {title}
-                </HeadingTag>
+                <FrankenGlitch trigger="hover" intensity="low">
+                  <HeadingTag
+                    id={headingId}
+                    className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight"
+                  >
+                    {title}
+                  </HeadingTag>
+                </FrankenGlitch>
               </div>
 
               {kicker && (

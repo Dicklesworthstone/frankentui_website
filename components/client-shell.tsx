@@ -60,6 +60,40 @@ export default function ClientShell({ children }: { children: React.ReactNode })
               onAnimationStart={() => setIsTransitioning(true)}
               className="flex-1 relative"
             >
+              {/* Stitched Transition Overlay */}
+              <AnimatePresence>
+                {isTransitioning && !prefersReducedMotion && (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-[60] pointer-events-none flex justify-around items-center"
+                  >
+                    {Array.from({ length: 12 }).map((_, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ scaleY: 0, opacity: 0 }}
+                        animate={{ 
+                          scaleY: [0, 1, 1, 0], 
+                          opacity: [0, 0.5, 0.5, 0],
+                          y: [0, (i % 2 === 0 ? 20 : -20), 0]
+                        }}
+                        transition={{ 
+                          duration: 0.6, 
+                          delay: i * 0.02,
+                          times: [0, 0.2, 0.8, 1]
+                        }}
+                        className="w-px h-full bg-green-500/30"
+                      >
+                        <div className="absolute top-1/4 w-4 h-[2px] bg-green-500/40 -left-2" />
+                        <div className="absolute top-1/2 w-4 h-[2px] bg-green-500/40 -left-2" />
+                        <div className="absolute top-3/4 w-4 h-[2px] bg-green-500/40 -left-2" />
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* Transition Noise & Flicker Overlay */}
               <AnimatePresence>
                 {isTransitioning && !prefersReducedMotion && (

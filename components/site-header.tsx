@@ -8,8 +8,10 @@ import { useState, useEffect } from "react";
 import { navItems, siteConfig } from "@/lib/content";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 import { cn } from "@/lib/utils";
-import { FrankenBolt } from "./franken-elements";
+import { FrankenBolt, NeuralPulse } from "./franken-elements";
 import { useSite } from "@/lib/site-state";
+import FrankenGlitch from "./franken-glitch";
+import { Magnetic } from "./motion-wrapper";
 
 export default function SiteHeader() {
   const pathname = usePathname();
@@ -52,29 +54,44 @@ export default function SiteHeader() {
           className={cn(
             "absolute top-6 left-1/2 -translate-x-1/2 flex items-center transition-all duration-500 ease-[cubic-bezier(0.19,1,0.22,1)] pointer-events-auto",
             "w-[95%] lg:w-[1200px] h-16 px-8 rounded-full border border-white/5",
-            scrolled ? "glass-modern shadow-2xl scale-[0.98]" : "bg-transparent border-transparent"
+            scrolled ? "glass-modern shadow-2xl scale-[0.98] border-green-500/20" : "bg-transparent border-transparent"
           )}
         >
-          <div className="flex items-center justify-between w-full">
+          {scrolled && <NeuralPulse className="opacity-40" />}
+          
+          <div className="flex items-center justify-between w-full relative z-10">
             {/* Logo */}
             <Link
               href="/"
               className="group flex items-center gap-4 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             >
-              <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-green-600 via-green-400 to-lime-400 shadow-[0_0_20px_rgba(34,197,94,0.3)] transition-transform group-hover:scale-110 active:scale-95">
-                <FrankenBolt className="absolute -left-1 -top-1 z-20 scale-50" />
-                <FrankenBolt className="absolute -right-1 -bottom-1 z-20 scale-50" />
-                <span className="text-xl font-black text-black select-none">F</span>
-              </div>
+              <FrankenGlitch trigger="hover" intensity="low">
+                <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-green-600 via-green-400 to-lime-400 shadow-[0_0_20px_rgba(34,197,94,0.3)] transition-transform group-hover:scale-110 active:scale-95">
+                  <FrankenBolt className="absolute -left-1 -top-1 z-20 scale-50" />
+                  <FrankenBolt className="absolute -right-1 -bottom-1 z-20 scale-50" />
+                  <span className="text-xl font-black text-black select-none">F</span>
+                </div>
+              </FrankenGlitch>
               <div className="flex flex-col">
                 <span className="text-base font-black tracking-tight text-white uppercase leading-none">
                   {siteConfig.name}
                 </span>
                 <div className="flex items-center gap-1.5 mt-1">
-                  <div className="relative flex h-1.5 w-1.5">
+                  <motion.div 
+                    animate={{ 
+                      scale: [1, 1.2, 1],
+                      opacity: [0.5, 1, 0.5]
+                    }}
+                    transition={{ 
+                      duration: 2, 
+                      repeat: Infinity, 
+                      ease: "easeInOut" 
+                    }}
+                    className="relative flex h-1.5 w-1.5"
+                  >
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500"></span>
-                  </div>
+                  </motion.div>
                   <span className="text-[8px] font-black text-green-500 uppercase tracking-widest leading-none">ALIVE</span>
                 </div>
               </div>
@@ -103,13 +120,16 @@ export default function SiteHeader() {
                           initial={{ opacity: 0, scale: 0.9 }}
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.9 }}
-                          className="absolute inset-0 bg-green-500/10 rounded-full -z-10"
+                          className="absolute inset-0 bg-green-500/10 border border-green-500/20 rounded-full -z-10"
                           transition={{ type: "spring", stiffness: 400, damping: 30 }}
                         />
                       )}
                     </AnimatePresence>
                     {active && !hoveredItem && (
-                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-green-500" />
+                      <motion.div 
+                        layoutId="nav-active-dot"
+                        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]" 
+                      />
                     )}
                     <span className="relative z-10">{item.label}</span>
                   </Link>
@@ -147,19 +167,23 @@ export default function SiteHeader() {
                 <Zap className={cn("h-4 w-4", isAudioEnabled && "animate-pulse")} />
               </button>
               <div className="w-px h-4 bg-white/10 mx-1" />
-              <a
-                href={siteConfig.github}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center gap-2 px-6 py-2.5 rounded-full bg-white text-black text-sm font-bold hover:bg-green-400 transition-all hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-              >
-                <Github className="h-4 w-4" />
-                <span>GITHUB</span>
-              </a>
+              <Magnetic strength={0.2}>
+                <a
+                  href={siteConfig.github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-magnetic="true"
+                  className="group flex items-center gap-2 px-6 py-2.5 rounded-full bg-white text-black text-sm font-bold hover:bg-green-400 transition-all hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                >
+                  <Github className="h-4 w-4" />
+                  <span>GITHUB</span>
+                </a>
+              </Magnetic>
             </div>
           </div>
         </header>
       </div>
+
 
       {/* ── MOBILE NAVBAR ───────────────────────────────────── */}
       <div className="fixed top-0 left-0 right-0 z-50 md:hidden p-4 pointer-events-none">

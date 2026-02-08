@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import type { Stat } from "@/lib/content";
 import { AnimatedNumber } from "@/components/animated-number";
-import { FrankenContainer } from "./franken-elements";
+import { FrankenContainer, NeuralPulse } from "./franken-elements";
+import { Magnetic } from "./motion-wrapper";
+import FrankenGlitch from "./franken-glitch";
 
 function parseStatValue(value: string): {
   number: number;
@@ -57,30 +59,34 @@ export default function StatsGrid({ stats }: { stats: Stat[] }) {
   }, []);
 
   return (
-    <FrankenContainer className="overflow-hidden">
+    <FrankenContainer withPulse={true} className="overflow-hidden border-green-500/10">
       <dl
         ref={containerRef}
-        className="grid gap-px overflow-hidden text-sm text-slate-200 sm:grid-cols-2 lg:grid-cols-4"
+        className="grid gap-px overflow-hidden text-sm text-slate-200 sm:grid-cols-2 lg:grid-cols-4 bg-white/5"
       >
         {parsedStats.map(({ stat, parsed }, index) => (
           <div
             key={stat.label}
-            className="group relative bg-[#020a02]/60 px-6 py-8 backdrop-blur transition-colors hover:bg-[#020a02]/40"
-            style={{ animationDelay: `${index * 100}ms` }}
+            className="group relative bg-[#020a02]/80 px-6 py-10 backdrop-blur transition-all duration-500 hover:bg-[#020a02]/40"
           >
+            <NeuralPulse className="opacity-0 group-hover:opacity-40 transition-opacity" />
             <div className="absolute inset-x-0 top-0 h-px origin-center scale-x-0 bg-gradient-to-r from-green-400 via-lime-400 to-green-400 transition-transform duration-500 group-hover:scale-x-100" aria-hidden="true" />
 
             <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
-            <dt className="text-xs font-bold uppercase tracking-widest text-slate-500 transition-colors group-hover:text-green-400/70">
-              {stat.label}
+            <dt className="relative z-10">
+              <FrankenGlitch trigger="hover" intensity="low">
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 transition-colors group-hover:text-green-400/70">
+                  {stat.label}
+                </span>
+              </FrankenGlitch>
             </dt>
-            <dd className="mt-3 text-3xl font-bold tracking-tight text-slate-100 transition-[filter] duration-500 group-hover:drop-shadow-[0_0_8px_rgba(34,197,94,0.3)] sm:text-4xl">
+            <dd className="relative z-10 mt-4 text-4xl font-black tracking-tight text-white transition-[filter] duration-500 group-hover:drop-shadow-[0_0_15px_rgba(34,197,94,0.5)] sm:text-5xl tabular-nums">
               {parsed.isAnimatable ? (
                 <AnimatedNumber
                   value={parsed.number}
                   suffix={parsed.suffix}
-                  duration={1800 + index * 200}
+                  duration={2000 + index * 200}
                   isVisible={isVisible}
                 />
               ) : (
@@ -88,7 +94,7 @@ export default function StatsGrid({ stats }: { stats: Stat[] }) {
               )}
             </dd>
             {stat.helper && (
-              <p className="mt-2 text-xs font-medium leading-relaxed text-slate-400/80">
+              <p className="relative z-10 mt-3 text-[10px] font-bold uppercase tracking-widest text-slate-600 leading-relaxed group-hover:text-slate-400 transition-colors">
                 {stat.helper}
               </p>
             )}
@@ -98,3 +104,4 @@ export default function StatsGrid({ stats }: { stats: Stat[] }) {
     </FrankenContainer>
   );
 }
+
