@@ -4,15 +4,18 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSite } from "@/lib/site-state";
 import { warStories, warStoriesExtended } from "@/lib/content";
-import type { WarStory } from "@/lib/content";
 import WarStoryCard from "./war-story-card";
 import { Skull, AlertCircle, ShieldAlert, X } from "lucide-react";
 import { createPortal } from "react-dom";
 
 function Portal({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  return mounted ? createPortal(children, document.body) : null;
+  useEffect(() => {
+    const rafId = window.requestAnimationFrame(() => setMounted(true));
+    return () => window.cancelAnimationFrame(rafId);
+  }, []);
+  if (!mounted) return null;
+  return createPortal(children, document.body);
 }
 
 export default function WarStoriesMap() {
@@ -31,12 +34,12 @@ export default function WarStoriesMap() {
   };
 
   return (
-    <div className="relative w-full aspect-[16/10] md:aspect-[21/9] bg-slate-950/50 rounded-[2rem] border border-red-900/20 overflow-hidden group/map">
+    <div className="relative w-full min-h-[750px] md:min-h-0 md:aspect-[21/9] bg-slate-950/50 rounded-[2rem] border border-red-900/20 overflow-hidden group/map">
       {/* Blueprint Grid */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(239,68,68,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(239,68,68,0.05)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_80%)]" />
       
       {/* Map Nodes */}
-      <div className="absolute inset-0 p-8 md:p-16 flex flex-wrap items-center justify-center gap-8 md:gap-16">
+      <div className="absolute inset-0 p-8 md:p-16 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-x-8 gap-y-16 md:gap-12 items-center justify-items-center overflow-y-auto md:overflow-hidden scrollbar-hide">
         {allStories.map((story, i) => {
           const isSelected = selectedId === story.title;
           const isCritical = i < warStories.length;
@@ -59,13 +62,22 @@ export default function WarStoriesMap() {
               >
                 {isCritical ? <ShieldAlert className="h-6 w-6" /> : <AlertCircle className="h-6 w-6" />}
                 
+                {/* Active Border for selection */}
+                {isSelected && (
+                  <motion.div 
+                    className="absolute -inset-1 rounded-full border border-red-500 border-dashed"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                  />
+                )}
+
                 {/* Pulse for critical nodes */}
                 {isCritical && !isSelected && (
                   <span className="absolute inset-0 rounded-full animate-ping bg-red-500/20 pointer-events-none" />
                 )}
               </motion.button>
               
-              <div className="absolute top-full mt-3 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-black uppercase tracking-widest text-red-500/40 pointer-events-none">
+              <div className="absolute top-full mt-4 left-1/2 -translate-x-1/2 whitespace-nowrap text-[9px] font-black uppercase tracking-widest text-red-500/40 pointer-events-none group-hover:text-red-500/70 transition-colors">
                 {story.title.split(" ").slice(0, 2).join("_")}
               </div>
             </motion.div>

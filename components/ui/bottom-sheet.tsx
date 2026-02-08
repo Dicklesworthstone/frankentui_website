@@ -5,7 +5,6 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { X, Binary } from "lucide-react";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 import { createPortal } from "react-dom";
-import { cn } from "@/lib/utils";
 
 interface BottomSheetProps {
   isOpen: boolean;
@@ -16,8 +15,12 @@ interface BottomSheetProps {
 
 function Portal({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  return mounted ? createPortal(children, document.body) : null;
+  useEffect(() => {
+    const rafId = window.requestAnimationFrame(() => setMounted(true));
+    return () => window.cancelAnimationFrame(rafId);
+  }, []);
+  if (!mounted) return null;
+  return createPortal(children, document.body);
 }
 
 export default function BottomSheet({
@@ -134,4 +137,3 @@ export default function BottomSheet({
     </AnimatePresence>
   );
 }
-
