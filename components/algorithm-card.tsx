@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { Binary } from "lucide-react";
 import type { Algorithm } from "@/lib/content";
 import { FrankenContainer } from "./franken-elements";
@@ -8,10 +9,9 @@ import DecodingText from "./decoding-text";
 import FrankenGlitch from "./franken-glitch";
 
 export default function AlgorithmCard({ algorithm }: { algorithm: Algorithm }) {
-  const spectrum = ["#38bdf8", "#a78bfa", "#f472b6", "#ef4444", "#fb923c", "#fbbf24", "#34d399", "#22d3ee"];
-  
   // Deterministic color based on name length
   const accentColor = useMemo(() => {
+    const spectrum = ["#38bdf8", "#a78bfa", "#f472b6", "#ef4444", "#fb923c", "#fbbf24", "#34d399", "#22d3ee"];
     const hash = algorithm.name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     return spectrum[hash % spectrum.length];
   }, [algorithm.name]);
@@ -35,7 +35,7 @@ export default function AlgorithmCard({ algorithm }: { algorithm: Algorithm }) {
               whileHover={{ rotate: 180 }}
               transition={{ duration: 0.5 }}
             >
-              <Binary className="h-4 w-4 text-slate-700 transition-colors" style={{ ["--hover-color" as any]: accentColor }} />
+              <Binary className="h-4 w-4 text-slate-700 transition-colors" style={{ ["--hover-color" as string]: accentColor }} />
             </motion.div>
           </div>
 
