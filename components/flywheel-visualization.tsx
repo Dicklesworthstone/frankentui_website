@@ -30,9 +30,9 @@ import { flywheelTools, flywheelDescription, type FlywheelTool } from "@/lib/con
 import { cn } from "@/lib/utils";
 import { getColorDefinition } from "@/lib/colors";
 import { useHapticFeedback } from "@/hooks/use-haptic-feedback";
-import BottomSheet from "@/components/bottom-sheet";
-import Magnetic from "@/components/magnetic";
-import { NOISE_SVG_DATA_URI } from "@/lib/constants";
+import BottomSheet from "@/components/ui/bottom-sheet";
+import Magnetic from "@/components/motion/magnetic";
+import { NOISE_SVG_DATA_URI } from "@/lib/utils";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutGrid,

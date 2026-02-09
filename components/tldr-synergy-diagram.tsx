@@ -5,7 +5,7 @@ import { motion, useReducedMotion, useInView } from "framer-motion";
 import { Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getColorDefinition } from "@/lib/colors";
-import type { TldrFlywheelTool } from "@/lib/content";
+import type { TldrFlywheelTool } from "@/lib/flywheel-data";
 
 // =============================================================================
 // TYPES
