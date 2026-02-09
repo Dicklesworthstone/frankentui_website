@@ -4,14 +4,13 @@ import React from "react";
 import { Gauge } from "lucide-react";
 import type { Optimization } from "@/lib/content";
 import { FrankenContainer } from "./franken-elements";
-
+import { motion } from "framer-motion";
 import FrankenGlitch from "./franken-glitch";
 
 export default function OptimizationCard({ opt }: { opt: Optimization }) {
-  const spectrum = ["#38bdf8", "#a78bfa", "#f472b6", "#ef4444", "#fb923c", "#fbbf24", "#34d399", "#22d3ee"];
-  
   // Deterministic color based on name length
   const accentColor = React.useMemo(() => {
+    const spectrum = ["#38bdf8", "#a78bfa", "#f472b6", "#ef4444", "#fb923c", "#fbbf24", "#34d399", "#22d3ee"];
     const hash = opt.name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     return spectrum[hash % spectrum.length];
   }, [opt.name]);
