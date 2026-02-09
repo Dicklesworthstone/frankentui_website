@@ -81,7 +81,7 @@ test.describe("spec evolution lab: performance", () => {
     const tabSwitchTimings: { tab: string; ms: number }[] = [];
 
     for (const tabName of ["MD_Snapshot", "Raw_Archive", "Evidence_Ledger", "Changed_Nodes", "Diff_Stream"]) {
-      const tab = page.getByRole("button", { name: new RegExp(tabName, "i") }).first();
+      const tab = page.getByRole("tab", { name: new RegExp(tabName, "i") }).first();
       const t0 = Date.now();
       await tab.click();
       // Wait for content to appear
@@ -132,13 +132,13 @@ test.describe("spec evolution lab: performance", () => {
     await expect(snapshotHeading).not.toBeVisible();
 
     // Switch to snapshot tab
-    await page.getByRole("button", { name: /MD_Snapshot/i }).first().click();
+    await page.getByRole("tab", { name: /MD_Snapshot/i }).first().click();
 
     // Now the snapshot markdown should render (heading visible once marked parses)
     await expect(snapshotHeading.first()).toBeVisible({ timeout: 15_000 });
 
     // Switch back to diff tab
-    await page.getByRole("button", { name: /Diff_Stream/i }).first().click();
+    await page.getByRole("tab", { name: /Diff_Stream/i }).first().click();
     await page.waitForTimeout(500);
 
     // Snapshot heading should be gone (lazy rendering removes it)

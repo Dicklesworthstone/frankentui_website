@@ -162,7 +162,7 @@ test.describe("spec evolution lab: compare mode", () => {
     await expect(page.getByTestId("compare-metrics")).toBeVisible({ timeout: 5_000 });
 
     // Switch to Files tab (labeled "Changed_Nodes" in the UI)
-    const filesTab = page.getByRole("button", { name: /Changed_Nodes/i }).first();
+    const filesTab = page.getByRole("tab", { name: /Changed_Nodes/i }).first();
     await filesTab.click();
 
     // The compare file summary should appear
@@ -194,7 +194,7 @@ test.describe("spec evolution lab: deep-linkable state", () => {
     await page.waitForTimeout(500);
 
     // Switch to snapshot tab
-    const snapshotTab = page.getByRole("button", { name: /MD_Snapshot/i }).first();
+    const snapshotTab = page.getByRole("tab", { name: /MD_Snapshot/i }).first();
     await snapshotTab.click();
     await page.waitForTimeout(500);
 

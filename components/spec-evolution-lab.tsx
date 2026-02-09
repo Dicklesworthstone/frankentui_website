@@ -559,6 +559,7 @@ function DialogShell({
     <dialog
       ref={dialogRef}
       className="w-[min(820px,92vw)] rounded-3xl border border-green-500/20 bg-[#020508] p-0 text-slate-100 shadow-[0_0_80px_-20px_rgba(34,197,94,0.3)] backdrop:bg-black/80 backdrop:backdrop-blur-sm overflow-hidden"
+      aria-label={title}
     >
       <div className="relative">
         <FrankenBolt className="absolute -left-1.5 -top-1.5 z-20 scale-75" />
@@ -570,7 +571,8 @@ function DialogShell({
           </div>
           <button
             type="button"
-            className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-400 hover:bg-white/10 hover:text-white transition-all"
+            aria-label={`Close ${title} dialog`}
+            className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-400 hover:bg-white/10 hover:text-white transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
             onClick={() => dialogRef.current?.close()}
           >
             Close
@@ -1155,8 +1157,6 @@ export default function SpecEvolutionLab() {
     return () => clearInterval(id);
   }, [isPlaying, playbackSpeed, commits.length, filteredCommits]);
 
-  // Stop playback when user manually changes commit
-  const playbackStopOnManualRef = useRef(false);
   const togglePlayback = useCallback(() => {
     if (prefersReducedMotion.current) return; // respect a11y preference
     setIsPlaying((prev) => !prev);
@@ -1430,11 +1430,13 @@ export default function SpecEvolutionLab() {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.05)_50%)] bg-[length:100%_4px] opacity-20" />
         
         {/* Occasional VHS glitch static */}
-        <motion.div 
-          animate={{ opacity: [0, 0.03, 0, 0.05, 0] }}
-          transition={{ duration: 4, repeat: Infinity, times: [0, 0.1, 0.2, 0.3, 1] }}
-          className="absolute inset-0 bg-white/[0.02] mix-blend-overlay"
-        />
+        {!prefersReducedMotion.current && (
+          <motion.div
+            animate={{ opacity: [0, 0.03, 0, 0.05, 0] }}
+            transition={{ duration: 4, repeat: Infinity, times: [0, 0.1, 0.2, 0.3, 1] }}
+            className="absolute inset-0 bg-white/[0.02] mix-blend-overlay"
+          />
+        )}
       </div>
 
       <header className="sticky top-0 z-50 border-b border-white/5 bg-black/80 backdrop-blur-2xl relative overflow-hidden">
@@ -1461,10 +1463,10 @@ export default function SpecEvolutionLab() {
                 <div className="relative h-12 w-12 shrink-0 rounded-xl border border-green-500/20 bg-green-500/5 grid place-items-center shadow-[0_0_30px_rgba(34,197,94,0.15)] group overflow-hidden">
                   <FrankenBolt className="absolute -left-1 -top-1 z-20 scale-50" />
                   <FrankenBolt className="absolute -right-1 -bottom-1 z-20 scale-50" />
-                  <motion.div 
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-0 border border-green-500/10 rounded-full scale-150 border-dashed" 
+                  <motion.div
+                    animate={prefersReducedMotion.current ? undefined : { rotate: 360 }}
+                    transition={prefersReducedMotion.current ? undefined : { duration: 20, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-0 border border-green-500/10 rounded-full scale-150 border-dashed"
                   />
                   <span className="font-black text-sm text-green-400 group-hover:scale-110 transition-transform z-10">EVO</span>
                 </div>
@@ -1491,7 +1493,7 @@ export default function SpecEvolutionLab() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => { if (searchResults.length > 0) setShowSearchResults(true); }}
                   placeholder={searchScope === "allCommits" ? "SEARCH_ALL_NODES..." : "SEARCH_THIS_NODE..."}
-                  className="relative w-[320px] rounded-full border border-white/10 bg-black/40 pl-10 pr-24 py-2.5 text-[11px] font-bold tracking-widest text-white placeholder:text-slate-600 focus:outline-none focus:border-green-500/40 transition-all z-10"
+                  className="relative w-full max-w-[320px] rounded-full border border-white/10 bg-black/40 pl-10 pr-24 py-2.5 text-[11px] font-bold tracking-widest text-white placeholder:text-slate-600 focus:outline-none focus:border-green-500/40 transition-all z-10"
                 />
                 {/* Scope toggle inside search bar */}
                 <button
@@ -1526,8 +1528,9 @@ export default function SpecEvolutionLab() {
                       </span>
                       <button
                         type="button"
+                        aria-label="Close search results"
                         onClick={() => setShowSearchResults(false)}
-                        className="text-slate-500 hover:text-white"
+                        className="text-slate-500 hover:text-white p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
                       >
                         <X className="h-3 w-3" />
                       </button>
@@ -1624,7 +1627,7 @@ export default function SpecEvolutionLab() {
 
             {bucketFilter !== null ? (
               <motion.button
-                initial={{ scale: 0.9, opacity: 0 }}
+                initial={prefersReducedMotion.current ? { opacity: 1 } : { scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 type="button"
                 title="Clear bucket filter"
@@ -1881,8 +1884,8 @@ export default function SpecEvolutionLab() {
                       <motion.button
                         key={b}
                         type="button"
-                        whileHover={{ scale: 1.05, y: -1 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={prefersReducedMotion.current ? undefined : { scale: 1.05, y: -1 }}
+                        whileTap={prefersReducedMotion.current ? undefined : { scale: 0.95 }}
                         onClick={() => toggleBucketFilter(b)}
                         title={dataset.bucket_defs?.[String(b)] || bucketNames[b]}
                         className={clsx(
@@ -1923,19 +1926,21 @@ export default function SpecEvolutionLab() {
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
+                    aria-label="Previous commit"
                     onClick={() => navigateFiltered(-1)}
-                    className="rounded-xl border border-white/10 bg-white/5 p-2 text-slate-400 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                    className="rounded-xl border border-white/10 bg-white/5 p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white transition-all active:scale-90"
                     title="Previous Node"
                   >
                     <ArrowLeft className="h-5 w-5" />
                   </button>
-                  <div className="px-4 py-2 rounded-xl bg-black/40 border border-white/5 font-mono text-xs font-bold text-green-400 shadow-inner">
+                  <div className="px-4 py-2 rounded-xl bg-black/40 border border-white/5 font-mono text-xs font-bold text-green-400 shadow-inner" aria-live="polite">
                     {selectedIndex + 1} <span className="text-slate-700 mx-1">/</span> {commits.length}
                   </div>
                   <button
                     type="button"
+                    aria-label="Next commit"
                     onClick={() => navigateFiltered(1)}
-                    className="rounded-xl border border-white/10 bg-white/5 p-2 text-slate-400 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                    className="rounded-xl border border-white/10 bg-white/5 p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white transition-all active:scale-90"
                     title="Next Node"
                   >
                     <ArrowRight className="h-5 w-5" />
@@ -1980,8 +1985,8 @@ export default function SpecEvolutionLab() {
                   <motion.div 
                     className="absolute h-4 w-4 bg-white rounded-full border-2 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.8)] pointer-events-none"
                     style={{ left: `calc(${(selectedIndex / (commits.length - 1)) * 100}% - 8px)` }}
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ repeat: Infinity, duration: 2 }}
+                    animate={prefersReducedMotion.current ? undefined : { scale: [1, 1.2, 1] }}
+                    transition={prefersReducedMotion.current ? undefined : { repeat: Infinity, duration: 2 }}
                   >
                     {compareBaseIndex === selectedIndex && (
                       <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] font-black font-mono text-rose-300 bg-rose-500/20 border border-rose-500/40 px-1 py-0.5 rounded">
@@ -2263,22 +2268,24 @@ export default function SpecEvolutionLab() {
                         <button
                           type="button"
                           data-testid="playback-toggle"
+                          aria-label={isPlaying ? "Pause playback" : "Play through commits"}
                           onClick={togglePlayback}
                           className={clsx(
-                            "rounded-lg border p-1.5 transition-all active:scale-90",
+                            "rounded-lg border p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center transition-all active:scale-90",
                             isPlaying
                               ? "border-green-500/40 bg-green-500/10 text-green-400 shadow-[0_0_12px_rgba(34,197,94,0.3)]"
                               : "border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white",
                           )}
                           title={isPlaying ? "Pause playback" : "Play through commits"}
                         >
-                          {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                          {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                         </button>
                         <button
                           type="button"
                           data-testid="playback-speed"
+                          aria-label={`Playback speed: ${playbackSpeed}x. Click to cycle.`}
                           onClick={cyclePlaybackSpeed}
-                          className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[9px] font-black font-mono text-slate-400 hover:bg-white/10 hover:text-white transition-all active:scale-95"
+                          className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 min-h-[44px] text-[10px] font-black font-mono text-slate-400 hover:bg-white/10 hover:text-white transition-all active:scale-95"
                           title="Cycle playback speed"
                         >
                           {playbackSpeed}x
@@ -2305,9 +2312,9 @@ export default function SpecEvolutionLab() {
                   aria-valuenow={selectedIndex}
                   tabIndex={0}
                   onKeyDown={(e) => {
-                    if (e.key === "ArrowRight") { selectCommit(selectedIndex + 1); e.preventDefault(); }
-                    if (e.key === "ArrowLeft") { selectCommit(selectedIndex - 1); e.preventDefault(); }
-                    if (e.key === " ") { togglePlayback(); e.preventDefault(); }
+                    if (e.key === "ArrowRight") { selectCommit(selectedIndex + 1); e.preventDefault(); e.stopPropagation(); }
+                    if (e.key === "ArrowLeft") { selectCommit(selectedIndex - 1); e.preventDefault(); e.stopPropagation(); }
+                    if (e.key === " ") { togglePlayback(); e.preventDefault(); e.stopPropagation(); }
                   }}
                 >
                   {/* Background bars */}
@@ -2437,7 +2444,7 @@ export default function SpecEvolutionLab() {
               </div>
 
               {/* Forensic Tab Bar */}
-              <div className="px-8 py-4 flex flex-wrap gap-3 border-b border-white/5 bg-white/[0.01]">
+              <div className="px-8 py-4 flex flex-wrap gap-3 border-b border-white/5 bg-white/[0.01]" role="tablist" aria-label="Inspector view tabs">
                 {(
                   [
                     ["diff", "Diff_Stream", "terminal"],
@@ -2452,6 +2459,9 @@ export default function SpecEvolutionLab() {
                     <button
                       key={k}
                       type="button"
+                      role="tab"
+                      aria-selected={isActive}
+                      aria-controls={`tabpanel-${k}`}
                       onClick={() => setActiveTab(k)}
                       className={clsx(
                         "group relative flex items-center gap-2.5 px-5 py-2.5 rounded-md text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-500 overflow-hidden",
@@ -2471,23 +2481,23 @@ export default function SpecEvolutionLab() {
                       )} />
                       
                       <span className="relative z-10">{label}</span>
-                      {isActive && <motion.div layoutId="tab-underline" className="absolute bottom-0 left-0 right-0 h-[2px] bg-green-500 shadow-[0_0_10px_#22c55e]" />}
+                      {isActive && <motion.div layoutId={prefersReducedMotion.current ? undefined : "tab-underline"} className="absolute bottom-0 left-0 right-0 h-[2px] bg-green-500 shadow-[0_0_10px_#22c55e]" />}
                     </button>
                   );
                 })}
               </div>
 
-              <div className="p-8 md:p-10 relative flex-1">
+              <div className="p-8 md:p-10 relative flex-1" role="tabpanel" id={`tabpanel-${activeTab}`} aria-label={`${activeTab} view`}>
                 {/* Content Scanline Effect */}
                 <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.02)_50%)] bg-[length:100%_8px] opacity-20 z-10" />
-                
+
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeTab + selectedCommit.sha}
-                    initial={{ opacity: 0, scale: 0.99, filter: "blur(4px)" }}
+                    initial={prefersReducedMotion.current ? { opacity: 1 } : { opacity: 0, scale: 0.99, filter: "blur(4px)" }}
                     animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-                    exit={{ opacity: 0, scale: 1.01, filter: "blur(4px)" }}
-                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                    exit={prefersReducedMotion.current ? { opacity: 1 } : { opacity: 0, scale: 1.01, filter: "blur(4px)" }}
+                    transition={prefersReducedMotion.current ? { duration: 0 } : { duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                     className="relative z-0"
                   >
 	                    {activeTab === "diff" ? (
@@ -2758,9 +2768,9 @@ export default function SpecEvolutionLab() {
                                       </div>
                                       <div className="h-1.5 w-full rounded-full bg-black/40 overflow-hidden border border-white/5">
                                         <motion.div
-                                          initial={{ width: 0 }}
+                                          initial={prefersReducedMotion.current ? { width: `${confPct}%` } : { width: 0 }}
                                           animate={{ width: `${confPct}%` }}
-                                          transition={{ duration: 1, ease: "easeOut" }}
+                                          transition={prefersReducedMotion.current ? { duration: 0 } : { duration: 1, ease: "easeOut" }}
                                           className="h-full rounded-full"
                                           style={{ background: conf > 0.8 ? "rgba(34,197,94,0.8)" : "rgba(251,191,36,0.8)", boxShadow: "0 0 10px currentColor" }}
                                         />
@@ -3219,8 +3229,9 @@ export default function SpecEvolutionLab() {
               </button>
               <button
                 type="button"
+                aria-label="Close performance diagnostics"
                 onClick={() => setShowPerfPanel(false)}
-                className="text-slate-500 hover:text-white"
+                className="text-slate-500 hover:text-white p-1"
               >
                 <X className="h-3 w-3" />
               </button>

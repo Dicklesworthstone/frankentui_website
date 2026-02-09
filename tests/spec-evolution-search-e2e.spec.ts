@@ -63,7 +63,7 @@ test.describe("spec evolution lab: full-text search", () => {
     await expect(resultsTray).not.toBeVisible();
 
     // Should be on snapshot tab now
-    const snapshotTab = page.getByRole("button", { name: /MD_Snapshot/i }).first();
+    const snapshotTab = page.getByRole("tab", { name: /MD_Snapshot/i }).first();
     // The active tab has a green glow styling
     await expect(snapshotTab).toBeVisible();
 
