@@ -227,35 +227,7 @@ test.describe("beads-viewer: table controls injection", () => {
 
     // Click the view toggle
     const toggleBtn = page.getByTestId("bv-table-view-toggle");
-
-    // Debug: check button state before click
-    const debugBefore = await page.evaluate(() => {
-      const btn = document.querySelector('[data-testid="bv-table-view-toggle"]');
-      const tbl = document.querySelector("table");
-      return {
-        btnExists: !!btn,
-        btnText: btn?.textContent,
-        tblExists: !!tbl,
-        tblClasses: tbl?.className,
-        tblDataBv: tbl?.getAttribute("data-bv-table"),
-        controlsExist: !!document.querySelector(".bv-table-controls"),
-        parentTag: tbl?.parentElement?.tagName,
-        rootExists: !!document.getElementById("root"),
-      };
-    });
-    console.log("DEBUG before click:", JSON.stringify(debugBefore));
-
     await toggleBtn.click();
-
-    // Debug: check state after click
-    const debugAfter = await page.evaluate(() => {
-      const tbl = document.querySelector("table");
-      return {
-        tblClasses: tbl?.className,
-        pref: localStorage.getItem("bv-table-view-pref"),
-      };
-    });
-    console.log("DEBUG after click:", JSON.stringify(debugAfter));
 
     // Should now have force-cards class
     const afterClick = await page.evaluate(() =>
