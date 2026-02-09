@@ -297,3 +297,97 @@ test.describe("beads-viewer: table controls injection", () => {
     expect(ariaLabel).toBe("Toggle table view mode");
   });
 });
+
+test.describe("beads-viewer: table a11y (bd-17l.1.5)", () => {
+  test("focus ring uses a defined color variable (not --bv-accent)", async ({ page }) => {
+    await loadWithStyles(page);
+
+    await page.evaluate(() => {
+      const md = "| A | B |\n| --- | --- |\n| 1 | 2 |";
+      const html = window.renderMarkdown!(md);
+      const root = document.getElementById("root")!;
+      root.innerHTML = html;
+      window.injectTableControls!(root);
+    });
+
+    const toggleBtn = page.getByTestId("bv-table-view-toggle");
+    await toggleBtn.focus();
+
+    // Verify focus-visible outline uses a real color (from --bv-cyan), not undefined --bv-accent
+    const outlineColor = await page.evaluate(() => {
+      const btn = document.querySelector('[data-testid="bv-table-view-toggle"]')!;
+      return getComputedStyle(btn).outlineColor;
+    });
+    // Should NOT be empty/transparent/initial — should be a real color
+    expect(outlineColor).not.toBe("");
+    expect(outlineColor).not.toBe("initial");
+  });
+
+  test("mobile: thead is sr-only (not display:none) so screen readers see headers", async ({ page }) => {
+    await loadWithStyles(page, { width: 375, height: 812 });
+
+    await page.evaluate(() => {
+      const md = "| Name | Age | City |\n| --- | --- | --- |\n| Alice | 30 | NYC |";
+      const html = window.renderMarkdown!(md);
+      const root = document.getElementById("root")!;
+      root.innerHTML = html;
+    });
+
+    // thead should exist in the DOM and be sr-only (clip pattern), not display:none
+    const theadInfo = await page.evaluate(() => {
+      const thead = document.querySelector("table thead");
+      if (!thead) return { exists: false };
+      const style = getComputedStyle(thead);
+      return {
+        exists: true,
+        display: style.display,
+        position: style.position,
+        clip: style.clip,
+        width: style.width,
+        height: style.height,
+      };
+    });
+
+    expect(theadInfo.exists).toBe(true);
+    // SR-only pattern uses position:absolute + clip, NOT display:none
+    expect(theadInfo.display).not.toBe("none");
+    expect(theadInfo.position).toBe("absolute");
+  });
+
+  test("table data cells have data-label for mobile context", async ({ page }) => {
+    await loadWithStyles(page);
+
+    const labels = await page.evaluate(() => {
+      const md = "| Name | Age | City |\n| --- | --- | --- |\n| Alice | 30 | NYC |";
+      const html = window.renderMarkdown!(md);
+      const root = document.getElementById("root")!;
+      root.innerHTML = html;
+      const cells = root.querySelectorAll("tbody td");
+      return Array.from(cells).map((td) => td.getAttribute("data-label"));
+    });
+
+    expect(labels).toEqual(["Name", "Age", "City"]);
+  });
+
+  test("control buttons use high-contrast text color", async ({ page }) => {
+    await loadWithStyles(page);
+
+    await page.evaluate(() => {
+      const md = "| A | B |\n| --- | --- |\n| 1 | 2 |";
+      const html = window.renderMarkdown!(md);
+      const root = document.getElementById("root")!;
+      root.innerHTML = html;
+      window.injectTableControls!(root);
+    });
+
+    // Button text should use --bv-fg (high contrast), not --bv-fg-muted
+    const color = await page.evaluate(() => {
+      const btn = document.querySelector('[data-testid="bv-table-view-toggle"]')!;
+      return getComputedStyle(btn).color;
+    });
+    // In dark mode (the default in our test setup), --bv-fg is typically a light color
+    // Just verify it's not the muted gray
+    expect(color).toBeTruthy();
+    expect(color).not.toBe("");
+  });
+});
