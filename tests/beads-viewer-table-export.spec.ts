@@ -391,3 +391,83 @@ test.describe("beads-viewer: table a11y (bd-17l.1.5)", () => {
     expect(color).not.toBe("");
   });
 });
+
+test.describe("beads-viewer: issue type badge system (bd-17l.2)", () => {
+  test("getIssueTypeMeta returns correct metadata for known types", async ({ page }) => {
+    await loadMarkdownPipeline(page);
+
+    const result = await page.evaluate(() => {
+      const types = ["bug", "feature", "task", "epic", "docs", "chore"];
+      return types.map((t) => {
+        const meta = window.getIssueTypeMeta!(t);
+        return { type: t, label: meta.label, hasColor: !!meta.color, hasIcon: !!meta.icon, hasBg: !!meta.bg };
+      });
+    });
+
+    expect(result).toHaveLength(6);
+    for (const r of result) {
+      expect(r.hasColor).toBe(true);
+      expect(r.hasIcon).toBe(true);
+      expect(r.hasBg).toBe(true);
+    }
+    expect(result[0].label).toBe("Bug");
+    expect(result[1].label).toBe("Feature");
+    expect(result[2].label).toBe("Task");
+    expect(result[3].label).toBe("Epic");
+    expect(result[4].label).toBe("Docs");
+    expect(result[5].label).toBe("Chore");
+  });
+
+  test("getIssueTypeMeta returns fallback for unknown types", async ({ page }) => {
+    await loadMarkdownPipeline(page);
+
+    const result = await page.evaluate(() => {
+      const meta = window.getIssueTypeMeta!("nonexistent");
+      return { label: meta.label, icon: meta.icon };
+    });
+
+    expect(result.label).toBe("Unknown");
+    expect(result.icon).toBe("❓");
+  });
+
+  test("getIssueTypeMeta is case-insensitive", async ({ page }) => {
+    await loadMarkdownPipeline(page);
+
+    const result = await page.evaluate(() => {
+      return [
+        window.getIssueTypeMeta!("BUG").label,
+        window.getIssueTypeMeta!("Feature").label,
+        window.getIssueTypeMeta!("EPIC").label,
+      ];
+    });
+
+    expect(result).toEqual(["Bug", "Feature", "Epic"]);
+  });
+
+  test("ISSUE_TYPE_META has distinct colors for each type", async ({ page }) => {
+    await loadMarkdownPipeline(page);
+
+    const colors = await page.evaluate(() => {
+      return Object.values(window.ISSUE_TYPE_META!).map((m: { color: string }) => m.color);
+    });
+
+    // All colors should be unique
+    const unique = new Set(colors);
+    expect(unique.size).toBe(colors.length);
+  });
+
+  test("each type has a non-empty description", async ({ page }) => {
+    await loadMarkdownPipeline(page);
+
+    const descriptions = await page.evaluate(() => {
+      return Object.entries(window.ISSUE_TYPE_META!).map(([key, meta]: [string, { description: string }]) => ({
+        key,
+        hasDesc: typeof meta.description === "string" && meta.description.length > 5,
+      }));
+    });
+
+    for (const d of descriptions) {
+      expect(d.hasDesc).toBe(true);
+    }
+  });
+});

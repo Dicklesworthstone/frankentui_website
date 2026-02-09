@@ -2466,6 +2466,34 @@ function stripMarkdownToText(text) {
   }
 }
 
+/* ------------------------------------------------------------------ */
+/*  Issue Type Badge Metadata                                          */
+/* ------------------------------------------------------------------ */
+
+const ISSUE_TYPE_META = {
+  bug:     { label: 'Bug',     color: '#cf222e', bg: '#fee2e2', darkBg: 'rgba(207,34,46,0.15)', icon: '🐛', description: 'Something broken that needs fixing' },
+  feature: { label: 'Feature', color: '#0969da', bg: '#dbeafe', darkBg: 'rgba(9,105,218,0.15)',  icon: '✨', description: 'New functionality or enhancement' },
+  task:    { label: 'Task',    color: '#9a6700', bg: '#fef3c7', darkBg: 'rgba(154,103,0,0.15)',  icon: '📋', description: 'Work item: tests, docs, or refactoring' },
+  epic:    { label: 'Epic',    color: '#8250df', bg: '#f3e8ff', darkBg: 'rgba(130,80,223,0.15)', icon: '🏔️', description: 'Large feature composed of sub-tasks' },
+  docs:    { label: 'Docs',    color: '#1a7f37', bg: '#dcfce7', darkBg: 'rgba(26,127,55,0.15)',  icon: '📝', description: 'Documentation or knowledge base updates' },
+  chore:   { label: 'Chore',   color: '#57606a', bg: '#f6f8fa', darkBg: 'rgba(87,96,106,0.15)', icon: '🔧', description: 'Maintenance: dependencies, tooling, CI' },
+};
+
+const ISSUE_TYPE_DEFAULT = { label: 'Unknown', color: '#57606a', bg: '#f6f8fa', darkBg: 'rgba(87,96,106,0.15)', icon: '❓', description: 'Uncategorised issue type' };
+
+/**
+ * Get metadata for a given issue type.
+ * @param {string} type - The issue_type string from the database.
+ * @returns {{ label: string, color: string, bg: string, darkBg: string, icon: string, description: string }}
+ */
+function getIssueTypeMeta(type) {
+  return ISSUE_TYPE_META[(type || '').toLowerCase()] || ISSUE_TYPE_DEFAULT;
+}
+
+// Expose for tests
+window.ISSUE_TYPE_META = ISSUE_TYPE_META;
+window.getIssueTypeMeta = getIssueTypeMeta;
+
 /**
  * Main Alpine.js application component
  */
@@ -2487,6 +2515,11 @@ function beadsApp() {
     darkMode: localStorage.getItem('darkMode') !== null
       ? localStorage.getItem('darkMode') === 'true'
       : true, // Default to dark mode
+    showTypeLegend: false, // Toggle for revision type legend popover
+
+    // Issue type badge helper (callable from Alpine templates)
+    typeMeta(type) { return getIssueTypeMeta(type); },
+    typeLegendItems: Object.entries(ISSUE_TYPE_META).map(([key, meta]) => ({ key, ...meta })),
 
     // Data
     stats: {},

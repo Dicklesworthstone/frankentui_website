@@ -69,10 +69,6 @@ export default function CustomCursor() {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
-  const springConfig = { damping: 25, stiffness: 250, mass: 0.5 };
-  const cursorX = useSpring(mouseX, springConfig);
-  const cursorY = useSpring(mouseY, springConfig);
-
   // Magnetic effect state
   const [magneticPos, setMagneticPos] = useState({ x: 0, y: 0 });
   const [isMagnetic, setIsMagnetic] = useState(false);
@@ -80,10 +76,7 @@ export default function CustomCursor() {
   useEffect(() => {
     if (prefersReducedMotion) return undefined;
 
-    const media = window.matchMedia("(min-width: 768px)") as MediaQueryList & {
-      addListener?: (listener: (this: MediaQueryList, ev: MediaQueryListEvent) => void) => void;
-      removeListener?: (listener: (this: MediaQueryList, ev: MediaQueryListEvent) => void) => void;
-    };
+    const media = window.matchMedia("(min-width: 768px)");
     let enabled = false;
     let rafId: number | null = null;
     let last: { clientX: number; clientY: number; target: HTMLElement | null } | null = null;
@@ -184,31 +177,27 @@ export default function CustomCursor() {
       setIsMagnetic(false);
     };
 
-    const onMediaChange = () => {
-      if (media.matches) enable();
+    const onMediaChange = (e: MediaQueryList | MediaQueryListEvent) => {
+      if (e.matches) enable();
       else disable();
     };
 
-    onMediaChange();
+    onMediaChange(media);
 
-    // Safari fallback: matchMedia uses addListener/removeListener
     if (typeof media.addEventListener === "function") {
       media.addEventListener("change", onMediaChange);
       return () => {
         media.removeEventListener("change", onMediaChange);
         disable();
       };
+    } else {
+      // Legacy Safari fallback
+      (media as any).addListener(onMediaChange);
+      return () => {
+        (media as any).removeListener(onMediaChange);
+        disable();
+      };
     }
-
-    if (typeof media.addListener !== "function") {
-      return () => disable();
-    }
-
-    media.addListener(onMediaChange);
-    return () => {
-      media.removeListener(onMediaChange);
-      disable();
-    };
   }, [mouseX, mouseY, prefersReducedMotion]);
 
   if (prefersReducedMotion) return null;
@@ -238,14 +227,14 @@ export default function CustomCursor() {
               )}
 
               {/* Data Debris Trail */}
-              {isTechnicalArea && <DataDebris x={cursorX} y={cursorY} />}
+              {isTechnicalArea && <DataDebris x={mouseX} y={mouseY} />}
 
               {/* Outer Ring */}
               <motion.div
                 className="absolute left-0 top-0 h-10 w-10 rounded-full border border-green-500/40 mix-blend-screen"
                 style={{
-                  x: isMagnetic ? magneticPos.x : cursorX,
-                  y: isMagnetic ? magneticPos.y : cursorY,
+                  x: isMagnetic ? magneticPos.x : mouseX,
+                  y: isMagnetic ? magneticPos.y : mouseY,
                   translateX: "-50%",
                   translateY: "-50%",
                 }}
@@ -258,8 +247,8 @@ export default function CustomCursor() {
                 }}
                 transition={{
                   type: "spring",
-                  stiffness: 300,
-                  damping: 20,
+                  stiffness: 400,
+                  damping: 30,
                   mass: 0.5
                 }}
               >

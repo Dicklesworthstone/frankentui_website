@@ -201,10 +201,13 @@ export default function BeadsView() {
     if (typeof w.ForceGraph === "function") setForceGraphLoaded(true);
   }, []);
 
+  const activeLoadRef = useRef<number>(0);
+
   // Reassemble database chunks
   const loadDatabase = useCallback(async () => {
     if (db) return;
 
+    const loadId = ++activeLoadRef.current;
     try {
       setLoading(true);
       setError(null);
@@ -212,6 +215,8 @@ export default function BeadsView() {
       
       const configResp = await fetch("/beads-viewer/beads.sqlite3.config.json");
       if (!configResp.ok) throw new Error("Database configuration not found.");
+      if (loadId !== activeLoadRef.current) return;
+
       const config = (await configResp.json()) as { chunk_count?: unknown };
       const chunkCount = asNumber(config.chunk_count);
       if (chunkCount <= 0) throw new Error("Invalid database configuration.");
@@ -219,20 +224,22 @@ export default function BeadsView() {
       setLoadingMessage(`Downloading Neural Chunks (0/${chunkCount})...`);
       
       let downloadedCount = 0;
-      // Fetch all chunks in parallel with progress tracking
       const chunkPromises = Array.from({ length: chunkCount }).map(async (_, i) => {
         const chunkPath = `/beads-viewer/chunks/${String(i).padStart(5, '0')}.bin`;
         const response = await fetch(chunkPath);
         if (!response.ok) throw new Error(`Neural Chunk ${i} extraction failed.`);
         const data = new Uint8Array(await response.arrayBuffer());
         
-        downloadedCount += 1;
-        setLoadingMessage(`Downloading Neural Chunks (${downloadedCount}/${chunkCount})...`);
+        if (loadId === activeLoadRef.current) {
+          downloadedCount += 1;
+          setLoadingMessage(`Downloading Neural Chunks (${downloadedCount}/${chunkCount})...`);
+        }
         
         return data;
       });
 
       const chunks = await Promise.all(chunkPromises);
+      if (loadId !== activeLoadRef.current) return;
 
       setLoadingMessage("Stitching Synapses...");
       const totalSize = chunks.reduce((sum, c) => sum + c.length, 0);
@@ -251,18 +258,21 @@ export default function BeadsView() {
         locateFile: (file: string) => `/beads-viewer/vendor/${file}`
       });
 
+      if (loadId !== activeLoadRef.current) return;
+
       const database = new SQL.Database(combined);
       setDb(database);
       setLoadingMessage("Synchronization Complete.");
       setLoading(false);
     } catch (err: unknown) {
-      console.error("Failed to load database:", err);
-      const message =
-        err instanceof Error ? err.message : (typeof err === "string" ? err : "Unknown system failure.");
-      setError(message);
-      setLoadingMessage("CRITICAL_FAILURE: System corruption detected.");
-      // Ensure we don't hang in a loading state if chunk fetching fails
-      setLoading(false);
+      if (loadId === activeLoadRef.current) {
+        console.error("Failed to load database:", err);
+        const message =
+          err instanceof Error ? err.message : (typeof err === "string" ? err : "Unknown system failure.");
+        setError(message);
+        setLoadingMessage("CRITICAL_FAILURE: System corruption detected.");
+        setLoading(false);
+      }
     }
   }, [db]);
 
@@ -270,6 +280,10 @@ export default function BeadsView() {
     if (sqlLoaded && !db) {
       loadDatabase();
     }
+    return () => {
+      // Invalidate any ongoing load
+      activeLoadRef.current++;
+    };
   }, [sqlLoaded, db, loadDatabase]);
 
   // Initialize data once DB is ready
@@ -366,18 +380,24 @@ export default function BeadsView() {
         .width(container.clientWidth)
         .height(container.clientHeight || 650)
         .nodeCanvasObject((node, ctx: CanvasRenderingContext2D, globalScale: number) => {
-          const size = (5 - node.priority) * 1.5 + 3;
           const x = typeof node.x === "number" ? node.x : 0;
           const y = typeof node.y === "number" ? node.y : 0;
           
+          // Size based on priority (lower P = higher priority = larger node)
+          const priority = typeof node.priority === "number" ? node.priority : 4;
+          const size = (5 - priority) * 1.5 + 3;
+          const nodeColor = STATUS_COLORS[node.status] || THEME.green;
+          
           ctx.save();
-          // Glow effect
-          ctx.shadowColor = STATUS_COLORS[node.status] || THEME.green;
-          ctx.shadowBlur = 15 / globalScale;
+          // Glow effect - only on larger zoom levels for performance
+          if (globalScale > 0.8) {
+            ctx.shadowColor = nodeColor;
+            ctx.shadowBlur = 15 / globalScale;
+          }
           
           ctx.beginPath(); 
           ctx.arc(x, y, size, 0, 2 * Math.PI, false); 
-          ctx.fillStyle = STATUS_COLORS[node.status] || THEME.green;
+          ctx.fillStyle = nodeColor;
           ctx.fill();
           
           ctx.shadowBlur = 0;
@@ -402,7 +422,7 @@ export default function BeadsView() {
               FROM issues i WHERE id = ?
             `, [node.id]);
             
-            if (result && result.length > 0 && result[0].values.length > 0) {
+            if (result && result.length > 0 && result[0].values && result[0].values.length > 0) {
               const columns = result[0].columns;
               const row = result[0].values[0];
               const obj: Record<string, unknown> = {};

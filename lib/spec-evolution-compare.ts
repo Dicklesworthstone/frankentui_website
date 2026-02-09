@@ -63,14 +63,14 @@ export function buildCorpusText(files: SpecFile[], fileChoice: string): string {
     return hit?.content ?? "";
   }
 
-  // Deterministic ordering: sort by path so comparisons are stable.
-  const sorted = [...files].sort((a, b) => a.path.localeCompare(b.path));
+  // Use a map for faster lookup if choice is specific, but here we just sort once.
+  const sorted = [...files].sort((a, b) => (a.path < b.path ? -1 : 1));
   return sorted.map((f) => `## ${f.path}\n\n${f.content ?? ""}`).join("\n\n---\n\n");
 }
 
 export function computeTextStats(text: string): TextStats {
   if (!text) return { lines: 0, bytes: 0, words: 0 };
-  const lines = text.split(/\n/).length;
+  const lines = text === "" ? 0 : text.split(/\r?\n/).length;
   const bytes = textEncoder.encode(text).length;
   const words = text.split(/\s+/).filter(Boolean).length;
   return { lines, bytes, words };
@@ -113,8 +113,8 @@ export function computePerFileContribution(
 
 export function computeEditDistanceLines(prevText: string, nextText: string, maxCost: number): number {
   // Levenshtein distance on lines (token = line). Uses hashing for faster comparisons.
-  const a = prevText ? prevText.split(/\n/) : [];
-  const b = nextText ? nextText.split(/\n/) : [];
+  const a = prevText ? prevText.split(/\r?\n/) : [];
+  const b = nextText ? nextText.split(/\r?\n/) : [];
 
   const k = typeof maxCost === "number" ? maxCost : Number.POSITIVE_INFINITY;
   if (Math.abs(a.length - b.length) > k) return k + 1;
@@ -163,9 +163,8 @@ export function computeEditDistanceLines(prevText: string, nextText: string, max
 }
 
 function splitLines(text: string): string[] {
-  // Keep empty trailing line if text ends with '\n' for stable diffs.
   if (!text) return [];
-  return text.split(/\n/);
+  return text.split(/\r?\n/);
 }
 
 function backtrackMyers(trace: Map<number, number>[], a: string[], b: string[]): DiffOp[] {
@@ -173,46 +172,50 @@ function backtrackMyers(trace: Map<number, number>[], a: string[], b: string[]):
   let y = b.length;
   const ops: DiffOp[] = [];
 
-  for (let d = trace.length - 1; d > 0; d--) {
-    const v = trace[d];
+  for (let d = trace.length - 1; d >= 0; d--) {
     const k = x - y;
+    const v = trace[d];
 
-    const vKMinus1 = v.get(k - 1) ?? -1;
-    const vKPlus1 = v.get(k + 1) ?? -1;
+    if (d > 0) {
+      const vPrev = trace[d - 1];
+      const vKMinus1 = vPrev.get(k - 1) ?? -1;
+      const vKPlus1 = vPrev.get(k + 1) ?? -1;
 
-    const prevK =
-      k === -d || (k !== d && vKMinus1 < vKPlus1)
-        ? k + 1 // insertion
-        : k - 1; // deletion
+      // Was the step an insertion (from k+1) or a deletion (from k-1)?
+      if (k === -d || (k !== d && vKMinus1 < vKPlus1)) {
+        // Insertion: move vertically from (prevX, prevY) to (prevX, prevY + 1), then diagonals.
+        const prevX = vKPlus1;
+        const prevY = prevX - (k + 1);
+        
+        while (x > prevX && y > (prevY + 1)) {
+          ops.push({ kind: "equal", text: a[x - 1] });
+          x--; y--;
+        }
+        ops.push({ kind: "add", text: b[y - 1] });
+        y--;
+        x = prevX;
+        y = prevY;
+      } else {
+        // Deletion: move horizontally from (prevX, prevY) to (prevX + 1, prevY), then diagonals.
+        const prevX = vKMinus1;
+        const prevY = prevX - (k - 1);
 
-    const prevX = trace[d - 1].get(prevK) ?? 0;
-    const prevY = prevX - prevK;
-
-    while (x > prevX && y > prevY) {
-      ops.push({ kind: "equal", text: a[x - 1] });
-      x--;
-      y--;
+        while (x > (prevX + 1) && y > prevY) {
+          ops.push({ kind: "equal", text: a[x - 1] });
+          x--; y--;
+        }
+        ops.push({ kind: "del", text: a[x - 1] });
+        x--;
+        x = prevX;
+        y = prevY;
+      }
+    } else {
+      // d == 0: just diagonals back to (0,0)
+      while (x > 0 && y > 0) {
+        ops.push({ kind: "equal", text: a[x - 1] });
+        x--; y--;
+      }
     }
-
-    if (x === prevX) ops.push({ kind: "add", text: b[prevY] });
-    else ops.push({ kind: "del", text: a[prevX] });
-
-    x = prevX;
-    y = prevY;
-  }
-
-  while (x > 0 && y > 0) {
-    ops.push({ kind: "equal", text: a[x - 1] });
-    x--;
-    y--;
-  }
-  while (x > 0) {
-    ops.push({ kind: "del", text: a[x - 1] });
-    x--;
-  }
-  while (y > 0) {
-    ops.push({ kind: "add", text: b[y - 1] });
-    y--;
   }
 
   ops.reverse();
@@ -221,10 +224,8 @@ function backtrackMyers(trace: Map<number, number>[], a: string[], b: string[]):
 
 /**
  * Myers O((N+M)D) diff on lines.
- *
- * Notes:
- * - Designed for compare-mode "corpus diff" views.
- * - If you need hunks, build them on top of the returned edit script.
+ * 
+ * Safety: Returns a simple "all deleted, all added" diff if it takes longer than 500ms.
  */
 export function myersDiffLines(aLines: string[], bLines: string[]): DiffOp[] {
   const N = aLines.length;
@@ -234,23 +235,28 @@ export function myersDiffLines(aLines: string[], bLines: string[]): DiffOp[] {
 
   const max = N + M;
   const trace: Map<number, number>[] = [];
+  const startTime = performance.now();
 
-  // k -> x (furthest x on diagonal k after d edits)
   let v = new Map<number, number>();
   v.set(1, 0);
 
   for (let d = 0; d <= max; d++) {
+    // Safety exit for extremely large or pathologically slow diffs.
+    if (d > 0 && d % 50 === 0 && performance.now() - startTime > 500) {
+      return [
+        ...aLines.map(text => ({ kind: "del" as const, text })),
+        ...bLines.map(text => ({ kind: "add" as const, text })),
+      ];
+    }
+
     const vNext = new Map<number, number>();
     for (let k = -d; k <= d; k += 2) {
       const vKMinus1 = v.get(k - 1) ?? -1;
       const vKPlus1 = v.get(k + 1) ?? -1;
 
-      // Choose insertion vs deletion step.
-      let x =
-        k === -d || (k !== d && vKMinus1 < vKPlus1)
-          ? vKPlus1 // insertion
-          : vKMinus1 + 1; // deletion
-      if (x < 0) x = 0;
+      let x = (k === -d || (k !== d && vKMinus1 < vKPlus1)) 
+        ? vKPlus1 
+        : vKMinus1 + 1;
 
       let y = x - k;
       while (x < N && y < M && aLines[x] === bLines[y]) {

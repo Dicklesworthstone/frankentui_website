@@ -33,12 +33,13 @@ export function buildTimelineData(
   }
 
   const rawValues = commits.map((c) => c.magnitude[metricKey] ?? 0);
-  const maxRaw = Math.max(...rawValues, 1); // avoid div by zero
+  const maxRaw = Math.max(...rawValues);
   const minRaw = Math.min(...rawValues);
+  const range = maxRaw - minRaw;
 
   const points: TimelinePoint[] = commits.map((c, i) => ({
     idx: c.idx,
-    value: maxRaw > 0 ? rawValues[i] / maxRaw : 0,
+    value: range > 0 ? (rawValues[i] - minRaw) / range : (maxRaw > 0 ? 1 : 0),
     rawValue: rawValues[i],
     reviewed: c.reviewed,
     matchesBucketFilter: bucketFilter === null || hasBucketBit(c.bucketMask, bucketFilter),

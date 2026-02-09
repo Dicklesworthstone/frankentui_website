@@ -1627,3 +1627,331 @@ export const performanceSLAs: PerformanceSLA[] = [
   { metric: "Dirty-span overhead (dense)", target: "< 2%", hardCap: "< 5%", notes: "Overhead of dirty-span tracking vs full scan" },
   { metric: "Dirty-span improvement (sparse)", target: "> 50%", hardCap: "—", notes: "Scan cost reduction for ≤ 5% edit density" },
 ];
+
+// ── Flywheel Ecosystem Data ──────────────────────────────────────────
+
+export interface FlywheelTool {
+  id: string;
+  name: string;
+  shortName: string;
+  tagline: string;
+  icon: string;
+  color: string;
+  href: string;
+  features: string[];
+  connectsTo: string[];
+  connectionDescriptions: Record<string, string>;
+  projectSlug?: string;
+  demoUrl?: string;
+  stars?: number;
+}
+
+export const flywheelDescription = {
+  title: "The Agent Flywheel",
+  subtitle: "A high-velocity AI engineering ecosystem designed for building systems like FrankenTUI.",
+  description: "FrankenTUI wasn't built manually. It was architected and implemented through a recursive feedback loop of specialized AI agents, each handling a different layer of the kernel hierarchy.",
+};
+
+export const flywheelTools: FlywheelTool[] = [
+  {
+    id: "ntm",
+    name: "Named Tmux Manager",
+    shortName: "NTM",
+    href: "https://github.com/Dicklesworthstone/ntm",
+    icon: "LayoutGrid",
+    color: "from-green-600 to-emerald-600",
+    tagline: "Multi-agent tmux orchestration",
+    connectsTo: ["slb", "mail", "cass", "bv"],
+    connectionDescriptions: {
+      slb: "Routes dangerous commands through safety checks",
+      mail: "Human Overseer messaging and file reservations",
+      cass: "Duplicate detection and session history search",
+      bv: "Dashboard shows beads status; --robot-triage for dispatch",
+    },
+    stars: 133,
+    projectSlug: "named-tmux-manager",
+    features: [
+      "Spawn 10+ Claude/Codex/Gemini agents in parallel",
+      "Smart broadcast with type/variant/tag filtering",
+      "60fps animated dashboard with health monitoring",
+    ],
+  },
+  {
+    id: "slb",
+    name: "Simultaneous Launch Button",
+    shortName: "SLB",
+    href: "https://github.com/Dicklesworthstone/slb",
+    icon: "ShieldCheck",
+    color: "from-emerald-500 to-green-600",
+    tagline: "Peer review for dangerous commands",
+    connectsTo: ["mail", "ubs"],
+    connectionDescriptions: {
+      mail: "Notifications sent to reviewer inboxes",
+      ubs: "Pre-flight scans before execution",
+    },
+    stars: 56,
+    projectSlug: "simultaneous-launch-button",
+    features: [
+      "Three-tier risk classification (CRITICAL/DANGEROUS/CAUTION)",
+      "Cryptographic command binding with SHA256+HMAC",
+      "Dynamic quorum based on active agents",
+    ],
+  },
+  {
+    id: "mail",
+    name: "MCP Agent Mail",
+    shortName: "Mail",
+    href: "https://github.com/Dicklesworthstone/mcp_agent_mail",
+    icon: "Mail",
+    color: "from-green-500 to-teal-500",
+    tagline: "Inter-agent messaging & coordination",
+    connectsTo: ["bv", "cm", "slb"],
+    connectionDescriptions: {
+      bv: "Task IDs link conversations to Beads issues",
+      cm: "Shared context across agent sessions",
+      slb: "Approval requests delivered to inboxes",
+    },
+    stars: 1654,
+    demoUrl: "https://dicklesworthstone.github.io/cass-memory-system-agent-mailbox-viewer/viewer/",
+    projectSlug: "mcp-agent-mail",
+    features: [
+      "GitHub-flavored Markdown messaging between agents",
+      "Advisory file reservations to prevent conflicts",
+      "SQLite-backed storage for complete audit trails",
+    ],
+  },
+  {
+    id: "bv",
+    name: "Beads Viewer",
+    shortName: "BV",
+    href: "https://github.com/Dicklesworthstone/beads_viewer",
+    icon: "GitBranch",
+    color: "from-emerald-600 to-lime-500",
+    tagline: "Graph analytics for task dependencies",
+    connectsTo: ["mail", "ubs", "cass"],
+    connectionDescriptions: {
+      mail: "Task updates trigger mail notifications",
+      ubs: "Bug scanner results create blocking issues",
+      cass: "Search prior sessions for task context",
+    },
+    stars: 1211,
+    demoUrl: "https://dicklesworthstone.github.io/beads_viewer-pages/",
+    projectSlug: "beads-viewer",
+    features: [
+      "9 graph metrics: PageRank, Betweenness, Critical Path",
+      "Robot protocol (--robot-*) for AI-ready JSON",
+      "60fps TUI rendering via Bubble Tea",
+    ],
+  },
+  {
+    id: "ubs",
+    name: "Ultimate Bug Scanner",
+    shortName: "UBS",
+    href: "https://github.com/Dicklesworthstone/ultimate_bug_scanner",
+    icon: "Bug",
+    color: "from-lime-600 to-green-500",
+    tagline: "Pattern-based bug detection",
+    connectsTo: ["bv", "slb"],
+    connectionDescriptions: {
+      bv: "Creates issues for discovered bugs",
+      slb: "Validates code before risky commits",
+    },
+    stars: 152,
+    projectSlug: "ultimate-bug-scanner",
+    features: [
+      "1,000+ custom detection patterns across languages",
+      "Consistent JSON output for all languages",
+      "Perfect for pre-commit hooks and CI/CD",
+    ],
+  },
+  {
+    id: "cm",
+    name: "CASS Memory System",
+    shortName: "CM",
+    href: "https://github.com/Dicklesworthstone/cass_memory_system",
+    icon: "Brain",
+    color: "from-teal-500 to-emerald-400",
+    tagline: "Persistent memory across sessions",
+    connectsTo: ["mail", "cass", "bv"],
+    connectionDescriptions: {
+      mail: "Stores conversation summaries for recall",
+      cass: "Semantic search over stored memories",
+      bv: "Remembers task patterns and solutions",
+    },
+    stars: 212,
+    demoUrl: "https://dicklesworthstone.github.io/cass-memory-system-agent-mailbox-viewer/viewer/",
+    projectSlug: "cass-memory-system",
+    features: [
+      "Three-layer cognitive: episodic, working, procedural memory",
+      "MCP tools for cross-session context persistence",
+      "Built on top of CASS for semantic search",
+    ],
+  },
+  {
+    id: "cass",
+    name: "Coding Agent Session Search",
+    shortName: "CASS",
+    href: "https://github.com/Dicklesworthstone/coding_agent_session_search",
+    icon: "Search",
+    color: "from-green-400 to-cyan-500",
+    tagline: "Unified search across 11+ agent formats",
+    connectsTo: ["cm", "ntm", "bv", "mail"],
+    connectionDescriptions: {
+      cm: "CM integrates CASS for memory retrieval",
+      ntm: "Duplicate detection before broadcasting",
+      bv: "Links search results to related tasks",
+      mail: "Agents query history before asking colleagues",
+    },
+    stars: 446,
+    projectSlug: "cass",
+    features: [
+      "11 formats: Claude Code, Codex, Cursor, Gemini, ChatGPT, Aider, etc.",
+      "Sub-5ms cached search, hybrid semantic + keyword",
+      "Multi-machine sync via SSH with path mapping",
+    ],
+  },
+  {
+    id: "acfs",
+    name: "Flywheel Setup",
+    shortName: "ACFS",
+    href: "https://github.com/Dicklesworthstone/agentic_coding_flywheel_setup",
+    icon: "Cog",
+    color: "from-emerald-600 to-teal-600",
+    tagline: "One-command environment bootstrap",
+    connectsTo: ["ntm", "mail", "dcg"],
+    connectionDescriptions: {
+      ntm: "Installs and configures NTM",
+      mail: "Sets up Agent Mail MCP server",
+      dcg: "Installs DCG safety hooks",
+    },
+    stars: 1006,
+    projectSlug: "agentic-coding-flywheel-setup",
+    features: [
+      "30-minute zero-to-hero setup",
+      "Installs Claude Code, Codex, Gemini CLI",
+      "All flywheel tools pre-configured",
+    ],
+  },
+  {
+    id: "dcg",
+    name: "Destructive Command Guard",
+    shortName: "DCG",
+    href: "https://github.com/Dicklesworthstone/destructive_command_guard",
+    icon: "ShieldAlert",
+    color: "from-red-600 to-orange-600",
+    tagline: "Intercepts dangerous shell commands",
+    connectsTo: ["slb", "ntm"],
+    connectionDescriptions: {
+      slb: "Works alongside SLB for layered command safety",
+      ntm: "Guards all commands in NTM-managed sessions",
+    },
+    stars: 349,
+    projectSlug: "destructive-command-guard",
+    features: [
+      "Intercepts rm -rf, git reset --hard, etc.",
+      "SIMD-accelerated pattern matching",
+      "Command audit logging",
+    ],
+  },
+  {
+    id: "ru",
+    name: "Repo Updater",
+    shortName: "RU",
+    href: "https://github.com/Dicklesworthstone/repo_updater",
+    icon: "RefreshCw",
+    color: "from-green-500 to-lime-600",
+    tagline: "Multi-repo sync in one command",
+    connectsTo: ["ubs", "ntm"],
+    connectionDescriptions: {
+      ubs: "Run bug scans across all synced repos",
+      ntm: "NTM integration for agent-driven sweeps",
+    },
+    stars: 49,
+    features: [
+      "One-command multi-repo sync",
+      "Parallel operations with conflict detection",
+      "AI code review integration",
+    ],
+  },
+  {
+    id: "giil",
+    name: "Get Image from Internet Link",
+    shortName: "GIIL",
+    href: "https://github.com/Dicklesworthstone/giil",
+    icon: "Image",
+    color: "from-emerald-400 to-green-500",
+    tagline: "Download images from share links",
+    connectsTo: ["mail", "cass"],
+    connectionDescriptions: {
+      mail: "Downloaded images can be referenced in Agent Mail",
+      cass: "Image analysis sessions are searchable",
+    },
+    stars: 27,
+    features: [
+      "iCloud share link support",
+      "CLI-based image download",
+      "Works over SSH without GUI",
+    ],
+  },
+  {
+    id: "xf",
+    name: "X Archive Search",
+    shortName: "XF",
+    href: "https://github.com/Dicklesworthstone/xf",
+    icon: "Archive",
+    color: "from-teal-600 to-emerald-700",
+    tagline: "Ultra-fast X/Twitter archive search",
+    connectsTo: ["cass", "cm"],
+    connectionDescriptions: {
+      cass: "Similar search architecture and patterns",
+      cm: "Found tweets can become memories",
+    },
+    stars: 67,
+    features: [
+      "Sub-second search over large archives",
+      "Semantic + keyword hybrid search",
+      "Privacy-preserving local processing",
+    ],
+  },
+  {
+    id: "s2p",
+    name: "Source to Prompt TUI",
+    shortName: "s2p",
+    href: "https://github.com/Dicklesworthstone/source_to_prompt_tui",
+    icon: "FileCode",
+    color: "from-green-600 to-teal-500",
+    tagline: "Combine source files into LLM prompts",
+    connectsTo: ["cass", "cm"],
+    connectionDescriptions: {
+      cass: "Generated prompts can be searched later",
+      cm: "Effective prompts stored as memories",
+    },
+    stars: 13,
+    features: [
+      "Interactive file selection TUI",
+      "Real-time token counting",
+      "Gitignore-aware filtering",
+    ],
+  },
+  {
+    id: "ms",
+    name: "Meta Skill",
+    shortName: "MS",
+    href: "https://github.com/Dicklesworthstone/meta_skill",
+    icon: "Sparkles",
+    color: "from-emerald-500 to-lime-500",
+    tagline: "Skill management with effectiveness tracking",
+    connectsTo: ["cass", "cm", "bv"],
+    connectionDescriptions: {
+      cass: "One input source for skill extraction",
+      cm: "Skills and CM memories are complementary layers",
+      bv: "Graph analysis for skill dependency insights",
+    },
+    stars: 108,
+    features: [
+      "MCP server for native AI agent integration",
+      "Thompson sampling optimizes suggestions",
+      "Multi-layer security (ACIP, DCG, path policy)",
+    ],
+  },
+];

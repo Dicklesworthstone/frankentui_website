@@ -61,6 +61,7 @@ export function searchSingleCommit(
       const lower = line.toLowerCase();
       let pos = lower.indexOf(q);
       while (pos !== -1 && hits.length < maxHits) {
+        const { snippet, snippetMatchOffset } = buildSnippet(line, pos, q.length);
         hits.push({
           commitIdx: commit.idx,
           commitShort: commit.short,
@@ -68,9 +69,9 @@ export function searchSingleCommit(
           commitSubject: commit.subject,
           filePath: file.path,
           lineNo: i + 1,
-          snippet: buildSnippet(line, pos, query.length),
-          matchOffset: Math.min(pos, 40),
-          matchLength: query.length,
+          snippet,
+          matchOffset: snippetMatchOffset,
+          matchLength: q.length,
         });
         pos = lower.indexOf(q, pos + 1);
       }
@@ -83,16 +84,26 @@ export function searchSingleCommit(
 /**
  * Build a context snippet around a match position.
  * Extracts ~40 chars before and after the match.
+ * Returns the snippet and the adjusted offset of the match within it.
  */
-function buildSnippet(line: string, matchPos: number, matchLen: number): string {
+function buildSnippet(line: string, matchPos: number, matchLen: number): { snippet: string; snippetMatchOffset: number } {
   const ctxBefore = 40;
   const ctxAfter = 60;
   const start = Math.max(0, matchPos - ctxBefore);
   const end = Math.min(line.length, matchPos + matchLen + ctxAfter);
+  
   let snippet = line.slice(start, end);
-  if (start > 0) snippet = "…" + snippet;
-  if (end < line.length) snippet = snippet + "…";
-  return snippet;
+  let snippetMatchOffset = matchPos - start;
+
+  if (start > 0) {
+    snippet = "…" + snippet;
+    snippetMatchOffset += 1;
+  }
+  if (end < line.length) {
+    snippet = snippet + "…";
+  }
+  
+  return { snippet, snippetMatchOffset };
 }
 
 /**

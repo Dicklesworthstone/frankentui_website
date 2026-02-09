@@ -105,12 +105,14 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
   }, [playSfx]);
 
   const toggleAudio = useCallback(() => {
-    const newState = !audioEnabledRef.current;
-    audioEnabledRef.current = newState;
-    setIsAudioEnabled(newState);
-    if (newState) {
+    const nextState = !audioEnabledRef.current;
+    audioEnabledRef.current = nextState;
+    setIsAudioEnabled(nextState);
+    if (nextState) {
       // Small delay to allow AudioContext to initialize if it hasn't
-      setTimeout(() => playSfx("hum"), 150);
+      setTimeout(() => {
+        if (audioEnabledRef.current) playSfx("hum");
+      }, 150);
     }
   }, [playSfx]);
 

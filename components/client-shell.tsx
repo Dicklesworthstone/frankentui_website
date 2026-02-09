@@ -33,16 +33,16 @@ export default function ClientShell({ children }: { children: React.ReactNode })
           <AnimatePresence mode="wait">
             <motion.div
               key={pathname}
-              initial={{ opacity: 0 }}
+              initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0 }}
               animate={{ 
                 opacity: 1, 
                 transition: {
-                  duration: 0.4,
+                  duration: prefersReducedMotion ? 0 : 0.4,
                   ease: "easeOut",
-                  delay: 0.1
+                  delay: prefersReducedMotion ? 0 : 0.1
                 }
               }}
-              exit={{ 
+              exit={prefersReducedMotion ? { opacity: 1 } : { 
                 opacity: 0,
                 transition: {
                   duration: 0.3,

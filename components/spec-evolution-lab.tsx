@@ -1953,47 +1953,57 @@ export default function SpecEvolutionLab() {
                   <span>EPOCH_START: {commits[0]?.dateShort.split(' ')[0] || ""}</span>
                   <span>EPOCH_END: {commits[commits.length - 1]?.dateShort.split(' ')[0] || ""}</span>
                 </div>
-                  <div className="relative h-12 flex items-center group">
+                <div className="relative h-12 flex items-center group">
                   <div className="absolute inset-x-0 h-1 bg-white/5 rounded-full" />
-                  <div 
-                    className="absolute h-1 bg-green-500 rounded-full shadow-[0_0_15px_#22c55e]" 
-                    style={{ width: `${(selectedIndex / (commits.length - 1)) * 100}%` }}
-                  />
-                  {compareBaseIndex !== null && commits.length > 1 ? (
-                    <div
-                      className="absolute top-0 bottom-0 pointer-events-none"
-                      style={{ 
-                        left: `calc(${(compareBaseIndex / (commits.length - 1)) * 100}% - 1px)`,
-                        opacity: compareBaseIndex === selectedIndex ? 0 : 1
-                      }}
-                      aria-hidden="true"
-                    >
-                      <div className="absolute top-1/2 -translate-y-1/2 h-7 w-[2px] rounded-full bg-rose-400/80 shadow-[0_0_12px_rgba(251,113,133,0.6)]" />
-                      <div className="absolute top-1/2 translate-y-[14px] -translate-x-3 text-[9px] font-black font-mono text-rose-300 bg-rose-500/10 border border-rose-500/20 px-1.5 py-0.5 rounded">
-                        A
-                      </div>
-                    </div>
-                  ) : null}
-                  <input
-                    type="range"
-                    min={0}
-                    max={Math.max(0, commits.length - 1)}
-                    value={selectedIndex}
-                    onChange={(e) => selectCommit(parseInt(e.target.value, 10))}
-                    className="absolute inset-x-0 w-full h-1 opacity-0 cursor-pointer z-10"
-                  />
-                  <motion.div 
-                    className="absolute h-4 w-4 bg-white rounded-full border-2 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.8)] pointer-events-none"
-                    style={{ left: `calc(${(selectedIndex / (commits.length - 1)) * 100}% - 8px)` }}
-                    animate={prefersReducedMotion.current ? undefined : { scale: [1, 1.2, 1] }}
-                    transition={prefersReducedMotion.current ? undefined : { repeat: Infinity, duration: 2 }}
-                  >
-                    {compareBaseIndex === selectedIndex && (
-                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] font-black font-mono text-rose-300 bg-rose-500/20 border border-rose-500/40 px-1 py-0.5 rounded">
-                        A
-                      </div>
-                    )}
-                  </motion.div>
+                  {(() => {
+                    const totalSteps = commits.length - 1;
+                    const percent = totalSteps > 0 ? (selectedIndex / totalSteps) * 100 : 0;
+                    const comparePercent = totalSteps > 0 && compareBaseIndex !== null ? (compareBaseIndex / totalSteps) * 100 : 0;
+                    
+                    return (
+                      <>
+                        <div 
+                          className="absolute h-1 bg-green-500 rounded-full shadow-[0_0_15px_#22c55e]" 
+                          style={{ width: `${percent}%` }}
+                        />
+                        {compareBaseIndex !== null && commits.length > 1 ? (
+                          <div
+                            className="absolute top-0 bottom-0 pointer-events-none"
+                            style={{ 
+                              left: `calc(${comparePercent}% - 1px)`,
+                              opacity: compareBaseIndex === selectedIndex ? 0 : 1
+                            }}
+                            aria-hidden="true"
+                          >
+                            <div className="absolute top-1/2 -translate-y-1/2 h-7 w-[2px] rounded-full bg-rose-400/80 shadow-[0_0_12px_rgba(251,113,133,0.6)]" />
+                            <div className="absolute top-1/2 translate-y-[14px] -translate-x-3 text-[9px] font-black font-mono text-rose-300 bg-rose-500/10 border border-rose-500/20 px-1.5 py-0.5 rounded">
+                              A
+                            </div>
+                          </div>
+                        ) : null}
+                        <input
+                          type="range"
+                          min={0}
+                          max={Math.max(0, commits.length - 1)}
+                          value={selectedIndex}
+                          onChange={(e) => selectCommit(parseInt(e.target.value, 10))}
+                          className="absolute inset-x-0 w-full h-1 opacity-0 cursor-pointer z-10"
+                        />
+                        <motion.div 
+                          className="absolute h-4 w-4 bg-white rounded-full border-2 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.8)] pointer-events-none"
+                          style={{ left: `calc(${percent}% - 8px)` }}
+                          animate={prefersReducedMotion.current ? undefined : { scale: [1, 1.2, 1] }}
+                          transition={prefersReducedMotion.current ? undefined : { repeat: Infinity, duration: 2 }}
+                        >
+                          {compareBaseIndex === selectedIndex && (
+                            <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] font-black font-mono text-rose-300 bg-rose-500/20 border border-rose-500/40 px-1 py-0.5 rounded">
+                              A
+                            </div>
+                          )}
+                        </motion.div>
+                      </>
+                    );
+                  })()}
                 </div>
                 
                 <div className="mt-8 grid md:grid-cols-[1fr_auto] gap-6 items-start">

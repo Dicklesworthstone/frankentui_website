@@ -22,6 +22,7 @@ import ComparisonTable from "@/components/comparison-table";
 import RustCodeBlock from "@/components/rust-code-block";
 import Timeline from "@/components/timeline";
 import TweetWall from "@/components/tweet-wall";
+import FrankenFlywheel from "@/components/franken-flywheel";
 import FrankenEye from "@/components/franken-eye";
 import FrankenGlitch from "@/components/franken-glitch";
 import { FrankenContainer } from "@/components/franken-elements";
@@ -503,90 +504,98 @@ export default function HomePage() {
         </div>
 
         <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8">
-          <FrankenContainer withPulse={true} className="glass-modern p-8 md:p-16 border-green-500/10">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
-              {/* Text Side */}
-              <div className="space-y-8 text-left">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-green-500/20 bg-green-500/5 text-[10px] font-black uppercase tracking-[0.3em] text-green-500">
-                  <Activity className="h-3 w-3" />
-                  Origin_Protocol
-                </div>
+          <div className="mb-16 text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-green-500/20 bg-green-500/5 text-[10px] font-black uppercase tracking-[0.3em] text-green-500 mb-8">
+              <Activity className="h-3 w-3" />
+              Origin_Protocol
+            </div>
 
-                <FrankenGlitch trigger="always" intensity="low">
-                  <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-tight">
-                    Crafted by <br />
-                    <span className="text-animate-green">Jeffrey Emanuel.</span>
-                  </h2>
-                </FrankenGlitch>
+            <FrankenGlitch trigger="hover" intensity="low">
+              <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter leading-tight uppercase">
+                Crafted by <br />
+                <span className="text-animate-green">Jeffrey Emanuel.</span>
+              </h2>
+            </FrankenGlitch>
 
-                <p className="text-xl text-slate-400 font-medium leading-relaxed">
-                  This entire system was architected and built using 
-                  <strong className="text-white"> Agent Flywheel</strong> — a high-velocity 
-                  AI engineering ecosystem.
-                </p>
+            <p className="mt-6 text-xl text-slate-400 font-medium leading-relaxed max-w-3xl">
+              This entire system was architected and built using the 
+              <strong className="text-white"> AI Flywheel</strong> — an interactive 
+              ecosystem of specialized autonomous agents.
+            </p>
+          </div>
 
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Magnetic strength={0.2}>
-                    <a
-                      href="https://agent-flywheel.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      data-magnetic="true"
-                      className="px-8 py-4 rounded-2xl bg-green-500 text-black font-black text-sm hover:bg-white transition-all flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(34,197,94,0.2)]"
-                    >
-                      EXPLORE FLYWHEEL
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  </Magnetic>
-                  <Magnetic strength={0.1}>
-                    <a
-                      href={siteConfig.social.authorGithub}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      data-magnetic="true"
-                      className="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-sm hover:bg-white/10 transition-all flex items-center justify-center gap-3"
-                    >
-                      <Github className="h-4 w-4" />
-                      AUTHOR_CORE
-                    </a>
-                  </Magnetic>
-                </div>
-              </div>
+          <FrankenFlywheel />
 
-              {/* Visual Side - 3D Tilted OG Image */}
-              <div className="relative group perspective-1000">
-                <motion.div
-                  whileHover={{ 
-                    rotateY: -10, 
-                    rotateX: 5, 
-                    scale: 1.02,
-                    boxShadow: "0 20px 80px -20px rgba(34, 197, 94, 0.3)"
-                  }}
-                  transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                  className="relative aspect-video rounded-2xl overflow-hidden border border-white/10 bg-black shadow-2xl transition-all"
-                >
-                  <Image 
-                    src="/images/frankentui_illustration.webp" 
-                    alt="FrankenTUI Origin" 
-                    fill 
-                    className="object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                  
-                  {/* Overlay scanlines */}
-                  <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%)] bg-[length:100%_4px] opacity-20" />
-                  
-                  {/* HUD elements over image */}
-                  <div className="absolute bottom-4 left-4 flex items-center gap-3 px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-md border border-white/5">
-                    <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-ping" />
-                    <span className="text-[8px] font-black text-white uppercase tracking-widest">Flywheel_Generated</span>
-                  </div>
-                </motion.div>
-                
-                {/* Back decorative glow */}
-                <div className="absolute -inset-4 bg-green-500/10 rounded-[2rem] blur-2xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="mt-20 grid lg:grid-cols-2 gap-16 items-center">
+            {/* Additional Info / CTA */}
+            <div className="space-y-8 text-left">
+              <p className="text-lg text-slate-400 font-medium leading-relaxed">
+                The development process for FrankenTUI was a recursive feedback loop. 
+                Specialized agents handled different layers of the kernel hierarchy, 
+                from the zero-unsafe core to the Bayesian diffing strategy.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Magnetic strength={0.2}>
+                  <a
+                    href="https://agent-flywheel.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-magnetic="true"
+                    className="px-8 py-4 rounded-2xl bg-green-500 text-black font-black text-sm hover:bg-white transition-all flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(34,197,94,0.2)]"
+                  >
+                    EXPLORE FLYWHEEL
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                </Magnetic>
+                <Magnetic strength={0.1}>
+                  <a
+                    href={siteConfig.social.authorGithub}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-magnetic="true"
+                    className="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-sm hover:bg-white/10 transition-all flex items-center justify-center gap-3"
+                  >
+                    <Github className="h-4 w-4" />
+                    AUTHOR_CORE
+                  </a>
+                </Magnetic>
               </div>
             </div>
-          </FrankenContainer>
+
+            {/* Visual Side - 3D Tilted OG Image */}
+            <div className="relative group perspective-1000">
+              <motion.div
+                whileHover={{ 
+                  rotateY: -10, 
+                  rotateX: 5, 
+                  scale: 1.02,
+                  boxShadow: "0 20px 80px -20px rgba(34, 197, 94, 0.3)"
+                }}
+                transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                className="relative aspect-video rounded-2xl overflow-hidden border border-white/10 bg-black shadow-2xl transition-all"
+              >
+                <Image 
+                  src="/images/frankentui_illustration.webp" 
+                  alt="FrankenTUI Origin" 
+                  fill 
+                  className="object-cover transition-transform duration-700 group-hover:scale-110"
+                />
+                
+                {/* Overlay scanlines */}
+                <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%)] bg-[length:100%_4px] opacity-20" />
+                
+                {/* HUD elements over image */}
+                <div className="absolute bottom-4 left-4 flex items-center gap-3 px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-md border border-white/5">
+                  <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-ping" />
+                  <span className="text-[8px] font-black text-white uppercase tracking-widest">Flywheel_Generated</span>
+                </div>
+              </motion.div>
+              
+              {/* Back decorative glow */}
+              <div className="absolute -inset-4 bg-green-500/10 rounded-[2rem] blur-2xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            </div>
+          </div>
         </div>
       </section>
     </main>

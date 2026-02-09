@@ -30,11 +30,11 @@ const LINES: TerminalLine[] = [
   { text: "    Compiling ftui v0.1.1", style: "dim", delay: 500, speed: 2, typed: false },
   { text: "     Running target/debug/examples/dashboard", style: "dim", delay: 400, speed: 2, typed: false },
   { text: "", style: "dim", delay: 300, speed: 1, typed: false },
-  { text: "┌─ Metrics ──────┐┌─ Events ──────────┐", style: "dashboard-border", delay: 200, speed: 3, typed: false },
-  { text: "│ CPU    ██▓░  54%││ 14:32 task.done   │", style: "dashboard-mixed", delay: 100, speed: 3, typed: false },
-  { text: "│ Memory ███░  71%││ 14:31 deploy.ok   │", style: "dashboard-mixed", delay: 100, speed: 3, typed: false },
-  { text: "│ Disk   █░░░  22%││ 14:30 build.pass  │", style: "dashboard-mixed", delay: 100, speed: 3, typed: false },
-  { text: "└────────────────┘└───────────────────┘", style: "dashboard-border", delay: 100, speed: 3, typed: false },
+  { text: "┌─ Metrics ──────┐ ┌─ Events ──────────┐", style: "dashboard-border", delay: 200, speed: 3, typed: false },
+  { text: "│ CPU    ██▓░ 54%│ │ 14:32 task.done   │", style: "dashboard-mixed", delay: 100, speed: 3, typed: false },
+  { text: "│ Memory ███░ 71%│ │ 14:31 deploy.ok   │", style: "dashboard-mixed", delay: 100, speed: 3, typed: false },
+  { text: "│ Disk   █░░░ 22%│ │ 14:30 build.pass  │", style: "dashboard-mixed", delay: 100, speed: 3, typed: false },
+  { text: "└────────────────┘ └───────────────────┘", style: "dashboard-border", delay: 100, speed: 3, typed: false },
 ];
 
 const TYPING_SPEED_BASE = 30; // ms per char
