@@ -702,7 +702,7 @@
     border-radius: 6px;
     border: 1px solid var(--bv-border);
     background: var(--bv-bg-secondary);
-    color: var(--bv-fg-muted);
+    color: var(--bv-fg);
     cursor: pointer;
     white-space: nowrap;
     min-height: 32px;
@@ -715,7 +715,7 @@
 }
 
 .bv-table-ctrl-btn:focus-visible {
-    outline: 2px solid var(--bv-accent);
+    outline: 2px solid var(--bv-cyan);
     outline-offset: 2px;
 }
 

@@ -71,7 +71,7 @@ export default class ErrorBoundary extends Component<
             <div className="relative mb-10 group">
               <div className="absolute -inset-2 bg-red-500/5 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
               <p className="relative z-10 text-base font-mono text-slate-400 max-w-lg mx-auto leading-relaxed border border-white/5 bg-white/5 p-4 rounded-xl">
-                <span className="text-red-500/60 mr-2">>></span>
+                <span className="text-red-500/60 mr-2">{">> "}</span>
                 {this.state.error?.message || "An unexpected neural desync occurred during render cycle."}
               </p>
             </div>
