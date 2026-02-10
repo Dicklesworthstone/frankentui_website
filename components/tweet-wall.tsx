@@ -15,25 +15,25 @@ function FallbackContent({ tweet }: { tweet: Tweet }) {
   const hasMetrics = typeof tweet.likes === "number";
 
   return (
-    <div className="flex flex-col p-8">
+    <div className="flex flex-col p-6 md:p-7">
       {/* Author header */}
       <div className="flex items-center gap-4 mb-6">
         <div className="h-10 w-10 rounded-full bg-gradient-to-br from-green-500/20 to-emerald-500/10 border border-green-500/20 flex items-center justify-center text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.2)]">
           <Zap className="h-4 w-4" />
         </div>
         <div className="flex flex-col text-left">
-          <p className="text-sm font-black text-slate-200 leading-tight tracking-tight uppercase">{tweet.author}</p>
+          <p className="text-sm font-black text-slate-200 leading-tight tracking-tight">{tweet.author}</p>
           <p className="text-[10px] font-bold text-green-500/50 uppercase tracking-widest">{tweet.handle}</p>
         </div>
         <span className="ml-auto text-[10px] font-bold text-slate-600 font-mono bg-white/5 px-2 py-1 rounded-md">{tweet.date}</span>
       </div>
 
-      <p className="text-base leading-relaxed text-slate-400 font-medium mb-8 text-left tracking-tight font-sans selection:bg-green-500/30">
+      <p className="text-[15px] md:text-base leading-7 text-slate-300 font-medium mb-7 text-left selection:bg-green-500/30">
         {tweet.content}
       </p>
 
       {hasMetrics && (
-        <div className="flex items-center gap-6 text-slate-600 text-[11px] font-bold mb-8 border-t border-white/5 pt-6">
+        <div className="flex items-center gap-6 text-slate-600 text-[11px] font-bold mb-7 border-t border-white/5 pt-5">
           {typeof tweet.replies === "number" && (
             <span className="flex items-center gap-1.5 hover:text-green-400 transition-colors cursor-default"><MessageSquare className="h-3.5 w-3.5" />{tweet.replies}</span>
           )}
@@ -52,7 +52,7 @@ function FallbackContent({ tweet }: { tweet: Tweet }) {
           href={tweet.tweetUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="group/link inline-flex items-center gap-2.5 text-[10px] font-black uppercase tracking-[0.2em] text-green-500 hover:text-green-400 transition-colors mt-auto"
+          className="group/link inline-flex items-center gap-2.5 text-[10px] font-black uppercase tracking-[0.2em] text-green-500 hover:text-green-400 transition-colors"
         >
           VIEW_ORIGIN_PROTOCOL 
           <ArrowRight className="h-3 w-3 transition-transform group-hover/link:translate-x-1" />
@@ -74,7 +74,7 @@ function GlassFrankenCard({
   className?: string;
 }) {
   return (
-    <div className={`franken-tweet-card h-full relative rounded-2xl overflow-hidden border border-white/10 bg-black/40 backdrop-blur-xl shadow-2xl hover:border-green-500/30 transition-all duration-700 hover:shadow-green-500/10 group ${className ?? ""}`}>
+    <div className={`franken-tweet-card relative rounded-2xl overflow-hidden border border-white/10 bg-black/40 backdrop-blur-xl shadow-2xl hover:border-green-500/30 transition-all duration-700 hover:shadow-green-500/10 group ${className ?? ""}`}>
       {/* Top stitch + bolts */}
       <FrankenStitch className="absolute top-0 left-1/4 right-1/4 w-1/2 opacity-10 group-hover:opacity-40 transition-opacity duration-700" />
       <FrankenBolt className="absolute -left-1 -top-1 z-20" />
@@ -113,7 +113,7 @@ function EmbeddedTweetCard({ tweet, index }: { tweet: Tweet; index: number }) {
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ delay: (index % 3) * 0.1, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
       viewport={{ once: true, margin: "-100px" }}
-      className="tweet-embed-wrapper group h-full"
+      className="tweet-embed-wrapper group inline-block w-full break-inside-avoid mb-6"
     >
       <GlassFrankenCard>
         <div data-theme="dark" className="p-1">
@@ -136,7 +136,7 @@ function FallbackCard({ tweet, index }: { tweet: Tweet; index: number }) {
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ delay: (index % 3) * 0.1, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
       viewport={{ once: true, margin: "-100px" }}
-      className="group h-full"
+      className="group inline-block w-full break-inside-avoid mb-6"
     >
       <GlassFrankenCard withBottomBolts>
         <FallbackContent tweet={tweet} />
@@ -162,7 +162,7 @@ export default function TweetWall({ tweets }: { tweets: Tweet[] }) {
         />
       </div>
 
-      <div className="tweet-wall-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
+      <div className="tweet-wall-grid columns-1 md:columns-2 gap-x-6">
         {tweets.map((tweet, i) =>
           tweet.tweetId ? (
             <EmbeddedTweetCard key={tweet.tweetId} tweet={tweet} index={i} />
