@@ -6,7 +6,6 @@ import type { Algorithm } from "@/lib/content";
 import { FrankenContainer } from "./franken-elements";
 import { motion } from "framer-motion";
 import DecodingText from "./decoding-text";
-import FrankenGlitch from "./franken-glitch";
 
 export default function AlgorithmCard({ algorithm }: { algorithm: Algorithm }) {
   // Deterministic color based on name length
@@ -39,14 +38,12 @@ export default function AlgorithmCard({ algorithm }: { algorithm: Algorithm }) {
             </motion.div>
           </div>
 
-          <FrankenGlitch trigger="hover" intensity="low">
-            <motion.h3 
-              className="text-xl font-black text-white mb-3 transition-colors"
-              whileHover={{ color: accentColor }}
-            >
-              {algorithm.name}
-            </motion.h3>
-          </FrankenGlitch>
+          <motion.h3
+            className="text-xl font-black text-white mb-3 transition-colors"
+            whileHover={{ color: accentColor }}
+          >
+            {algorithm.name}
+          </motion.h3>
           
           <p className="text-sm font-medium leading-relaxed text-slate-400 group-hover:text-slate-300 transition-colors mb-8 flex-1">
             {algorithm.description}

@@ -17,7 +17,6 @@ import {
 import type { LucideIcon } from "lucide-react";
 import {
   algorithms,
-  cellDiagram,
   optimizations,
   performanceSLAs,
 } from "@/lib/content";
@@ -248,9 +247,34 @@ export default function ArchitecturePage() {
                 </div>
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">cell.rs</span>
               </div>
-              <pre className="p-8 text-[11px] font-mono leading-relaxed text-green-400 overflow-x-auto selection:bg-green-500/30">
-                {cellDiagram}
-              </pre>
+              <div className="p-6 md:p-8">
+                {/* Header */}
+                <div className="text-center border border-green-500/30 rounded-t-lg bg-green-500/5 px-4 py-3">
+                  <span className="text-sm font-black text-green-400 uppercase tracking-widest">Cell</span>
+                  <span className="text-xs text-green-500/60 ml-2 font-mono">(16 bytes)</span>
+                </div>
+                {/* Fields row */}
+                <div className="grid grid-cols-[4fr_4fr_4fr_2fr_2fr] border-x border-b border-green-500/30 rounded-b-lg overflow-hidden">
+                  {[
+                    { name: "CellContent", size: "4 bytes", detail: "char / gid" },
+                    { name: "fg", size: "4 bytes", detail: "PackedRgba" },
+                    { name: "bg", size: "4 bytes", detail: "PackedRgba" },
+                    { name: "attrs", size: "2 bytes", detail: "CellAttrs" },
+                    { name: "link_id", size: "2 bytes", detail: "" },
+                  ].map((field, i) => (
+                    <div
+                      key={field.name}
+                      className={`flex flex-col items-center justify-center py-4 px-2 text-center ${i > 0 ? "border-l border-green-500/20" : ""} hover:bg-green-500/5 transition-colors`}
+                    >
+                      <span className="text-[11px] md:text-xs font-black text-green-400 font-mono">{field.name}</span>
+                      <span className="text-[9px] md:text-[10px] text-green-500/50 font-mono mt-1">{field.size}</span>
+                      {field.detail && (
+                        <span className="text-[9px] md:text-[10px] text-green-500/30 font-mono mt-0.5">{field.detail}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </FrankenContainer>
           </motion.div>
           
@@ -288,7 +312,7 @@ export default function ArchitecturePage() {
         title="Monster Math"
         kicker="Algorithms borrowed from statistical machine learning, not hand-tuned heuristics."
       >
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {algorithms.map((algorithm, i) => (
             <motion.div
               key={algorithm.name}
