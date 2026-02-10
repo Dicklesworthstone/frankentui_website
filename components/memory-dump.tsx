@@ -24,18 +24,24 @@ export default function MemoryDump() {
     const colors = ["#22c55e", "#10b981", "#3b82f6", "#8b5cf6", "#ec4899", "#f43f5e"];
     let columns = Math.floor(width / fontSize);
     let drops: number[] = [];
-    const columnColors: string[] = [];
-    const columnSpeeds: number[] = [];
+    let columnColors: string[] = [];
+    let columnSpeeds: number[] = [];
 
     const initDrops = (cols: number, existingDrops: number[] = []) => {
       const newDrops = [...existingDrops];
+      const newColors = [...columnColors];
+      const newSpeeds = [...columnSpeeds];
+      
       for (let i = 0; i < cols; i++) {
         if (newDrops[i] === undefined) {
           newDrops[i] = Math.random() * -100;
-          columnColors[i] = colors[Math.floor(Math.random() * colors.length)];
-          columnSpeeds[i] = 0.5 + Math.random() * 1.5;
+          newColors[i] = colors[Math.floor(Math.random() * colors.length)];
+          newSpeeds[i] = 0.5 + Math.random() * 1.5;
         }
       }
+      
+      columnColors = newColors.slice(0, cols);
+      columnSpeeds = newSpeeds.slice(0, cols);
       return newDrops.slice(0, cols);
     };
 
