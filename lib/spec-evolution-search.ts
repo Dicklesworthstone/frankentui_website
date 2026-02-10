@@ -234,13 +234,15 @@ export class CorpusIndex {
 /**
  * Tokenize text into lowercase word tokens.
  * Splits on whitespace and common punctuation, discards very short tokens.
+ * Supports Unicode letters.
  */
 export function tokenize(text: string): string[] {
   if (!text) return [];
   const tokens: string[] = [];
   const seen = new Set<string>();
-  // Split on non-word chars but keep apostrophes within words
-  const words = text.toLowerCase().split(/[^\w']+/);
+  // Split on non-word chars but keep apostrophes within words.
+  // Using Unicode property escapes for wide language support.
+  const words = text.toLowerCase().split(/[^\p{L}\p{N}']+/u);
   for (const w of words) {
     const clean = w.replace(/^'+|'+$/g, "");
     if (clean.length < 2) continue;

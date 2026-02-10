@@ -21,7 +21,11 @@ export default function SiteHeader() {
   useBodyScrollLock(open);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
+    const handleScroll = () => {
+      const next = window.scrollY > 20;
+      setScrolled((prev) => (prev === next ? prev : next));
+    };
+    handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -77,8 +81,8 @@ export default function SiteHeader() {
                 className="flex items-center gap-3 group shrink-0"
               >
                 <div className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-tr from-green-600 to-lime-400 shadow-lg transition-transform group-hover:scale-105 active:scale-95 overflow-visible">
-                  <FrankenBolt color="#22c55e" className="absolute -left-1 -top-1 z-20 scale-50" />
-                  <FrankenBolt color="#22c55e" className="absolute -right-1 -bottom-1 z-20 scale-50" />
+                  <FrankenBolt color="#22c55e" baseScale={0.5} className="absolute -left-1 -top-1 z-20" />
+                  <FrankenBolt color="#22c55e" baseScale={0.5} className="absolute -right-1 -bottom-1 z-20" />
                   <span className="text-lg font-black text-black select-none">F</span>
                 </div>
                 <div className="flex flex-col text-left justify-center">

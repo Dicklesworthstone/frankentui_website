@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { useSyncExternalStore } from "react";
 
 const noop = () => () => {};
@@ -11,6 +11,7 @@ const noop = () => () => {};
  */
 export default function SpectralBackground() {
   const isMounted = useSyncExternalStore(noop, () => true, () => false);
+  const prefersReducedMotion = useReducedMotion();
 
   if (!isMounted) return null;
 
@@ -41,24 +42,25 @@ export default function SpectralBackground() {
       {/* Moving Vertical Scanlines */}
       <motion.div 
         initial={{ opacity: 0 }}
-        animate={{ opacity: [0.05, 0.08, 0.04, 0.07] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+        animate={prefersReducedMotion ? { opacity: 0.05 } : { opacity: [0.05, 0.08, 0.04, 0.07] }}
+        transition={prefersReducedMotion ? { duration: 0 } : { duration: 4, repeat: Infinity, ease: "linear" }}
         className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:100px_100%]"
       />
 
       {/* Horizontal Interference Line */}
       <motion.div
         animate={{
-          top: ["-10%", "110%"],
-          opacity: [0, 0.3, 0],
+          // Animate with transforms (compositor) instead of `top` (layout).
+          y: prefersReducedMotion ? 0 : ["-10vh", "110vh"],
+          opacity: prefersReducedMotion ? 0 : [0, 0.3, 0],
         }}
         transition={{
-          duration: 8,
-          repeat: Infinity,
+          duration: prefersReducedMotion ? 0 : 8,
+          repeat: prefersReducedMotion ? 0 : Infinity,
           ease: "linear",
-          delay: 2
+          delay: prefersReducedMotion ? 0 : 2
         }}
-        className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent blur-[1px]"
+        className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent blur-[1px]"
       />
 
       {/* Subtle Light Leak / Organic Glows */}

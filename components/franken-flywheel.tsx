@@ -389,8 +389,8 @@ export default function FrankenFlywheel() {
                           })}
                         </div>
                         <span className="text-[7px] font-black uppercase tracking-tighter transition-colors" style={{ color: isSelected ? "#ffffff" : isHovered ? nodeColor : "rgb(148,163,184)" }}>{tool.shortName}</span>
-                        <FrankenBolt color={nodeColor} className="absolute -left-1.5 -top-1.5 scale-[0.3] opacity-20" />
-                        <FrankenBolt color={nodeColor} className="absolute -right-1.5 -bottom-1.5 scale-[0.3] opacity-20" />
+                        <FrankenBolt color={nodeColor} baseScale={0.3} className="absolute -left-1.5 -top-1.5 opacity-20" />
+                        <FrankenBolt color={nodeColor} baseScale={0.3} className="absolute -right-1.5 -bottom-1.5 opacity-20" />
                       </button>
                     </Magnetic>
                   </motion.div>

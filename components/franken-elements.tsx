@@ -8,7 +8,15 @@ import { useEffect, useState } from "react";
  * A small industrial bolt-like element for corners
  * Enhanced with galvanic electrical arcs on hover
  */
-export function FrankenBolt({ className, color = "#4ade80" }: { className?: string; color?: string }) {
+export function FrankenBolt({ 
+  className, 
+  color = "#4ade80",
+  baseScale = 1
+}: { 
+  className?: string; 
+  color?: string;
+  baseScale?: number;
+}) {
   const [isHovered, setIsHovered] = useState(false);
   const controls = useAnimationControls();
 
@@ -33,11 +41,13 @@ export function FrankenBolt({ className, color = "#4ade80" }: { className?: stri
     <motion.div
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
+      initial={{ scale: baseScale }}
+      animate={{ scale: baseScale }}
+      whileHover={{ scale: baseScale * 1.15 }}
       className={cn(
         "group relative h-3.5 w-3.5 rounded-full bg-gradient-to-br from-slate-700 via-slate-900 to-black border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_1px_3px_rgba(0,0,0,0.6)] flex items-center justify-center",
         className
       )}
-      whileHover={{ scale: 1.15 }}
     >
       <div className="h-[60%] w-[1.5px] bg-slate-800 rotate-45 absolute" />
       <div className="h-[60%] w-[1.5px] bg-slate-800 -rotate-45 absolute" />

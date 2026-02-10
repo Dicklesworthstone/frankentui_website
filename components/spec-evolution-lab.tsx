@@ -561,8 +561,8 @@ function DialogShell({
       aria-label={title}
     >
       <div className="relative">
-        <FrankenBolt className="absolute -left-1.5 -top-1.5 z-20 scale-75" />
-        <FrankenBolt className="absolute -right-1.5 -top-1.5 z-20 scale-75" />
+        <FrankenBolt baseScale={0.75} className="absolute -left-1.5 -top-1.5 z-20" />
+        <FrankenBolt baseScale={0.75} className="absolute -right-1.5 -top-1.5 z-20" />
         <div className="flex items-start justify-between gap-3 border-b border-white/5 bg-white/5 p-6">
           <div className="min-w-0">
             <h3 className="text-xl font-black tracking-tight text-white">{title}</h3>
@@ -738,7 +738,10 @@ function StackedBars({
 
 function MarkdownView({ markdown }: { markdown: string }) {
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const hljsRef = useRef<{ highlightElement: (el: HTMLElement) => void } | null>(null);
+  const hljsRef = useRef<{
+    highlightElement: (el: HTMLElement) => void;
+    registerLanguage?: (name: string, lang: unknown) => void;
+  } | null>(null);
   const [html, setHtml] = useState<string>("");
   const [err, setErr] = useState<string>("");
 
@@ -761,7 +764,9 @@ function MarkdownView({ markdown }: { markdown: string }) {
         const [{ marked }, { default: DOMPurify }, { default: hljs }] = await Promise.all([
           import("marked"),
           import("dompurify"),
-          import("highlight.js"),
+          // highlight.js full build is huge; "common" covers most real-world languages
+          // and includes INI with TOML alias support.
+          import("highlight.js/lib/common"),
         ]);
 
         hljsRef.current = hljs;

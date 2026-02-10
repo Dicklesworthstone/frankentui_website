@@ -310,6 +310,90 @@ body::before {
   transition: opacity 0.3s;
 }
 
-.franken-tweet-card:hover .react-tweet-theme [class*="actions"] {
-  opacity: 1;
+/* ── highlight.js: Franken-Green Theme ────────────────────────── */
+
+pre code.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 1em;
+}
+
+.hljs {
+  color: #e2e8f0;
+  background: transparent;
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: #475569;
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-section,
+.hljs-link {
+  color: #4ade80;
+  font-weight: 800;
+}
+
+.hljs-function .hljs-keyword {
+  color: #22c55e;
+}
+
+.hljs-string,
+.hljs-doctag {
+  color: #a3e635;
+}
+
+.hljs-type,
+.hljs-number,
+.hljs-class .hljs-title,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag .hljs-attr {
+  color: #fbbf24;
+}
+
+.hljs-name,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+  color: #bef264;
+}
+
+.hljs-title,
+.hljs-section,
+.hljs-selector-id {
+  color: #4ade80;
+  font-weight: 900;
+}
+
+.hljs-subst {
+  color: #e2e8f0;
+}
+
+.hljs-identifier {
+  color: #f1f5f9;
+}
+
+.hljs-attr {
+  color: #34d399;
+}
+
+.hljs-attribute {
+  color: #94a3b8;
+}
+
+.hljs-deletion {
+  color: #f87171;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: bold;
 }

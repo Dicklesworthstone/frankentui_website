@@ -167,22 +167,21 @@ function splitLines(text: string): string[] {
   return text.split(/\r?\n/);
 }
 
-function backtrackMyers(trace: Map<number, number>[], a: string[], b: string[]): DiffOp[] {
+function backtrackMyers(trace: Int32Array[], a: string[], b: string[], max: number): DiffOp[] {
   let x = a.length;
   let y = b.length;
   const ops: DiffOp[] = [];
 
   for (let d = trace.length - 1; d >= 0; d--) {
     const k = x - y;
+    const v = trace[d];
 
     if (d > 0) {
       const vPrev = trace[d - 1];
-      const vKMinus1 = vPrev.get(k - 1) ?? -1;
-      const vKPlus1 = vPrev.get(k + 1) ?? -1;
+      const vKMinus1 = vPrev[max + k - 1];
+      const vKPlus1 = vPrev[max + k + 1];
 
-      // Was the step an insertion (from k+1) or a deletion (from k-1)?
       if (k === -d || (k !== d && vKMinus1 < vKPlus1)) {
-        // Insertion: move vertically from (prevX, prevY) to (prevX, prevY + 1), then diagonals.
         const prevX = vKPlus1;
         const prevY = prevX - (k + 1);
         
@@ -195,7 +194,6 @@ function backtrackMyers(trace: Map<number, number>[], a: string[], b: string[]):
         x = prevX;
         y = prevY;
       } else {
-        // Deletion: move horizontally from (prevX, prevY) to (prevX + 1, prevY), then diagonals.
         const prevX = vKMinus1;
         const prevY = prevX - (k - 1);
 
@@ -209,7 +207,6 @@ function backtrackMyers(trace: Map<number, number>[], a: string[], b: string[]):
         y = prevY;
       }
     } else {
-      // d == 0: just diagonals back to (0,0)
       while (x > 0 && y > 0) {
         ops.push({ kind: "equal", text: a[x - 1] });
         x--; y--;
@@ -233,14 +230,27 @@ export function myersDiffLines(aLines: string[], bLines: string[]): DiffOp[] {
   if (M === 0) return aLines.map((text) => ({ kind: "del", text }));
 
   const max = N + M;
-  const trace: Map<number, number>[] = [];
+  const trace: Int32Array[] = [];
   const startTime = performance.now();
 
-  let v = new Map<number, number>();
-  v.set(1, 0);
+  function fnv1a(str: string) {
+    let h = 2166136261;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+
+  const ah = new Uint32Array(N);
+  const bh = new Uint32Array(M);
+  for (let i = 0; i < N; i++) ah[i] = fnv1a(aLines[i]);
+  for (let j = 0; j < M; j++) bh[j] = fnv1a(bLines[j]);
+
+  let v = new Int32Array(2 * max + 1).fill(-1);
+  v[max + 1] = 0;
 
   for (let d = 0; d <= max; d++) {
-    // Safety exit for extremely large or pathologically slow diffs.
     if (d > 0 && d % 50 === 0 && performance.now() - startTime > 500) {
       return [
         ...aLines.map(text => ({ kind: "del" as const, text })),
@@ -248,32 +258,32 @@ export function myersDiffLines(aLines: string[], bLines: string[]): DiffOp[] {
       ];
     }
 
-    const vNext = new Map<number, number>();
+    const vNext = new Int32Array(v);
     for (let k = -d; k <= d; k += 2) {
-      const vKMinus1 = v.get(k - 1) ?? -1;
-      const vKPlus1 = v.get(k + 1) ?? -1;
+      const vKMinus1 = vNext[max + k - 1];
+      const vKPlus1 = vNext[max + k + 1];
 
       let x = (k === -d || (k !== d && vKMinus1 < vKPlus1)) 
         ? vKPlus1 
         : vKMinus1 + 1;
 
       let y = x - k;
-      while (x < N && y < M && aLines[x] === bLines[y]) {
+      while (x < N && y < M && ah[x] === bh[y] && aLines[x] === bLines[y]) {
         x++;
         y++;
       }
 
-      vNext.set(k, x);
+      vNext[max + k] = x;
       if (x >= N && y >= M) {
         trace.push(vNext);
-        return backtrackMyers(trace, aLines, bLines);
+        return backtrackMyers(trace, aLines, bLines, max);
       }
     }
     trace.push(vNext);
     v = vNext;
   }
 
-  return backtrackMyers(trace, aLines, bLines);
+  return backtrackMyers(trace, aLines, bLines, max);
 }
 
 export function myersDiffTextLines(aText: string, bText: string): DiffOp[] {

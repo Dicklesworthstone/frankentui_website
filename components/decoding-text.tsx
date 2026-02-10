@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useReducedMotion } from "framer-motion";
 
 const GLYPHS = "0123456789ABCDEF$#@&*<>[]{}";
@@ -27,8 +27,11 @@ export default function DecodingText({
   const frameRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
 
-  // When reduced motion is on, always show the real text directly (no setState in effect)
+  // When reduced motion is on, always show the real text directly
   const displayText = prefersReducedMotion ? text : animatedText;
+
+  // Pre-tokenize characters to avoid split() in animate loop
+  const chars = useMemo(() => text.split(""), [text]);
 
   useEffect(() => {
     if (prefersReducedMotion) return undefined;
@@ -44,21 +47,27 @@ export default function DecodingText({
       const elapsed = timestamp - startTimeRef.current;
       const progress = Math.min(elapsed / duration, 1);
 
-      const nextText = text
-        .split("")
-        .map((char, index) => {
-          if (char === " ") return " ";
-          const revealThreshold = index / text.length;
-          if (progress > revealThreshold) return char;
-          return GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
-        })
-        .join("");
+      let nextText = "";
+      for (let i = 0; i < chars.length; i++) {
+        const char = chars[i];
+        if (char === " ") {
+          nextText += " ";
+          continue;
+        }
+        const revealThreshold = i / chars.length;
+        if (progress > revealThreshold) {
+          nextText += char;
+        } else {
+          nextText += GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+        }
+      }
 
       setAnimatedText(nextText);
 
       if (progress < 1) {
         frameRef.current = requestAnimationFrame(animate);
       } else {
+        setAnimatedText(text);
         setIsAnimating(false);
       }
     };

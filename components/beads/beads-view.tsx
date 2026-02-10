@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo, useSyncExternalStore } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import { 
@@ -162,13 +162,11 @@ function StatusPill({ status }: { status: string }) {
   );
 }
 
+const noop = () => () => {};
+
 function Portal({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    const rafId = window.requestAnimationFrame(() => setMounted(true));
-    return () => window.cancelAnimationFrame(rafId);
-  }, []);
-  if (!mounted) return null;
+  const isClient = useSyncExternalStore(noop, () => true, () => false);
+  if (!isClient) return null;
   return createPortal(children, document.body);
 }
 
@@ -718,7 +716,7 @@ export default function BeadsView() {
                             <div className="h-14 w-14 rounded-[1.25rem] bg-gradient-to-tr from-green-600 via-green-400 to-emerald-300 flex items-center justify-center text-black font-black text-xl uppercase shadow-[0_0_30px_rgba(34,197,94,0.3)]">{selectedIssue.assignee ? selectedIssue.assignee[0] : "?"}</div>
                             <div>
                               <p className="text-lg font-black text-white">{selectedIssue.assignee || "UNASSIGNED"}</p>
-                              <div className="flex items-center gap-2 mt-1"><div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" /><p className="text-[9px] font-black text-green-500/60 uppercase tracking-widest uppercase">Validated_Engineer</p></div>
+                              <div className="flex items-center gap-2 mt-1"><div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" /><p className="text-[9px] font-black text-green-500/60 uppercase tracking-widest">Validated_Engineer</p></div>
                             </div>
                           </div>
                         </div>
