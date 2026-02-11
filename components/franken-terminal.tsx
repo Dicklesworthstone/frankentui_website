@@ -30,7 +30,6 @@ import {
   loadWasmModules,
   loadFont,
   loadTextAssets,
-  isWebGPUSupported,
   type FrankenTermWebInstance,
   type ShowcaseRunnerInstance,
 } from "@/lib/wasm-loader";
@@ -119,6 +118,7 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
     const mountedRef = useRef(false);
     const resizeObserverRef = useRef<ResizeObserver | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
+    const userZoomRef = useRef(initialZoom);
 
     // ── Cleanup function ───────────────────────────────────────────────
     const cleanup = useCallback(() => {
@@ -141,13 +141,17 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
     // ── Imperative handle ──────────────────────────────────────────────
     useImperativeHandle(ref, () => ({
       goToScreen(screen: number) {
-        // Navigate by sending key inputs (screens cycle with left/right arrows)
         const runner = runnerRef.current;
-        const term = termRef.current;
-        if (!runner || !term) return;
-        // This is a simplified approach — actual screen navigation depends on
-        // the showcase runner's input handling
-        void screen;
+        if (!runner) return;
+        const screenIdx = screen - 1;
+        if (screenIdx < 10) {
+          const key = screenIdx === 9 ? "0" : String(screenIdx + 1);
+          runner.pushEncodedInput(JSON.stringify({ kind: "key", phase: "down", key, code: `Digit${key}`, mods: 0, repeat: false }));
+        } else {
+          for (let i = 0; i < screenIdx; i++) {
+            runner.pushEncodedInput(JSON.stringify({ kind: "key", phase: "down", key: "Tab", code: "Tab", mods: 0, repeat: false }));
+          }
+        }
       },
       sendInput(event) {
         termRef.current?.input(event);
@@ -159,6 +163,7 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
         return canvasRef.current;
       },
       setZoom(zoom: number) {
+        userZoomRef.current = zoom;
         termRef.current?.setZoom(zoom);
       },
       forceRender() {
@@ -221,32 +226,33 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
           });
           if (cancelled) return;
 
-          // 5. Fit to container
+          // 5. Apply initial zoom before fitToContainer
+          let userZoom = userZoomRef.current;
+          if (userZoom !== 1.0 && typeof term.setZoom === "function") {
+            term.setZoom(userZoom);
+          }
+
+          // 6. Fit to container
           const geo = term.fitToContainer(
             container.clientWidth,
             container.clientHeight,
             dpr
           );
-          const cols = geo.cols;
-          const rows = geo.rows;
-          setDimensions({ cols, rows });
+          let currentCols = geo.cols;
+          let currentRows = geo.rows;
+          setDimensions({ cols: currentCols, rows: currentRows });
 
-          // 6. Create showcase runner
-          const runner = new ShowcaseRunner(cols, rows);
+          // 7. Create showcase runner
+          const runner = new ShowcaseRunner(currentCols, currentRows);
           runnerRef.current = runner;
           runner.init();
 
-          // 7. Apply initial patches and render first frame
+          // 8. Apply initial patches and render first frame
           const initPatches = runner.takeFlatPatches();
           if (initPatches.cells.length > 0) {
             term.applyPatchBatchFlat(initPatches.spans, initPatches.cells);
           }
           term.render();
-
-          // 8. Set zoom if custom
-          if (initialZoom !== 1.0) {
-            term.setZoom(initialZoom);
-          }
 
           // 9. Load text assets in background (non-blocking)
           if (shouldLoadTextAssets) {
@@ -261,15 +267,37 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
             });
           }
 
-          // 10. Start frame loop
+          // 10. Helper: apply zoom with container refit
+          function applyZoom() {
+            const t = termRef.current;
+            const r = runnerRef.current;
+            const c = containerRef.current;
+            if (!t || !r || !c) return;
+            if (typeof t.setZoom === "function") {
+              t.setZoom(userZoom);
+            }
+            const newDpr = window.devicePixelRatio || 1.0;
+            const newGeo = t.fitToContainer(c.clientWidth, c.clientHeight, newDpr);
+            if (newGeo.cols !== currentCols || newGeo.rows !== currentRows) {
+              currentCols = newGeo.cols;
+              currentRows = newGeo.rows;
+              r.resize(currentCols, currentRows);
+              setDimensions({ cols: currentCols, rows: currentRows });
+              onResize?.(currentCols, currentRows);
+            }
+            if (Math.abs(userZoom - 1.0) > 0.01) {
+              setStatusText(`${currentCols}\u00d7${currentRows} \u2014 zoom ${Math.round(userZoom * 100)}%`);
+            } else {
+              setStatusText(`${currentCols}\u00d7${currentRows}`);
+            }
+          }
+
+          // 11. Start frame loop
           runningRef.current = true;
           setState("running");
-          setStatusText(`${cols}\u00d7${rows}`);
+          setStatusText(`${currentCols}\u00d7${currentRows}`);
           if (autoFocus) canvasRef.current?.focus();
           onReady?.();
-
-          let currentCols = cols;
-          let currentRows = rows;
 
           function frame(timestamp: number) {
             if (!runningRef.current) return;
@@ -281,19 +309,15 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
             const t = termRef.current;
             if (!r || !t) return;
 
-            // Advance time
             r.advanceTime(dt);
 
-            // Drain inputs from terminal → push to runner
             const inputs = t.drainEncodedInputs();
             for (let i = 0; i < inputs.length; i++) {
               r.pushEncodedInput(inputs[i]);
             }
 
-            // Step the application
             const result = r.step();
 
-            // If a frame was rendered, apply patches and present
             if (result.rendered) {
               const patches = r.takeFlatPatches();
               if (patches.cells.length > 0) {
@@ -304,7 +328,6 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
               onFrame?.(result.frame_idx);
             }
 
-            // Continue or stop
             if (result.running) {
               rafRef.current = requestAnimationFrame(frame);
             } else {
@@ -314,7 +337,7 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
 
           rafRef.current = requestAnimationFrame(frame);
 
-          // 11. ResizeObserver for container changes
+          // 12. ResizeObserver for container changes
           const resizeObserver = resizeObserverRef.current = new ResizeObserver(() => {
             const t = termRef.current;
             const r = runnerRef.current;
@@ -334,7 +357,7 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
           });
           resizeObserver.observe(container);
 
-          // 12. Input event listeners (only if captureKeys is true)
+          // 13. Input event listeners
           const abortController = abortControllerRef.current = new AbortController();
           const signal = abortController.signal;
 
@@ -369,9 +392,49 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
             };
           }
 
+          function domWheelToInput(e: WheelEvent) {
+            const rect = canvas!.getBoundingClientRect();
+            const cw = rect.width / currentCols;
+            const ch = rect.height / currentRows;
+            return {
+              kind: "wheel",
+              x: Math.max(0, Math.min(Math.floor((e.clientX - rect.left) / cw), currentCols - 1)),
+              y: Math.max(0, Math.min(Math.floor((e.clientY - rect.top) / ch), currentRows - 1)),
+              dx: Math.round(e.deltaX),
+              dy: Math.round(e.deltaY),
+              mods: (e.shiftKey ? 1 : 0) | (e.altKey ? 2 : 0) | (e.ctrlKey ? 4 : 0) | (e.metaKey ? 8 : 0),
+            };
+          }
+
+          // Keyboard events
           if (captureKeys) {
             canvas.addEventListener("keydown", (e) => {
               if (e.isComposing || e.key === "Process") return;
+
+              // Zoom: Ctrl/Cmd +/-/0
+              const zoomMod = e.ctrlKey || e.metaKey;
+              if (zoomMod && (e.key === "+" || e.key === "=")) {
+                e.preventDefault();
+                userZoom = Math.min(3.0, userZoom * 1.1);
+                userZoomRef.current = userZoom;
+                applyZoom();
+                return;
+              }
+              if (zoomMod && e.key === "-") {
+                e.preventDefault();
+                userZoom = Math.max(0.3, userZoom / 1.1);
+                userZoomRef.current = userZoom;
+                applyZoom();
+                return;
+              }
+              if (zoomMod && e.key === "0") {
+                e.preventDefault();
+                userZoom = 1.0;
+                userZoomRef.current = userZoom;
+                applyZoom();
+                return;
+              }
+
               e.preventDefault();
               safeInput(domKeyToInput(e, "down"));
             }, { signal, capture: true });
@@ -383,33 +446,198 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
             }, { signal, capture: true });
           }
 
+          // Mouse events with drag tracking
+          let mouseButtonsDown = 0;
+          let dragButton = 0;
+
           canvas.addEventListener("mousedown", (e) => {
+            e.preventDefault();
             canvas.focus();
+            mouseButtonsDown = e.buttons;
+            dragButton = e.button;
             safeInput(domMouseToInput(e, "down"));
           }, { signal });
           canvas.addEventListener("mouseup", (e) => {
+            e.preventDefault();
+            mouseButtonsDown = e.buttons;
             safeInput(domMouseToInput(e, "up"));
           }, { signal });
           canvas.addEventListener("mousemove", (e) => {
-            safeInput(domMouseToInput(e, "move"));
+            mouseButtonsDown = e.buttons;
+            if (mouseButtonsDown) {
+              const ev = domMouseToInput(e, "drag");
+              ev.button = dragButton;
+              safeInput(ev);
+            } else {
+              safeInput(domMouseToInput(e, "move"));
+            }
           }, { signal });
+          canvas.addEventListener("contextmenu", (e) => { e.preventDefault(); }, { signal });
+
           canvas.addEventListener("wheel", (e) => {
             e.preventDefault();
+            safeInput(domWheelToInput(e));
+          }, { signal, passive: false });
+
+          // Paste
+          canvas.addEventListener("paste", ((e: ClipboardEvent) => {
+            const text = e.clipboardData?.getData("text");
+            if (text) safeInput({ kind: "paste", data: text });
+          }) as EventListener, { signal });
+
+          // Focus/blur
+          canvas.addEventListener("focus", () => safeInput({ kind: "focus", focused: true }), { signal });
+          canvas.addEventListener("blur", () => safeInput({ kind: "focus", focused: false }), { signal });
+
+          // IME composition
+          canvas.addEventListener("compositionstart", () => {
+            safeInput({ kind: "composition", phase: "start" });
+          }, { signal });
+          canvas.addEventListener("compositionupdate", ((e: CompositionEvent) => {
+            safeInput({ kind: "composition", phase: "update", data: e.data || "" });
+          }) as EventListener, { signal });
+          canvas.addEventListener("compositionend", ((e: CompositionEvent) => {
+            safeInput({ kind: "composition", phase: "end", data: e.data || "" });
+          }) as EventListener, { signal });
+
+          // ── Touch state machine ───────────────────────────────────────
+          const TOUCH_IDLE = 0, TOUCH_TRACKING = 1, TOUCH_SCROLLING = 2, TOUCH_PINCHING = 3;
+          let touchState = TOUCH_IDLE;
+          let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
+          let touchLastX = 0, touchLastY = 0;
+          let touchScrollAccX = 0, touchScrollAccY = 0;
+          let pinchStartDist = 0, pinchStartZoom = 1.0;
+          const TAP_MAX_DIST = 10;
+          const TAP_MAX_TIME = 300;
+
+          function touchScrollStepsPx() {
+            const rect = canvas!.getBoundingClientRect();
+            const rawX = currentCols > 0 ? rect.width / currentCols : cellWidth;
+            const rawY = currentRows > 0 ? rect.height / currentRows : cellHeight;
+            return {
+              x: Math.max(4, Math.round(rawX || cellWidth)),
+              y: Math.max(4, Math.round(rawY || cellHeight)),
+            };
+          }
+
+          function touchCellCoords(clientX: number, clientY: number) {
             const rect = canvas!.getBoundingClientRect();
             const cw = rect.width / currentCols;
             const ch = rect.height / currentRows;
-            safeInput({
-              kind: "wheel",
-              x: Math.max(0, Math.min(Math.floor((e.clientX - rect.left) / cw), currentCols - 1)),
-              y: Math.max(0, Math.min(Math.floor((e.clientY - rect.top) / ch), currentRows - 1)),
-              dx: Math.round(e.deltaX),
-              dy: Math.round(e.deltaY),
-              mods: (e.shiftKey ? 1 : 0) | (e.altKey ? 2 : 0) | (e.ctrlKey ? 4 : 0) | (e.metaKey ? 8 : 0),
-            });
+            return {
+              x: Math.max(0, Math.min(Math.floor((clientX - rect.left) / cw), currentCols - 1)),
+              y: Math.max(0, Math.min(Math.floor((clientY - rect.top) / ch), currentRows - 1)),
+            };
+          }
+
+          function pinchDistance(t0: Touch, t1: Touch) {
+            const dx = t1.clientX - t0.clientX;
+            const dy = t1.clientY - t0.clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+          }
+
+          canvas.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            canvas!.focus();
+            const touches = e.touches;
+            if (touches.length === 1) {
+              touchState = TOUCH_TRACKING;
+              touchStartX = touchLastX = touches[0].clientX;
+              touchStartY = touchLastY = touches[0].clientY;
+              touchStartTime = Date.now();
+              touchScrollAccX = 0;
+              touchScrollAccY = 0;
+            } else if (touches.length === 2) {
+              touchState = TOUCH_PINCHING;
+              pinchStartDist = pinchDistance(touches[0], touches[1]);
+              pinchStartZoom = userZoom;
+            }
           }, { signal, passive: false });
 
-          canvas.addEventListener("focus", () => safeInput({ kind: "focus", focused: true }), { signal });
-          canvas.addEventListener("blur", () => safeInput({ kind: "focus", focused: false }), { signal });
+          canvas.addEventListener("touchmove", (e) => {
+            e.preventDefault();
+            const touches = e.touches;
+
+            if (touches.length === 2 && touchState !== TOUCH_IDLE) {
+              if (touchState !== TOUCH_PINCHING) {
+                touchState = TOUCH_PINCHING;
+                pinchStartDist = pinchDistance(touches[0], touches[1]);
+                pinchStartZoom = userZoom;
+                return;
+              }
+              const dist = pinchDistance(touches[0], touches[1]);
+              if (pinchStartDist > 0) {
+                const scale = dist / pinchStartDist;
+                userZoom = Math.max(0.3, Math.min(3.0, pinchStartZoom * scale));
+                userZoomRef.current = userZoom;
+                applyZoom();
+              }
+              return;
+            }
+
+            if (touches.length === 1 && (touchState === TOUCH_TRACKING || touchState === TOUCH_SCROLLING)) {
+              const cx = touches[0].clientX;
+              const cy = touches[0].clientY;
+              const dx = cx - touchLastX;
+              const dy = cy - touchLastY;
+              touchLastX = cx;
+              touchLastY = cy;
+
+              if (touchState === TOUCH_TRACKING) {
+                const totalDx = cx - touchStartX;
+                const totalDy = cy - touchStartY;
+                if (Math.abs(totalDx) > TAP_MAX_DIST || Math.abs(totalDy) > TAP_MAX_DIST) {
+                  touchState = TOUCH_SCROLLING;
+                } else {
+                  return;
+                }
+              }
+
+              touchScrollAccX += dx;
+              touchScrollAccY += dy;
+              const scrollStep = touchScrollStepsPx();
+              const cell = touchCellCoords(cx, cy);
+              while (Math.abs(touchScrollAccY) >= scrollStep.y) {
+                const sign = touchScrollAccY > 0 ? -1 : 1;
+                safeInput({ kind: "wheel", x: cell.x, y: cell.y, dx: 0, dy: sign, mods: 0 });
+                touchScrollAccY -= (touchScrollAccY > 0 ? scrollStep.y : -scrollStep.y);
+              }
+              while (Math.abs(touchScrollAccX) >= scrollStep.x) {
+                const sign = touchScrollAccX > 0 ? -1 : 1;
+                safeInput({ kind: "wheel", x: cell.x, y: cell.y, dx: sign, dy: 0, mods: 0 });
+                touchScrollAccX -= (touchScrollAccX > 0 ? scrollStep.x : -scrollStep.x);
+              }
+            }
+          }, { signal, passive: false });
+
+          canvas.addEventListener("touchend", (e) => {
+            e.preventDefault();
+            if (touchState === TOUCH_TRACKING && e.changedTouches.length > 0) {
+              const elapsed = Date.now() - touchStartTime;
+              const t = e.changedTouches[0];
+              const dist = Math.hypot(t.clientX - touchStartX, t.clientY - touchStartY);
+              if (elapsed < TAP_MAX_TIME && dist < TAP_MAX_DIST) {
+                const cell = touchCellCoords(t.clientX, t.clientY);
+                safeInput({ kind: "mouse", phase: "down", button: 0, x: cell.x, y: cell.y, mods: 0 });
+                safeInput({ kind: "mouse", phase: "up", button: 0, x: cell.x, y: cell.y, mods: 0 });
+              }
+            }
+            if (e.touches.length === 0) {
+              touchState = TOUCH_IDLE;
+            } else if (e.touches.length === 1 && touchState === TOUCH_PINCHING) {
+              touchState = TOUCH_TRACKING;
+              touchStartX = touchLastX = e.touches[0].clientX;
+              touchStartY = touchLastY = e.touches[0].clientY;
+              touchStartTime = Date.now();
+              touchScrollAccX = 0;
+              touchScrollAccY = 0;
+            }
+          }, { signal, passive: false });
+
+          canvas.addEventListener("touchcancel", (e) => {
+            e.preventDefault();
+            touchState = TOUCH_IDLE;
+          }, { signal, passive: false });
 
         } catch (e) {
           if (cancelled) return;
@@ -450,7 +678,14 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
       <div
         ref={containerRef}
         className={className}
-        style={{ width: cssWidth, height: cssHeight, position: "relative", overflow: "hidden", background: "#0a0a0a" }}
+        style={{
+          width: cssWidth,
+          height: cssHeight,
+          position: "relative",
+          overflow: "hidden",
+          background: "#0a0a0a",
+          overscrollBehavior: "none",
+        }}
       >
         <canvas
           ref={canvasRef}
@@ -460,6 +695,10 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
             width: "100%",
             height: "100%",
             imageRendering: "pixelated",
+            touchAction: "none",
+            WebkitTouchCallout: "none",
+            WebkitUserSelect: "none",
+            userSelect: "none",
           }}
         />
         {content}
@@ -475,7 +714,7 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
               zIndex: 10,
             }}
           >
-            {dimensions.cols}&times;{dimensions.rows}
+            {statusText}
           </div>
         )}
       </div>
