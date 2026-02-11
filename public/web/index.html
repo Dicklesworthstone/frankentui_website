@@ -103,23 +103,13 @@
 <div id="error-overlay"></div>
 
 <script>
+// WebGPU detection — log-only, does NOT block the demo.
+// The WASM renderer has a WebGL/Canvas2D fallback path and works on Safari/iOS.
 if (!navigator.gpu) {
-  document.addEventListener("DOMContentLoaded", function() {
-    var fb = document.getElementById("webgpu-fallback");
-    if (fb) fb.classList.add("visible");
-    var st = document.getElementById("status");
-    if (st) st.style.display = "none";
-  });
+  console.info("[FrankenTUI] WebGPU not available; renderer will use fallback path.");
 }
 </script>
 <script type="module">
-// ── WebGPU guard — bail out immediately on unsupported browsers ────────
-if (!navigator.gpu) {
-  // The inline <script> above already shows the fallback UI on DOMContentLoaded.
-  // Nothing more to do — skip all WASM loading and frame-loop setup.
-  throw new Error("WebGPU not supported — skipping WASM demo initialization.");
-}
-
 // ── Configuration ──────────────────────────────────────────────────────
 const INITIAL_COLS = 80;
 const INITIAL_ROWS = 24;

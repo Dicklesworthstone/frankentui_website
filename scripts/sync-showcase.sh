@@ -73,80 +73,9 @@ if ! $DRY_RUN && [[ -f "${DEST}index.html" ]]; then
     echo "Injected <base href=\"/web/\"> into index.html"
   fi
 
-  # 2. Inject WebGPU fallback page (polished browser compatibility message)
-  if ! grep -q 'webgpu-fallback' "${DEST}index.html"; then
-    # Add fallback CSS to the style block
-    sed -i '/<\/style>/i\
-  #webgpu-fallback {\
-    display: none; position: fixed; inset: 0; z-index: 100;\
-    background: #0a0a0a; color: #e2e8f0;\
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;\
-    padding: 40px; overflow: auto;\
-    flex-direction: column; align-items: center; justify-content: center; text-align: center;\
-  }\
-  #webgpu-fallback.visible { display: flex; }\
-  #webgpu-fallback h1 { font-size: 28px; font-weight: 800; color: #22c55e; margin-bottom: 12px; }\
-  #webgpu-fallback h2 { font-size: 18px; font-weight: 600; color: #94a3b8; margin-bottom: 24px; }\
-  #webgpu-fallback .supported { background: #1a1a2e; border: 1px solid #334155; border-radius: 12px; padding: 24px; max-width: 480px; margin-bottom: 24px; }\
-  #webgpu-fallback .supported h3 { color: #22c55e; font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }\
-  #webgpu-fallback .browser-list { list-style: none; padding: 0; text-align: left; }\
-  #webgpu-fallback .browser-list li { padding: 6px 0; color: #cbd5e1; font-size: 14px; }\
-  #webgpu-fallback .browser-list li::before { content: "\\2713 "; color: #22c55e; font-weight: bold; }\
-  #webgpu-fallback .actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }\
-  #webgpu-fallback .actions a {\
-    padding: 12px 24px; border-radius: 9999px; font-weight: 700; font-size: 13px;\
-    text-decoration: none; text-transform: uppercase; letter-spacing: 0.1em; transition: all 0.2s;\
-  }\
-  #webgpu-fallback .btn-primary { background: #22c55e; color: #000; }\
-  #webgpu-fallback .btn-primary:hover { background: #16a34a; }\
-  #webgpu-fallback .btn-secondary { background: transparent; color: #94a3b8; border: 1px solid #334155; }\
-  #webgpu-fallback .btn-secondary:hover { border-color: #22c55e; color: #22c55e; }' "${DEST}index.html"
-
-    # Add fallback HTML before the error-overlay div
-    sed -i '/<div id="error-overlay"><\/div>/i\
-<div id="webgpu-fallback">\
-  <h1>FrankenTUI Live Demo</h1>\
-  <h2>This demo requires WebGPU, which is not available in your browser.</h2>\
-  <div class="supported">\
-    <h3>Supported Browsers</h3>\
-    <ul class="browser-list">\
-      <li>Google Chrome 113+ (recommended)</li>\
-      <li>Microsoft Edge 113+</li>\
-      <li>Opera 99+</li>\
-      <li>Chrome for Android 113+</li>\
-    </ul>\
-  </div>\
-  <div class="actions">\
-    <a href="/" class="btn-primary">Back to FrankenTUI</a>\
-    <a href="/showcase" class="btn-secondary">View Screenshots</a>\
-  </div>\
-</div>' "${DEST}index.html"
-
-    # Add early WebGPU detection script before the main module script
-    sed -i '/<script type="module">/i\
-<script>\
-if (!navigator.gpu) {\
-  document.addEventListener("DOMContentLoaded", function() {\
-    var fb = document.getElementById("webgpu-fallback");\
-    if (fb) fb.classList.add("visible");\
-    var st = document.getElementById("status");\
-    if (st) st.style.display = "none";\
-  });\
-}\
-</script>' "${DEST}index.html"
-
-    echo "Injected WebGPU fallback page into index.html"
-  fi
-
-  # 3. Inject WebGPU guard at top of main module script to prevent WASM loading on unsupported browsers
-  if ! grep -q 'WebGPU guard' "${DEST}index.html"; then
-    sed -i '/<script type="module">/a\
-// ── WebGPU guard — bail out immediately on unsupported browsers ────────\
-if (!navigator.gpu) {\
-  throw new Error("WebGPU not supported — skipping WASM demo initialization.");\
-}' "${DEST}index.html"
-    echo "Injected WebGPU guard into module script"
-  fi
+  # (WebGPU fallback and guard injection removed — the WASM renderer has a
+  #  WebGL/Canvas2D fallback path and works on browsers without WebGPU,
+  #  including Safari/iOS.)
 fi
 
 # Summary and version manifest

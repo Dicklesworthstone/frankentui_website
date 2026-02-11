@@ -200,7 +200,7 @@ export default function WebReactPage() {
               className="text-xl md:text-2xl text-slate-400 font-medium max-w-3xl leading-relaxed text-left"
             >
               Embed a live FrankenTUI terminal in any React page. Three lines
-              of code, full WebGPU rendering, automatic resize handling.
+              of code, full GPU-accelerated rendering, automatic resize handling.
             </motion.p>
           </div>
         </div>
@@ -292,7 +292,7 @@ export default function WebReactPage() {
         </div>
 
         <p className="mt-8 text-center text-xs text-slate-600">
-          Requires Chrome or Edge with WebGPU support. The full WASM kernel runs in your browser at 60fps.
+          The full WASM kernel runs in your browser at 60fps. Works in Chrome, Edge, Safari, and Firefox.
         </p>
       </SectionShell>
 
@@ -327,7 +327,7 @@ export default function WebReactPage() {
         id="integration"
         icon="fileText"
         title="3-Line Integration"
-        kicker="Import the component, set your dimensions, and you're done. FrankenTerminal handles WASM loading, WebGPU setup, and resize events internally."
+        kicker="Import the component, set your dimensions, and you're done. FrankenTerminal handles WASM loading, GPU setup, and resize events internally."
       >
         <div className="mx-auto max-w-2xl">
           <CodeBlock code={codeSnippet} />

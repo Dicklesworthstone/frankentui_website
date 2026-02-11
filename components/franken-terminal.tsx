@@ -64,10 +64,10 @@ function DefaultFallback() {
     <div className="flex flex-col items-center justify-center h-full w-full bg-[#0a0a0a] text-slate-300 font-sans text-center p-8 gap-4">
       <div className="text-xl font-bold text-green-500">FrankenTUI Live Demo</div>
       <div className="text-slate-400">
-        This demo requires WebGPU, which is not available in your browser.
+        Unable to initialize the terminal renderer in this browser.
       </div>
       <div className="text-sm text-slate-500">
-        Supported: Chrome 113+, Edge 113+, Opera 99+
+        Try Chrome, Edge, Safari, or Firefox on a recent OS version.
       </div>
     </div>
   );
@@ -178,11 +178,8 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
       let cancelled = false;
 
       async function init() {
-        // 1. Check WebGPU
-        if (!isWebGPUSupported()) {
-          setState("unsupported");
-          return;
-        }
+        // Note: WebGPU check removed — the WASM renderer has a WebGL/Canvas2D
+        // fallback path and works on browsers without WebGPU (e.g. Safari/iOS).
 
         try {
           // 2. Load font

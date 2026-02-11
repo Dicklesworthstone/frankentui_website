@@ -67,7 +67,7 @@ function LazyTerminalSection() {
             </div>
           )}
           <p className="mt-4 text-center text-xs text-slate-600">
-            Requires Chrome or Edge with WebGPU support. The full WASM kernel runs in your browser at 60fps.
+            The full WASM kernel runs in your browser at 60fps. Works in Chrome, Edge, Safari, and Firefox.
           </p>
         </div>
       </SectionShell>
@@ -154,7 +154,7 @@ export default function ShowcasePage() {
           Try the Live Demo
           <ArrowRight className="h-5 w-5" />
         </Link>
-        <p className="mt-3 text-xs text-slate-600">Requires Chrome or Edge (WebGPU)</p>
+        <p className="mt-3 text-xs text-slate-600">Works in Chrome, Edge, Safari, and Firefox</p>
       </div>
 
       {/* ── Interactive WASM Demo ───────────────────────────── */}
