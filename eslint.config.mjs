@@ -14,6 +14,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Static/vendor assets (not part of the TS/React codebase)
     "public/beads-viewer/**",
+    "public/web/**",
   ]),
 ]);
 
