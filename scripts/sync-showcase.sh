@@ -137,6 +137,16 @@ if (!navigator.gpu) {\
 
     echo "Injected WebGPU fallback page into index.html"
   fi
+
+  # 3. Inject WebGPU guard at top of main module script to prevent WASM loading on unsupported browsers
+  if ! grep -q 'WebGPU guard' "${DEST}index.html"; then
+    sed -i '/<script type="module">/a\
+// ── WebGPU guard — bail out immediately on unsupported browsers ────────\
+if (!navigator.gpu) {\
+  throw new Error("WebGPU not supported — skipping WASM demo initialization.");\
+}' "${DEST}index.html"
+    echo "Injected WebGPU guard into module script"
+  fi
 fi
 
 # Summary and version manifest

@@ -113,6 +113,13 @@ if (!navigator.gpu) {
 }
 </script>
 <script type="module">
+// ── WebGPU guard — bail out immediately on unsupported browsers ────────
+if (!navigator.gpu) {
+  // The inline <script> above already shows the fallback UI on DOMContentLoaded.
+  // Nothing more to do — skip all WASM loading and frame-loop setup.
+  throw new Error("WebGPU not supported — skipping WASM demo initialization.");
+}
+
 // ── Configuration ──────────────────────────────────────────────────────
 const INITIAL_COLS = 80;
 const INITIAL_ROWS = 24;
