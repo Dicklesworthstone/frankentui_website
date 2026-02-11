@@ -3,7 +3,7 @@ import { join } from "path";
 import { ImageResponse } from "next/og";
 
 export const alt = "FrankenTUI Beads — Project Graph";
-export const size = { width: 1200, height: 630 };
+export const size = { width: 1200, height: 600 };
 export const contentType = "image/png";
 
 export default function Image() {
@@ -34,6 +34,7 @@ export default function Image() {
             backgroundImage: "linear-gradient(rgba(34, 197, 94, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(34, 197, 94, 0.05) 1px, transparent 1px)",
             backgroundSize: "40px 40px",
             opacity: 0.5,
+            display: "flex",
           }}
         />
 
@@ -51,27 +52,27 @@ export default function Image() {
           }}
         />
 
-        <div style={{ display: "flex", width: "100%", height: "100%", alignItems: "center", padding: "80px", zIndex: 10 }}>
-          <div style={{ display: "flex", position: "relative", marginRight: "60px" }}>
-            <img src={headUri} alt="" width={280} height={280} style={{ borderRadius: "48px", border: "2px solid rgba(34, 197, 94, 0.2)", boxShadow: "0 0 60px rgba(34, 197, 94, 0.3)" }} />
+        <div style={{ display: "flex", width: "100%", height: "100%", alignItems: "center", padding: "60px 80px", zIndex: 10 }}>
+          <div style={{ display: "flex", position: "relative", marginRight: "50px" }}>
+            <img src={headUri} alt="" width={240} height={240} style={{ borderRadius: "40px", border: "2px solid rgba(34, 197, 94, 0.2)", boxShadow: "0 0 60px rgba(34, 197, 94, 0.3)" }} />
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
               <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#22c55e", display: "flex" }} />
               <span style={{ fontSize: "14px", fontWeight: 900, color: "#22c55e", letterSpacing: "4px", display: "flex" }}>SYNAPTIC_MAP_LOADED</span>
             </div>
-            <div style={{ fontSize: "80px", fontWeight: 900, color: "white", lineHeight: 0.9, letterSpacing: "-4px", display: "flex", flexDirection: "column" }}>
+            <div style={{ fontSize: "72px", fontWeight: 900, color: "white", lineHeight: 0.9, letterSpacing: "-4px", display: "flex", flexDirection: "column" }}>
               <span style={{ display: "flex" }}>Project</span>
               <span style={{ display: "flex" }}>Graph.</span>
             </div>
-            <div style={{ fontSize: "24px", fontWeight: 700, color: "#4ade80", marginTop: "24px", letterSpacing: "1px", display: "flex" }}>
+            <div style={{ fontSize: "22px", fontWeight: 700, color: "#4ade80", marginTop: "20px", letterSpacing: "1px", display: "flex" }}>
               VISUALIZING THE DEPENDENCY-AWARE ISSUE GRAPH
             </div>
           </div>
         </div>
 
-        <div style={{ position: "absolute", bottom: "40px", right: "40px", display: "flex", alignItems: "center", gap: "12px", backgroundColor: "rgba(34, 197, 94, 0.05)", padding: "8px 20px", borderRadius: "9999px", border: "1px solid rgba(34, 197, 94, 0.1)" }}>
+        <div style={{ position: "absolute", bottom: "30px", right: "40px", display: "flex", alignItems: "center", gap: "12px", backgroundColor: "rgba(34, 197, 94, 0.05)", padding: "8px 20px", borderRadius: "9999px", border: "1px solid rgba(34, 197, 94, 0.1)" }}>
           <span style={{ fontSize: "18px", fontWeight: 900, color: "#4ade80", display: "flex" }}>FRANKENTUI / BEADS</span>
         </div>
       </div>

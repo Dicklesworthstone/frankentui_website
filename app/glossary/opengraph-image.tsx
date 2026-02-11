@@ -7,7 +7,7 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default function Image() {
-  const headBuffer = readFileSync(join(process.cwd(), "franken_favicon.png"));
+  const headBuffer = readFileSync(join(process.cwd(), "franken_favicon_og.png"));
   const headUri = `data:image/png;base64,${headBuffer.toString("base64")}`;
 
   const bgBuffer = readFileSync(join(process.cwd(), "public", "screenshots", "widget_gallery_inputs_and_controls_og.png"));
@@ -58,21 +58,21 @@ export default function Image() {
 
           <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
             <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
-              <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#22c55e" }} />
-              <span style={{ fontSize: "14px", fontWeight: 900, color: "#22c55e", letterSpacing: "4px" }}>LEXICAL_DECODER_INIT</span>
+              <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#22c55e", display: "flex" }} />
+              <span style={{ fontSize: "14px", fontWeight: 900, color: "#22c55e", letterSpacing: "4px", display: "flex" }}>LEXICAL_DECODER_INIT</span>
             </div>
             <div style={{ fontSize: "80px", fontWeight: 900, color: "white", lineHeight: 0.9, letterSpacing: "-4px", display: "flex", flexDirection: "column" }}>
               <span style={{ display: "flex" }}>Glossary</span>
               <span style={{ display: "flex" }}>Engine.</span>
             </div>
-            <div style={{ fontSize: "24px", fontWeight: 700, color: "#4ade80", marginTop: "24px", letterSpacing: "1px", textTransform: "uppercase" }}>
-              Demystifying the arcane vocabulary of TUIs.
+            <div style={{ fontSize: "24px", fontWeight: 700, color: "#4ade80", marginTop: "24px", letterSpacing: "1px", display: "flex" }}>
+              DEMYSTIFYING THE ARCANE VOCABULARY OF TUIS.
             </div>
           </div>
         </div>
 
         <div style={{ position: "absolute", bottom: "40px", right: "40px", display: "flex", alignItems: "center", gap: "12px", backgroundColor: "rgba(34, 197, 94, 0.05)", padding: "8px 20px", borderRadius: "9999px", border: "1px solid rgba(34, 197, 94, 0.1)" }}>
-          <span style={{ fontSize: "18px", fontWeight: 900, color: "#4ade80" }}>FRANKENTUI / LEX</span>
+          <span style={{ fontSize: "18px", fontWeight: 900, color: "#4ade80", display: "flex" }}>FRANKENTUI / LEX</span>
         </div>
       </div>
     ),

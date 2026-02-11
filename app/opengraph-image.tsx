@@ -8,7 +8,7 @@ export const contentType = "image/png";
 
 export default function Image() {
   // Load primary brand mark (the head) and background assets
-  const headBuffer = readFileSync(join(process.cwd(), "franken_favicon.png"));
+  const headBuffer = readFileSync(join(process.cwd(), "franken_favicon_og.png"));
   const headUri = `data:image/png;base64,${headBuffer.toString("base64")}`;
 
   const bgBuffer = readFileSync(join(process.cwd(), "public", "screenshots", "dashboard_fullscreen_overview_og.png"));
@@ -106,8 +106,8 @@ export default function Image() {
               justifyContent: "center",
             }}
           >
-            <div style={{ position: "absolute", width: "10px", height: "1px", backgroundColor: "#22c55e", transform: "rotate(45deg)" }} />
-            <div style={{ position: "absolute", width: "10px", height: "1px", backgroundColor: "#22c55e", transform: "rotate(-45deg)" }} />
+            <div style={{ position: "absolute", width: "10px", height: "1px", backgroundColor: "#22c55e", transform: "rotate(45deg)", display: "flex" }} />
+            <div style={{ position: "absolute", width: "10px", height: "1px", backgroundColor: "#22c55e", transform: "rotate(-45deg)", display: "flex" }} />
           </div>
         ))}
 
@@ -191,8 +191,8 @@ export default function Image() {
                 marginBottom: "16px",
               }}
             >
-              <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#ef4444" }} />
-              <span style={{ fontSize: "14px", fontWeight: 900, color: "#ef4444", letterSpacing: "4px" }}>SYSTEM_ALIVE</span>
+              <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#ef4444", display: "flex" }} />
+              <span style={{ fontSize: "14px", fontWeight: 900, color: "#ef4444", letterSpacing: "4px", display: "flex" }}>SYSTEM_ALIVE</span>
             </div>
 
             <div
@@ -237,8 +237,8 @@ export default function Image() {
                 { label: "LOGIC", val: "MATH-HEAVY" },
               ].map((stat, i) => (
                 <div key={i} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                  <span style={{ fontSize: "10px", fontWeight: 900, color: "#64748b", letterSpacing: "2px" }}>{stat.label}</span>
-                  <span style={{ fontSize: "20px", fontWeight: 900, color: "white" }}>{stat.val}</span>
+                  <span style={{ fontSize: "10px", fontWeight: 900, color: "#64748b", letterSpacing: "2px", display: "flex" }}>{stat.label}</span>
+                  <span style={{ fontSize: "20px", fontWeight: 900, color: "white", display: "flex" }}>{stat.val}</span>
                 </div>
               ))}
             </div>
@@ -257,8 +257,8 @@ export default function Image() {
             gap: "4px",
           }}
         >
-          <span style={{ fontSize: "10px", fontWeight: 900, color: "rgba(34, 197, 94, 0.4)", letterSpacing: "2px" }}>ORIGIN_PROTOCOL_V0.1.1</span>
-          <div style={{ width: "120px", height: "2px", backgroundColor: "rgba(34, 197, 94, 0.2)" }} />
+          <span style={{ fontSize: "10px", fontWeight: 900, color: "rgba(34, 197, 94, 0.4)", letterSpacing: "2px", display: "flex" }}>ORIGIN_PROTOCOL_V0.1.1</span>
+          <div style={{ width: "120px", height: "2px", backgroundColor: "rgba(34, 197, 94, 0.2)", display: "flex" }} />
         </div>
 
         <div
@@ -275,7 +275,7 @@ export default function Image() {
             border: "1px solid rgba(34, 197, 94, 0.1)",
           }}
         >
-          <span style={{ fontSize: "18px", fontWeight: 900, color: "#4ade80", letterSpacing: "1px" }}>FRANKENTUI.COM</span>
+          <span style={{ fontSize: "18px", fontWeight: 900, color: "#4ade80", letterSpacing: "1px", display: "flex" }}>FRANKENTUI.COM</span>
         </div>
       </div>
     ),
