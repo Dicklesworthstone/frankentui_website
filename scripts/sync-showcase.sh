@@ -73,9 +73,13 @@ if ! $DRY_RUN && [[ -f "${DEST}index.html" ]]; then
     echo "Injected <base href=\"/web/\"> into index.html"
   fi
 
-  # (WebGPU fallback and guard injection removed — the WASM renderer has a
-  #  WebGL/Canvas2D fallback path and works on browsers without WebGPU,
-  #  including Safari/iOS.)
+  # 2. Rewrite relative ./pkg/ and ./assets/ paths to absolute /web/ paths.
+  #    JavaScript import() and fetch() don't respect <base href>, so relative
+  #    paths break when the page is served at /web (no trailing slash) on Vercel.
+  sed -i "s|\./pkg/|/web/pkg/|g; s|\./assets/|/web/assets/|g" "${DEST}index.html"
+  # Also fix import.meta.url references to use window.location.origin
+  sed -i 's|, import\.meta\.url)|, window.location.origin)|g' "${DEST}index.html"
+  echo "Rewrote relative paths to absolute /web/ paths"
 fi
 
 # Summary and version manifest
