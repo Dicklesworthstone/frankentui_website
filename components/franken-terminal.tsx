@@ -524,6 +524,30 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
           const TAP_MAX_DIST = 10;
           const TAP_MAX_TIME = 300;
 
+          // Touch devices have no Tab key, which is how the showcase cycles
+          // screens, so dragging inward from a bezel moves between them: left
+          // edge goes back, right edge goes forward.
+          const EDGE_SWIPE_ZONE_PX = 44;
+          const EDGE_SWIPE_ARM_PX = 16;
+          const EDGE_SWIPE_COMMIT_PX = 72;
+          let edgeSwipeFrom = 0; // -1 left bezel, +1 right bezel, 0 none
+          let edgeSwipeArmed = false;
+
+          function commitEdgeSwipe(totalDx: number) {
+            if (Math.abs(totalDx) < EDGE_SWIPE_COMMIT_PX) return;
+            const back = edgeSwipeFrom < 0;
+            runnerRef.current?.pushEncodedInput(
+              JSON.stringify({
+                kind: "key",
+                phase: "down",
+                key: back ? "BackTab" : "Tab",
+                code: "Tab",
+                mods: back ? 1 : 0,
+                repeat: false,
+              }),
+            );
+          }
+
           function touchScrollStepsPx() {
             const rect = canvas!.getBoundingClientRect();
             const rawX = currentCols > 0 ? rect.width / currentCols : cellWidth;
@@ -561,7 +585,15 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
               touchStartTime = Date.now();
               touchScrollAccX = 0;
               touchScrollAccY = 0;
+              const bounds = canvas!.getBoundingClientRect();
+              const localX = touches[0].clientX - bounds.left;
+              const zone = Math.max(EDGE_SWIPE_ZONE_PX, bounds.width * 0.07);
+              edgeSwipeArmed = false;
+              edgeSwipeFrom =
+                localX <= zone ? -1 : localX >= bounds.width - zone ? 1 : 0;
             } else if (touches.length === 2) {
+              edgeSwipeFrom = 0;
+              edgeSwipeArmed = false;
               touchState = TOUCH_PINCHING;
               pinchStartDist = pinchDistance(touches[0], touches[1]);
               pinchStartZoom = userZoomRef.current;
@@ -596,6 +628,29 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
               touchLastX = cx;
               touchLastY = cy;
 
+              // Claim bezel drags before the scroll accumulator sees them, so
+              // the two gestures never fight over the same finger.
+              if (edgeSwipeFrom !== 0) {
+                const totalDx = cx - touchStartX;
+                const totalDy = cy - touchStartY;
+                const inward = Math.sign(totalDx) === -edgeSwipeFrom;
+                if (
+                  !edgeSwipeArmed &&
+                  inward &&
+                  Math.abs(totalDx) >= EDGE_SWIPE_ARM_PX &&
+                  Math.abs(totalDx) > Math.abs(totalDy)
+                ) {
+                  edgeSwipeArmed = true;
+                } else if (!edgeSwipeArmed && Math.abs(totalDy) > Math.abs(totalDx)) {
+                  // Mostly vertical: an ordinary scroll that began near an edge.
+                  edgeSwipeFrom = 0;
+                }
+                if (edgeSwipeArmed) {
+                  touchState = TOUCH_SCROLLING;
+                  return;
+                }
+              }
+
               if (touchState === TOUCH_TRACKING) {
                 const totalDx = cx - touchStartX;
                 const totalDy = cy - touchStartY;
@@ -625,6 +680,16 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
 
           canvas.addEventListener("touchend", (e) => {
             e.preventDefault();
+            // An armed edge swipe owns the gesture and must not also tap.
+            if (edgeSwipeArmed) {
+              const t = e.changedTouches[0];
+              if (t) commitEdgeSwipe(t.clientX - touchStartX);
+              edgeSwipeArmed = false;
+              edgeSwipeFrom = 0;
+              if (e.touches.length === 0) touchState = TOUCH_IDLE;
+              return;
+            }
+            edgeSwipeFrom = 0;
             if (touchState === TOUCH_TRACKING && e.changedTouches.length > 0) {
               const elapsed = Date.now() - touchStartTime;
               const t = e.changedTouches[0];
@@ -650,6 +715,8 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
           canvas.addEventListener("touchcancel", (e) => {
             e.preventDefault();
             touchState = TOUCH_IDLE;
+            edgeSwipeArmed = false;
+            edgeSwipeFrom = 0;
           }, { signal, passive: false });
 
         } catch (e) {
