@@ -58,6 +58,8 @@ export interface ShowcaseRunnerModule {
 /** Instance of ShowcaseRunner after construction */
 export interface ShowcaseRunnerInstance {
   init(): void;
+  /** Select a screen by zero-based registry index. Absent in bundles built before this existed. */
+  gotoScreen?(index: number): boolean;
   advanceTime(dtMs: number): void;
   step(): { running: boolean; rendered: boolean; events_processed: number; frame_idx: number };
   takeFlatPatches(): { spans: Uint32Array; cells: Uint32Array };

@@ -39,6 +39,14 @@ export class ShowcaseRunner {
      */
     frameIdx(): bigint;
     /**
+     * Select a screen by its zero-based index in the screen registry.
+     *
+     * Hosts previously deep-linked by synthesizing digit or Tab key presses,
+     * which landed on the wrong screen because Tab advances relative to the
+     * guided tour's active screen. Returns false if the index is out of range.
+     */
+    gotoScreen(index: number): boolean;
+    /**
      * Initialize the model and render the first frame. Call exactly once.
      */
     init(): void;
@@ -225,6 +233,14 @@ export class ShowcaseRunner {
      */
     resize(cols: number, rows: number): boolean;
     /**
+     * Provide the evidence JSONL for the `ExplainabilityCockpit` screen.
+     *
+     * Native builds poll this log from a local path; a browser has no such
+     * file, so the host supplies the same rows once during startup. Returns
+     * false if the log was already set.
+     */
+    setEvidenceJsonl(text: string): boolean;
+    /**
      * Provide the Shakespeare text blob for the `Shakespeare` screen.
      *
      * For WASM builds we avoid embedding multi-megabyte strings in the module.
@@ -282,6 +298,7 @@ export interface InitOutput {
     readonly showcaserunner_flatSpansLen: (a: number) => number;
     readonly showcaserunner_flatSpansPtr: (a: number) => number;
     readonly showcaserunner_frameIdx: (a: number) => bigint;
+    readonly showcaserunner_gotoScreen: (a: number, b: number) => number;
     readonly showcaserunner_init: (a: number) => void;
     readonly showcaserunner_isRunning: (a: number) => number;
     readonly showcaserunner_new: (a: number, b: number) => number;
@@ -321,6 +338,7 @@ export interface InitOutput {
     readonly showcaserunner_prepareFlatPatches: (a: number) => void;
     readonly showcaserunner_pushEncodedInput: (a: number, b: number, c: number) => number;
     readonly showcaserunner_resize: (a: number, b: number, c: number) => number;
+    readonly showcaserunner_setEvidenceJsonl: (a: number, b: number, c: number) => number;
     readonly showcaserunner_setShakespeareText: (a: number, b: number, c: number) => number;
     readonly showcaserunner_setSqliteSource: (a: number, b: number, c: number) => number;
     readonly showcaserunner_setTime: (a: number, b: number) => void;

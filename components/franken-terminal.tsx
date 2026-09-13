@@ -145,14 +145,19 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
       goToScreen(screen: number) {
         const runner = runnerRef.current;
         if (!runner) return;
+        // Select directly. The previous digit-key / repeated-Tab approach
+        // landed one screen late from screen 11 on, because Tab advances from
+        // the guided tour's active screen rather than from current_screen.
+        if (runner.gotoScreen) {
+          runner.gotoScreen(screen - 1);
+          return;
+        }
+        // Bundle predates gotoScreen: fall back to the digit keys, which were
+        // correct for the first ten screens.
         const screenIdx = screen - 1;
         if (screenIdx < 10) {
           const key = screenIdx === 9 ? "0" : String(screenIdx + 1);
           runner.pushEncodedInput(JSON.stringify({ kind: "key", phase: "down", key, code: `Digit${key}`, mods: 0, repeat: false }));
-        } else {
-          for (let i = 0; i < screenIdx; i++) {
-            runner.pushEncodedInput(JSON.stringify({ kind: "key", phase: "down", key: "Tab", code: "Tab", mods: 0, repeat: false }));
-          }
         }
       },
       sendInput(event) {

@@ -71,6 +71,19 @@ export class ShowcaseRunner {
         return BigInt.asUintN(64, ret);
     }
     /**
+     * Select a screen by its zero-based index in the screen registry.
+     *
+     * Hosts previously deep-linked by synthesizing digit or Tab key presses,
+     * which landed on the wrong screen because Tab advances relative to the
+     * guided tour's active screen. Returns false if the index is out of range.
+     * @param {number} index
+     * @returns {boolean}
+     */
+    gotoScreen(index) {
+        const ret = wasm.showcaserunner_gotoScreen(this.__wbg_ptr, index);
+        return ret !== 0;
+    }
+    /**
      * Initialize the model and render the first frame. Call exactly once.
      */
     init() {
@@ -526,6 +539,21 @@ export class ShowcaseRunner {
      */
     resize(cols, rows) {
         const ret = wasm.showcaserunner_resize(this.__wbg_ptr, cols, rows);
+        return ret !== 0;
+    }
+    /**
+     * Provide the evidence JSONL for the `ExplainabilityCockpit` screen.
+     *
+     * Native builds poll this log from a local path; a browser has no such
+     * file, so the host supplies the same rows once during startup. Returns
+     * false if the log was already set.
+     * @param {string} text
+     * @returns {boolean}
+     */
+    setEvidenceJsonl(text) {
+        const ptr0 = passStringToWasm0(text, wasm.__wbindgen_export3, wasm.__wbindgen_export4);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.showcaserunner_setEvidenceJsonl(this.__wbg_ptr, ptr0, len0);
         return ret !== 0;
     }
     /**

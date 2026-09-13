@@ -50,6 +50,22 @@ function createFakeDist(dir: string, opts?: { omit?: string[] }) {
     mkdirSync(pkg, { recursive: true });
     writeFileSync(join(pkg, "FrankenTerm.js"), "// wasm loader");
     writeFileSync(join(pkg, "FrankenTerm_bg.wasm"), "fake-wasm-bytes");
+    // build-wasm.sh emits this alongside the packages, and the sync validates
+    // it: both the demo page and the React loader key their cache-busting and
+    // integrity checks off these digests.
+    if (!omit.has("pkg/manifest.json")) {
+      writeFileSync(
+        join(pkg, "manifest.json"),
+        JSON.stringify({
+          schema: "ftui-browser-package-v1",
+          toolchain: "nightly-0000-00-00",
+          renderer: { revision: "0".repeat(40) },
+          source_inputs_sha256: "0".repeat(64),
+          runner_lock_sha256: "0".repeat(64),
+          files: { "FrankenTerm.js": "0".repeat(64) },
+        }),
+      );
+    }
   }
 
   if (!omit.has("fonts")) {
@@ -175,6 +191,21 @@ describe("sync-showcase.sh", () => {
     stepLog("missing-files", "PASS");
   });
 
+  test("missing expected files: fails when pkg/manifest.json is missing", () => {
+    createFakeDist(FAKE_DIST, { omit: ["pkg/manifest.json"] });
+    const { exitCode, stderr } = runSync(FAKE_DIST);
+
+    stepLog("missing-manifest", `exit=${exitCode}, stderr=${stderr.substring(0, 200)}`);
+
+    // Without the manifest the deployed page cannot verify or cache-bust its
+    // packages, so an incomplete bundle must never reach public/web/.
+    expect(exitCode).not.toBe(0);
+    expect(stderr).toContain("ERROR");
+    expect(stderr).toContain("manifest.json");
+
+    stepLog("missing-manifest", "PASS");
+  });
+
   test("missing expected files: fails when index.html is missing", () => {
     createFakeDist(FAKE_DIST, { omit: ["index.html"] });
     const { exitCode, stderr } = runSync(FAKE_DIST);
@@ -277,8 +308,8 @@ describe("sync-showcase.sh", () => {
     stepLog("delta-sync", "PASS");
   });
 
-  /* (8) Delete propagation */
-  test("delete propagation: removed source files are removed from dest", () => {
+  /* (8) Stale artifacts are reported, never deleted */
+  test("stale artifacts: files dropped from source are kept and reported", () => {
     createFakeDist(FAKE_DIST);
     runSync(FAKE_DIST);
 
@@ -288,13 +319,16 @@ describe("sync-showcase.sh", () => {
     // Remove the file from source
     rmSync(join(FAKE_DIST, "assets", "test.txt"));
 
-    const { exitCode } = runSync(FAKE_DIST);
+    const { exitCode, stdout } = runSync(FAKE_DIST);
     expect(exitCode).toBe(0);
 
-    // File should be deleted from destination (rsync --delete)
-    expect(existsSync(join(TEST_DEST, "assets", "test.txt"))).toBe(false);
+    // The sync deliberately does not pass rsync --delete: removing a deployed
+    // artifact is a human decision, so it is surfaced instead of performed.
+    expect(existsSync(join(TEST_DEST, "assets", "test.txt"))).toBe(true);
+    expect(stdout).toContain("not produced by the build");
+    expect(stdout).toContain("assets/test.txt");
 
-    stepLog("delete-propagation", "PASS");
+    stepLog("stale-artifacts", "PASS");
   });
 
   /* (9) Permissions */
