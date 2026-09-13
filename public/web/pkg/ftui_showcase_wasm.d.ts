@@ -66,6 +66,20 @@ export class ShowcaseRunner {
      */
     paneBlur(): any;
     /**
+     * Pane-specific host context-loss path.
+     */
+    paneContextLost(): any;
+    /**
+     * Serialize actual execution counters, retention, and maintenance diagnostics.
+     * Counter values are JSON integers and can exceed JavaScript's safe integer range.
+     */
+    paneExecutionStatusJson(): string;
+    /**
+     * Actual history substrate: `checkpointed` or `persistent`.
+     * Conservative execution uses the checkpointed substrate; see status JSON.
+     */
+    paneExecutionStrategy(): string;
+    /**
      * Export current pane workspace snapshot JSON.
      */
     paneExportWorkspaceSnapshot(): string | undefined;
@@ -82,6 +96,10 @@ export class ShowcaseRunner {
      */
     paneLostPointerCapture(pointer_id: number): any;
     /**
+     * Mark an exported pane workspace generation as durably saved.
+     */
+    paneMarkWorkspaceSaved(generation: bigint): boolean;
+    /**
      * Pane-specific pointer-cancel path.
      *
      * Pass `0` to represent an unspecified pointer id.
@@ -92,6 +110,10 @@ export class ShowcaseRunner {
      */
     panePointerCaptureAcquired(pointer_id: number): any;
     /**
+     * Pane pointer-down path that auto-detects pane/edge/corner from coordinates.
+     */
+    panePointerDownAt(pointer_id: number, button: number, x: number, y: number, mods: number): any;
+    /**
      * Pane-specific pointer-down path with direct capture semantics.
      *
      * `axis`: `0` = horizontal, `1` = vertical.
@@ -100,21 +122,21 @@ export class ShowcaseRunner {
      */
     panePointerDown(split_id: bigint, axis: number, pointer_id: number, button: number, x: number, y: number, mods: number): any;
     /**
-     * Pane pointer-down path that auto-detects pane/edge/corner from coordinates.
-     */
-    panePointerDownAt(pointer_id: number, button: number, x: number, y: number, mods: number): any;
-    /**
      * Pane-specific pointer-leave path.
      */
     panePointerLeave(pointer_id: number): any;
+    /**
+     * Auto-targeted pointer move path.
+     */
+    panePointerMoveAt(pointer_id: number, x: number, y: number, mods: number): any;
     /**
      * Pane-specific pointer-move path.
      */
     panePointerMove(pointer_id: number, x: number, y: number, mods: number): any;
     /**
-     * Auto-targeted pointer move path.
+     * Auto-targeted pointer-up path.
      */
-    panePointerMoveAt(pointer_id: number, x: number, y: number, mods: number): any;
+    panePointerUpAt(pointer_id: number, button: number, x: number, y: number, mods: number): any;
     /**
      * Pane-specific pointer-up path.
      *
@@ -123,17 +145,43 @@ export class ShowcaseRunner {
      */
     panePointerUp(pointer_id: number, button: number, x: number, y: number, mods: number): any;
     /**
-     * Auto-targeted pointer-up path.
-     */
-    panePointerUpAt(pointer_id: number, button: number, x: number, y: number, mods: number): any;
-    /**
      * Redo one pane structural change.
      */
     paneRedoLayout(): boolean;
     /**
+     * Pane-specific host render-stall path.
+     */
+    paneRenderStalled(): any;
+    /**
      * Rebuild pane tree from timeline baseline and cursor.
      */
     paneReplayLayout(): boolean;
+    /**
+     * Last pane workspace generation the host acknowledged as durably saved.
+     */
+    paneSavedWorkspaceGeneration(): bigint;
+    /**
+     * Change live execution policy when no pane pointer is active.
+     *
+     * `mode`: `0=checkpointed`, `1=persistent`, `2=conservative`, `3=adaptive`.
+     * All arguments must be finite integer JavaScript numbers in the `u32` range.
+     * Each retention ceiling uses `0` for unbounded. Retention counts edits.
+     * Invalid arguments and active pointers throw without changing state. Finish
+     * the gesture, or call `panePointerCancel` and handle its capture command,
+     * before changing policy. Migration errors preserve the previous policy.
+     */
+    paneSetExecutionPolicy(mode: any, max_retained_bytes: any, max_retained_edits: any): void;
+    /**
+     * Shared splitter/handle primitives for host-specific renderers.
+     */
+    paneSplitterPrimitives(): any;
+    /**
+     * Touch-specific pane pointer-down path that auto-detects pane/edge/corner.
+     *
+     * `active_touch_points` is the host's current touch count including this
+     * pointer. Values above one yield pane capture to scroll/pinch handling.
+     */
+    paneTouchPointerDownAt(pointer_id: number, x: number, y: number, active_touch_points: number, mods: number): any;
     /**
      * Undo one pane structural change.
      */
@@ -142,6 +190,14 @@ export class ShowcaseRunner {
      * Pane-specific hidden visibility path.
      */
     paneVisibilityHidden(): any;
+    /**
+     * Whether the pane workspace has unsaved changes.
+     */
+    paneWorkspaceDirty(): boolean;
+    /**
+     * Current pane workspace generation for host persistence.
+     */
+    paneWorkspaceGeneration(): bigint;
     /**
      * FNV-1a hash of the last patch batch, or `null`.
      */
@@ -159,13 +215,15 @@ export class ShowcaseRunner {
     prepareFlatPatches(): void;
     /**
      * Parse a JSON-encoded input and push to the event queue.
-     * Returns `true` if accepted, `false` if unsupported/malformed.
+     * Returns `true` if accepted, `false` if unsupported, malformed, or over
+     * input capacity. After a capacity rejection, step before retrying.
      */
     pushEncodedInput(json: string): boolean;
     /**
-     * Resize the terminal (pushes Resize event, processed on next step).
+     * Queue a resize for the next step. Returns false without changing size
+     * when input capacity is exhausted; step before retrying.
      */
-    resize(cols: number, rows: number): void;
+    resize(cols: number, rows: number): boolean;
     /**
      * Provide the Shakespeare text blob for the `Shakespeare` screen.
      *
@@ -186,7 +244,7 @@ export class ShowcaseRunner {
     setTime(ts_ns: number): void;
     /**
      * Process pending events and render if dirty.
-     * Returns `{ running, rendered, events_processed, frame_idx }`.
+     * Returns `{ running, rendered, events_processed, events_pending, frame_idx }`.
      */
     step(): any;
     /**
@@ -200,6 +258,14 @@ export class ShowcaseRunner {
      * Drain accumulated log lines. Returns `Array<string>`.
      */
     takeLogs(): Array<any>;
+    /**
+     * Recover unprocessed input as canonical golden-trace-v2 input JSONL.
+     *
+     * Events remain in FIFO order and are removed without executing effects.
+     * Timestamps are zero because original admission timestamps are unavailable.
+     * This is an input fragment, not a complete replay trace or encoded DOM input.
+     */
+    takePendingInputTrace(): string;
 }
 
 export function wasm_start(): void;
@@ -222,10 +288,14 @@ export interface InitOutput {
     readonly showcaserunner_paneActivePointerId: (a: number) => number;
     readonly showcaserunner_paneApplyLayoutMode: (a: number, b: number, c: bigint) => number;
     readonly showcaserunner_paneBlur: (a: number) => number;
+    readonly showcaserunner_paneContextLost: (a: number) => number;
+    readonly showcaserunner_paneExecutionStatusJson: (a: number, b: number) => void;
+    readonly showcaserunner_paneExecutionStrategy: (a: number, b: number) => void;
     readonly showcaserunner_paneExportWorkspaceSnapshot: (a: number, b: number) => void;
     readonly showcaserunner_paneImportWorkspaceSnapshot: (a: number, b: number, c: number) => number;
     readonly showcaserunner_paneLayoutState: (a: number) => number;
     readonly showcaserunner_paneLostPointerCapture: (a: number, b: number) => number;
+    readonly showcaserunner_paneMarkWorkspaceSaved: (a: number, b: bigint) => number;
     readonly showcaserunner_panePointerCancel: (a: number, b: number) => number;
     readonly showcaserunner_panePointerCaptureAcquired: (a: number, b: number) => number;
     readonly showcaserunner_panePointerDown: (a: number, b: bigint, c: number, d: number, e: number, f: number, g: number, h: number) => number;
@@ -236,20 +306,28 @@ export interface InitOutput {
     readonly showcaserunner_panePointerUp: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
     readonly showcaserunner_panePointerUpAt: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
     readonly showcaserunner_paneRedoLayout: (a: number) => number;
+    readonly showcaserunner_paneRenderStalled: (a: number) => number;
     readonly showcaserunner_paneReplayLayout: (a: number) => number;
+    readonly showcaserunner_paneSavedWorkspaceGeneration: (a: number) => bigint;
+    readonly showcaserunner_paneSetExecutionPolicy: (a: number, b: number, c: number, d: number, e: number) => void;
+    readonly showcaserunner_paneSplitterPrimitives: (a: number) => number;
+    readonly showcaserunner_paneTouchPointerDownAt: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
     readonly showcaserunner_paneUndoLayout: (a: number) => number;
     readonly showcaserunner_paneVisibilityHidden: (a: number) => number;
+    readonly showcaserunner_paneWorkspaceDirty: (a: number) => number;
+    readonly showcaserunner_paneWorkspaceGeneration: (a: number) => bigint;
     readonly showcaserunner_patchHash: (a: number, b: number) => void;
     readonly showcaserunner_patchStats: (a: number) => number;
     readonly showcaserunner_prepareFlatPatches: (a: number) => void;
     readonly showcaserunner_pushEncodedInput: (a: number, b: number, c: number) => number;
-    readonly showcaserunner_resize: (a: number, b: number, c: number) => void;
+    readonly showcaserunner_resize: (a: number, b: number, c: number) => number;
     readonly showcaserunner_setShakespeareText: (a: number, b: number, c: number) => number;
     readonly showcaserunner_setSqliteSource: (a: number, b: number, c: number) => number;
     readonly showcaserunner_setTime: (a: number, b: number) => void;
     readonly showcaserunner_step: (a: number) => number;
     readonly showcaserunner_takeFlatPatches: (a: number) => number;
     readonly showcaserunner_takeLogs: (a: number) => number;
+    readonly showcaserunner_takePendingInputTrace: (a: number, b: number) => void;
     readonly wasm_start: () => void;
     readonly __wbindgen_export: (a: number) => void;
     readonly __wbindgen_add_to_stack_pointer: (a: number) => number;

@@ -72,6 +72,14 @@ export interface ShowcaseRunnerInstance {
   free(): void;
 }
 
+/** pkg/manifest.json, emitted by frankentui's build-wasm.sh alongside the bundle */
+export interface PackageManifest {
+  schema: string;
+  toolchain: string;
+  /** Filename -> SHA-256 hex digest, for every .js and .wasm file in pkg/ */
+  files: Record<string, string>;
+}
+
 /** Combined loaded modules ready for use */
 export interface WasmModules {
   FrankenTermWeb: new () => FrankenTermWebInstance;
@@ -160,6 +168,31 @@ export async function loadFont(paths?: FrankenTerminalAssetPaths): Promise<void>
 
 let cachedModules: Promise<WasmModules> | null = null;
 let cachedPaths: FrankenTerminalAssetPaths | undefined;
+let cachedManifest: Promise<PackageManifest | null> | null = null;
+
+/**
+ * Fetch the bundle's package manifest, or null if it is unavailable.
+ *
+ * /web/pkg/* is served `immutable, max-age=31536000`, so a bare URL pins a
+ * returning visitor to whichever build their browser cached first. The manifest
+ * carries a SHA-256 per file, which is used below as a cache-busting query so a
+ * redeploy is picked up automatically without a version constant to bump.
+ */
+async function loadPackageManifest(wasmBase: string): Promise<PackageManifest | null> {
+  if (!cachedManifest) {
+    cachedManifest = (async () => {
+      try {
+        const response = await fetch(`${wasmBase}manifest.json`, { cache: "no-store" });
+        if (!response.ok) return null;
+        const manifest = (await response.json()) as PackageManifest;
+        return manifest?.schema === "ftui-browser-package-v1" ? manifest : null;
+      } catch {
+        return null;
+      }
+    })();
+  }
+  return cachedManifest;
+}
 
 /**
  * Load and initialize both WASM modules. First call triggers the download;
@@ -183,15 +216,24 @@ export function loadWasmModules(paths?: FrankenTerminalAssetPaths): Promise<Wasm
 export function resetWasmCache(): void {
   cachedModules = null;
   cachedPaths = undefined;
+  cachedManifest = null;
 }
 
 async function doLoadWasmModules(paths?: FrankenTerminalAssetPaths): Promise<WasmModules> {
   const { wasmBase, version } = resolvePaths(paths);
 
-  const termJsUrl = versionedUrl(wasmBase, "FrankenTerm.js", version);
-  const runnerJsUrl = versionedUrl(wasmBase, "ftui_showcase_wasm.js", version);
-  const termWasmUrl = versionedUrl(wasmBase, "FrankenTerm_bg.wasm", version);
-  const runnerWasmUrl = versionedUrl(wasmBase, "ftui_showcase_wasm_bg.wasm", version);
+  // Prefer the manifest's content hash; fall back to the configured version so
+  // the loader still works against a bundle built before manifests existed.
+  const manifest = await loadPackageManifest(wasmBase);
+  const packageUrl = (file: string): string => {
+    const hash = manifest?.files?.[file];
+    return hash ? `${wasmBase}${file}?sha256=${hash}` : versionedUrl(wasmBase, file, version);
+  };
+
+  const termJsUrl = packageUrl("FrankenTerm.js");
+  const runnerJsUrl = packageUrl("ftui_showcase_wasm.js");
+  const termWasmUrl = packageUrl("FrankenTerm_bg.wasm");
+  const runnerWasmUrl = packageUrl("ftui_showcase_wasm_bg.wasm");
 
   // Load both JS glue modules in parallel via native import
   const [termMod, runnerMod] = await Promise.all([

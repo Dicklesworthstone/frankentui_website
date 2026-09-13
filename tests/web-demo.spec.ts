@@ -13,14 +13,22 @@ type TouchProbe = {
 // Observe the real WASM input and patch boundaries. Every call still runs the
 // original implementation; no renderer, runner, input result, or patch is mocked.
 async function observeTouchDemo(page: Page, screen = 2) {
-  const hostResponse = await page.request.get(`${BASE_URL}/web`);
-  expect(hostResponse.ok()).toBe(true);
-  const hostHtml = await hostResponse.text();
-  const version = hostHtml.match(/const ASSET_VERSION = "([^"]+)"/)?.[1];
-  expect(version).toBeTruthy();
-  const termPath = hostHtml.match(/const termJsUrl = `([^`]+)`/)?.[1];
-  expect(termPath).toBeTruthy();
-  const moduleUrl = new URL(termPath!.replace("${ASSET_VERSION}", version!), hostResponse.url()).href;
+  // The bundle is described by pkg/manifest.json (schema ftui-browser-package-v1),
+  // which carries a SHA-256 per package file. That digest is the cache buster,
+  // replacing the ASSET_VERSION constant the demo page used to define.
+  const manifestResponse = await page.request.get(`${BASE_URL}/web/pkg/manifest.json`);
+  expect(manifestResponse.ok()).toBe(true);
+  const manifest = (await manifestResponse.json()) as {
+    schema: string;
+    files: Record<string, string>;
+  };
+  expect(manifest.schema).toBe("ftui-browser-package-v1");
+  const termHash = manifest.files["FrankenTerm.js"];
+  expect(termHash).toBeTruthy();
+  const moduleUrl = new URL(
+    `/web/pkg/FrankenTerm.js?sha256=${termHash}`,
+    manifestResponse.url(),
+  ).href;
   await page.addInitScript(({ moduleUrl }) => {
     const probe: TouchProbe = { cols: 0, rows: 0, cells: [], inputs: [], trustedTouches: 0 };
     (window as unknown as { ftuiTouchProbe: TouchProbe }).ftuiTouchProbe = probe;

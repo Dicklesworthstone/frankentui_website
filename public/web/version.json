@@ -1,9 +1,88 @@
 {
-  "synced_at": "2026-02-20T17:50:37-05:00",
-  "source_dir": "/data/projects/frankentui/dist/",
-  "asset_version": "2026-02-20.4",
-  "host_revision": "2026-09-06.touch-1",
-  "frankentui_git_sha": "805d38f35d01504e73d1055698f7af072f8af365",
-  "file_count": 16,
-  "files": {"_headers":{"size_bytes":187,"sha256":"5be799029ed166012164b4b09e18dad28b7a9e4ed14d78db308b32609665aac9"},"assets/shakespeare.txt":{"size_bytes":5638525,"sha256":"4291cb282e90f6580fa683148f7c94a55276acb1757d725a2e84caf8c00cb9a5"},"assets/sqlite3.c":{"size_bytes":9215145,"sha256":"5fdc8109b60ea295a2ffe526bcce47812c501db7a41b4b4baeeea921e6f9bfc8"},"fonts/pragmasevka-nf-subset.woff2":{"size_bytes":17896,"sha256":"54bfc636093de7506c5785d9d08c7aa4b79bed672a2b5c9345d7b079d4f2cb00"},"index.html":{"size_bytes":80338,"sha256":"e0a73cf970ac2a669a73b649def8f90a7728dd4e03bc9a93c65378e82965aac7"},"og.png":{"size_bytes":87362,"sha256":"320828afddb82fbb7e72bbcaf7a3b36688d8252195187815ce732061540ce243"},"pkg/FrankenTerm.d.ts":{"size_bytes":14680,"sha256":"2c7f8412c913c683171b06d4f07efc2306d5f59fb58a360f9296febb793963f1"},"pkg/FrankenTerm.js":{"size_bytes":85668,"sha256":"4cff5619ece81c0a2e6c25aa460c742451ef6a7892aecb081da5afb011f5e33b"},"pkg/FrankenTerm_bg.wasm":{"size_bytes":394920,"sha256":"26b84220acb8e192480480b40d64bbc30a3d760ce800f97659a37e92136fd64b"},"pkg/FrankenTerm_bg.wasm.d.ts":{"size_bytes":4226,"sha256":"14c341e0c4406127270224013b8c9e08c21ce7e63cf6543193211405dd32e642"},"pkg/README.md":{"size_bytes":60888,"sha256":"88ed0761cae798febe0c50f16cb01d051845e86b457b332403a35141754b147a"},"pkg/ftui_showcase_wasm.d.ts":{"size_bytes":11366,"sha256":"0c4970b7f64deaaaa308127cb4c8c097085b9e2f7b407d3536b8db3301226aa8"},"pkg/ftui_showcase_wasm.js":{"size_bytes":26772,"sha256":"892c418e0ef5c92e3f76941720b2af033d6f72f5b28187b380ae8db4432df67b"},"pkg/ftui_showcase_wasm_bg.wasm":{"size_bytes":3724219,"sha256":"8309727f886ef993eb7a7b6263fbea03a1cacd114af10c77a2be980d9ffbf2c0"},"pkg/ftui_showcase_wasm_bg.wasm.d.ts":{"size_bytes":3875,"sha256":"b9468c2c9da53ef5bf6edce7f98aab746535ae9cb8a7d55f3efa94674a66010f"},"pkg/package.json":{"size_bytes":557,"sha256":"d73ae151da3c8efc439418036d8f537fc0aa45d8334bee330ec8bd0c1a63d2b3"}}
+  "synced_at": "2026-09-13T16:50:16-04:00",
+  "source_dir": "/private/tmp/claude-501/-Users-jemanuel-projects-frankentui/945addf3-d108-450e-8e00-64fc33f38eb4/scratchpad/wasmbuild/site/",
+  "frankentui_git_sha": "934722060c3186f59f29b922a03bfa318c22afd9",
+  "toolchain": "nightly-2026-08-31",
+  "renderer_revision": "88b402b8be9c70a4405895d4172e449940cab2fe",
+  "source_inputs_sha256": "dc01a053e659fe573ee98c57c339ed67af756395ce0f055b32b3f921af8385b8",
+  "runner_lock_sha256": "f167b7a13df94da7bf96a45e6102538db93ea37a066ded451351c3d6ce73b720",
+  "file_count": 19,
+  "files": {
+    "LICENSE": {
+      "size_bytes": 3939,
+      "sha256": "32a82e0a5754e72e51fae44b65a936c831c07376f21c90f5fb9e76897fcc3509"
+    },
+    "RENDERER-LICENSE": {
+      "size_bytes": 3939,
+      "sha256": "32a82e0a5754e72e51fae44b65a936c831c07376f21c90f5fb9e76897fcc3509"
+    },
+    "_headers": {
+      "size_bytes": 187,
+      "sha256": "5be799029ed166012164b4b09e18dad28b7a9e4ed14d78db308b32609665aac9"
+    },
+    "assets/shakespeare.txt": {
+      "size_bytes": 5638525,
+      "sha256": "4291cb282e90f6580fa683148f7c94a55276acb1757d725a2e84caf8c00cb9a5"
+    },
+    "assets/sqlite3.c": {
+      "size_bytes": 9215145,
+      "sha256": "5fdc8109b60ea295a2ffe526bcce47812c501db7a41b4b4baeeea921e6f9bfc8"
+    },
+    "fonts/pragmasevka-nf-subset.woff2": {
+      "size_bytes": 17896,
+      "sha256": "54bfc636093de7506c5785d9d08c7aa4b79bed672a2b5c9345d7b079d4f2cb00"
+    },
+    "index.html": {
+      "size_bytes": 95228,
+      "sha256": "86373f331a7c888bc5bbc9802b9f19829b9f10f3fcdc900fe4d11dfd57fbc463"
+    },
+    "og.png": {
+      "size_bytes": 87362,
+      "sha256": "320828afddb82fbb7e72bbcaf7a3b36688d8252195187815ce732061540ce243"
+    },
+    "pkg/FrankenTerm.d.ts": {
+      "size_bytes": 26484,
+      "sha256": "23d2d68167b62844b346c45df2cbc92f58dc6d6dfead8db2df926bd24a8f209b"
+    },
+    "pkg/FrankenTerm.js": {
+      "size_bytes": 110355,
+      "sha256": "28c8d76037198d9aae7a4268d8819deb94c91e4e5f6965190e32995e45b1883e"
+    },
+    "pkg/FrankenTerm_bg.wasm": {
+      "size_bytes": 627001,
+      "sha256": "6bc646ad14722abcd4a5d997e702d44fe06d79e0cef4e5f8b473c2e57def994f"
+    },
+    "pkg/FrankenTerm_bg.wasm.d.ts": {
+      "size_bytes": 7832,
+      "sha256": "88f54e4d2fcc1aaa842101f8a9c63c996ab4d18b42665d609a151c55a967235b"
+    },
+    "pkg/README.md": {
+      "size_bytes": 60888,
+      "sha256": "88ed0761cae798febe0c50f16cb01d051845e86b457b332403a35141754b147a"
+    },
+    "pkg/ftui_showcase_wasm.d.ts": {
+      "size_bytes": 15214,
+      "sha256": "3a8dc50edaa02f6bbc790c7273758fb7429e69b432c725199c2daa6f49488fad"
+    },
+    "pkg/ftui_showcase_wasm.js": {
+      "size_bytes": 33745,
+      "sha256": "b04e4a7657a341086ebf82cc685963b2ea117220fe0eecb27bced269c8da1137"
+    },
+    "pkg/ftui_showcase_wasm_bg.wasm": {
+      "size_bytes": 3884127,
+      "sha256": "bb1ff72c728fd338b74a1753add35fe0c431869e8b60d849416f1e342c30e4c2"
+    },
+    "pkg/ftui_showcase_wasm_bg.wasm.d.ts": {
+      "size_bytes": 4902,
+      "sha256": "8f539c63aacc35472700951213b44b614e7855bc7bc576a99e6bd56838bc0f99"
+    },
+    "pkg/manifest.json": {
+      "size_bytes": 983,
+      "sha256": "36884fe31f4d4daf2608234a81d902cd724e33e52ac3e516ff8134cc818285ff"
+    },
+    "pkg/package.json": {
+      "size_bytes": 557,
+      "sha256": "d73ae151da3c8efc439418036d8f537fc0aa45d8334bee330ec8bd0c1a63d2b3"
+    }
+  }
 }

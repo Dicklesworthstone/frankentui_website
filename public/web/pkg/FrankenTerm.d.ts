@@ -34,14 +34,29 @@ export class FrankenTermWeb {
      */
     accessibilityState(): any;
     /**
-     * Apply a cell patch (ftui-web mode).
+     * Canonical API contract snapshot for deterministic host validation.
      *
-     * Accepts a JS object: `{ offset: number, cells: [{bg, fg, glyph, attrs}] }`.
-     * When a renderer is initialized, only the patched cells are uploaded to
-     * the GPU. Without a renderer, patches still update the in-memory shadow
-     * state so host-side logic (search/link lookup/evidence) remains usable.
+     * Shape:
+     * `{ apiLine, apiVersion, packageName, packageVersion, protocolVersion,
+     *    methods, versioningPolicy, eventSchemaVersion, eventTypes,
+     *    eventOrdering, eventBufferPolicy }`
      */
-    applyPatch(patch: any): void;
+    apiContract(): any;
+    /**
+     * Stable FrankenTermJS API semver for host-side compatibility checks.
+     *
+     * This is intentionally distinct from crate/package semver.
+     */
+    apiVersion(): string;
+    /**
+     * Apply multiple cell patches from flat payload arrays (ftui-web fast path).
+     *
+     * - `spans`: `Uint32Array` in `[offset, len, offset, len, ...]` order
+     * - `cells`: `Uint32Array` in `[bg, fg, glyph, attrs, ...]` order
+     *
+     * `len` is measured in cells (not `u32` words).
+     */
+    applyPatchBatchFlat(spans: Uint32Array, cells: Uint32Array): void;
     /**
      * Apply multiple cell patches (ftui-web mode).
      *
@@ -53,25 +68,116 @@ export class FrankenTermWeb {
      */
     applyPatchBatch(patches: any): void;
     /**
-     * Apply multiple cell patches from flat payload arrays (ftui-web fast path).
+     * Apply a cell patch (ftui-web mode).
      *
-     * - `spans`: `Uint32Array` in `[offset, len, offset, len, ...]` order
-     * - `cells`: `Uint32Array` in `[bg, fg, glyph, attrs, ...]` order
-     *
-     * `len` is measured in cells (not `u32` words).
+     * Accepts a JS object: `{ offset: number, cells: [{bg, fg, glyph, attrs}] }`.
+     * When a renderer is initialized, only the patched cells are uploaded to
+     * the GPU. Without a renderer, patches still update the in-memory shadow
+     * state so host-side logic (search/link lookup/evidence) remains usable.
      */
-    applyPatchBatchFlat(spans: Uint32Array, cells: Uint32Array): void;
+    applyPatch(patch: any): void;
+    /**
+     * Request graceful client-side session close.
+     */
+    attachClose(reason: string, now_ms: number): any;
+    /**
+     * Start (or restart) a websocket attach lifecycle.
+     *
+     * Host is expected to open the websocket transport after this call reports
+     * `open_transport` in `actions`.
+     */
+    attachConnect(now_ms: number): any;
+    /**
+     * Inform state machine that handshake acknowledgement was received.
+     */
+    attachHandshakeAck(session_id: string, now_ms: number): any;
+    /**
+     * Inform state machine about protocol-level error.
+     */
+    attachProtocolError(code: string, fatal: boolean, now_ms: number): any;
+    /**
+     * Reset attach lifecycle to detached baseline state.
+     */
+    attachReset(now_ms: number): any;
+    /**
+     * Inform state machine about server-initiated session end.
+     */
+    attachSessionEnded(reason: string, now_ms: number): any;
+    /**
+     * Return websocket-attach lifecycle snapshot.
+     *
+     * Shape:
+     * `{state, attempt, maxRetries, handshakeDeadlineMs, retryDeadlineMs,
+     *   sessionId, closeReason, failureCode, closeCode, cleanClose, canRetry}`
+     */
+    attachState(): any;
+    /**
+     * Advance timer-driven attach transitions deterministically.
+     */
+    attachTick(now_ms: number): any;
+    /**
+     * Inform state machine that transport was closed.
+     */
+    attachTransportClosed(code: number, clean: boolean, reason: string, now_ms: number): any;
+    /**
+     * Inform state machine that the transport opened successfully.
+     *
+     * Host should send handshake frame when transition actions include
+     * `send_handshake`.
+     */
+    attachTransportOpened(now_ms: number): any;
     /**
      * Clear search query/results and remove search highlight.
      */
     clearSearch(): void;
     clearSelection(): void;
     /**
+     * Return current clipboard policy snapshot.
+     */
+    clipboardPolicy(): any;
+    /**
+     * Dispose an event subscription handle and release its queued records.
+     */
+    closeEventSubscription(subscription_id: number): boolean;
+    /**
      * Return selected text for host-managed clipboard writes.
      *
      * Returns `None` when there is no active non-empty selection.
      */
     copySelection(): string | undefined;
+    /**
+     * Create a decoration primitive anchored by marker ids.
+     *
+     * `kind` values:
+     * - `"inline"`: range `[startCol, endCol)` on `startMarkerId` line
+     * - `"line"`: full-line decoration at `startMarkerId`
+     * - `"range"`: multiline range from `startMarkerId` to `endMarkerId`
+     *
+     * For non-range kinds pass `endMarkerId < 0`.
+     */
+    createDecoration(kind: string, start_marker_id: number, end_marker_id: number, start_col: number, end_col: number): number;
+    /**
+     * Register a typed host-event subscription with bounded buffering.
+     *
+     * `options` keys:
+     * - `eventTypes` / `event_types`: string[] event taxonomy filter (defaults to all)
+     * - `maxBuffered` / `max_buffered`: number in `1..=8192` (defaults to 512)
+     */
+    createEventSubscription(options?: any | null): any;
+    /**
+     * Create a marker anchored to a unified-history line index.
+     *
+     * - `line_idx`: `0 = oldest retained line`, must be in range of
+     *   `viewportState().totalLines`.
+     * - `column`: optional preferred column for inline/range decorations.
+     *
+     * Returns a deterministic marker id (`u32`).
+     */
+    createMarker(line_idx: number, column: number): number;
+    /**
+     * Return decoration snapshots resolved against the current viewport/history.
+     */
+    decorationsState(): any;
     /**
      * Explicit teardown for JS callers. Drops GPU resources and clears
      * internal references so the canvas can be reclaimed.
@@ -82,6 +188,10 @@ export class FrankenTermWeb {
      */
     drainAccessibilityAnnouncements(): Array<any>;
     /**
+     * Drain structured attach transition logs as JSONL lines.
+     */
+    drainAttachTransitionsJsonl(run_id: string): Array<any>;
+    /**
      * Drain queued VT-compatible input byte chunks for remote PTY forwarding.
      */
     drainEncodedInputBytes(): Array<any>;
@@ -90,12 +200,20 @@ export class FrankenTermWeb {
      */
     drainEncodedInputs(): Array<any>;
     /**
-     * Drain queued hyperlink click events detected from normalized mouse input.
-     *
-     * Each entry has:
-     * `{x, y, button, linkId, source, url, openAllowed, openReason}`.
+     * Drain queued subscription events as deterministic JSONL records.
      */
-    drainLinkClicks(): Array<any>;
+    drainEventSubscriptionJsonl(subscription_id: number, run_id: string, seed: bigint, timestamp: string): Array<any>;
+    /**
+     * Drain queued subscription events as structured JS objects.
+     */
+    drainEventSubscription(subscription_id: number): Array<any>;
+    /**
+     * Drain queued IME composition trace records as JSONL lines.
+     *
+     * Records are emitted in rewrite order and include post-rewrite composition
+     * state snapshots for deterministic failure triage.
+     */
+    drainImeCompositionJsonl(run_id: string, seed: bigint, timestamp: string): Array<any>;
     /**
      * Drain queued link clicks into JSONL lines for deterministic E2E logs.
      *
@@ -103,13 +221,51 @@ export class FrankenTermWeb {
      */
     drainLinkClicksJsonl(run_id: string, seed: bigint, timestamp: string): Array<any>;
     /**
+     * Drain queued hyperlink click events detected from normalized mouse input.
+     *
+     * Each entry has:
+     * `{x, y, button, linkId, source, url, openAllowed, openReason}`.
+     */
+    drainLinkClicks(): Array<any>;
+    /**
+     * Drain marker/decoration diagnostics as JSONL lines.
+     *
+     * Records are ordered by deterministic diagnostic sequence and include
+     * stale/invalidation reasons for replay-grade troubleshooting.
+     */
+    drainMarkerDecorationJsonl(run_id: string, seed: number, timestamp: string): Array<any>;
+    /**
+     * Drain pending terminal reply bytes generated by VT query sequences.
+     *
+     * Returned as `Array<Uint8Array>` chunks in FIFO order.
+     */
+    drainReplyBytes(): Array<any>;
+    /**
+     * Remove a decoration by id.
+     *
+     * Returns `true` when a decoration existed and was removed.
+     */
+    dropDecoration(decoration_id: number): boolean;
+    /**
+     * Remove a marker by id.
+     *
+     * Returns `true` when a marker existed and was removed.
+     */
+    dropMarker(marker_id: number): boolean;
+    /**
+     * Snapshot subscription queue depth/drop counters for host observability.
+     *
+     * Returns `null` when the handle does not exist.
+     */
+    eventSubscriptionState(subscription_id: number): any;
+    /**
      * Extract selected text from current shadow cells (for copy workflows).
      */
     extractSelectionText(): string;
     /**
      * Feed a VT/ANSI byte stream (remote mode).
      */
-    feed(_data: Uint8Array): void;
+    feed(data: Uint8Array): void;
     /**
      * Fit the grid to a CSS-pixel container using current font metrics.
      *
@@ -117,6 +273,13 @@ export class FrankenTermWeb {
      * `dpr` lets callers pass the latest `window.devicePixelRatio`.
      */
     fitToContainer(container_width_css: number, container_height_css: number, dpr: number): any;
+    /**
+     * Return the current IME composition snapshot.
+     *
+     * Shape:
+     * `{ active, preedit }` where `preedit` is `null` when no tracked preedit text exists.
+     */
+    imeState(): any;
     /**
      * Initialize the terminal surface with an existing `<canvas>`.
      *
@@ -143,9 +306,15 @@ export class FrankenTermWeb {
      */
     linkOpenPolicy(): any;
     /**
-     * Return plaintext auto-detected URL at a given grid cell, if present.
+     * Return resolved hyperlink URL at a given cell, if present.
+     *
+     * Explicit OSC-8 links take precedence over auto-detected plaintext URLs.
      */
     linkUrlAt(x: number, y: number): string | undefined;
+    /**
+     * Return marker snapshots with deterministic anchor-resolution metadata.
+     */
+    markersState(): any;
     constructor();
     /**
      * Queue pasted text as terminal input bytes.
@@ -159,6 +328,10 @@ export class FrankenTermWeb {
      */
     render(): void;
     /**
+     * Return the active renderer backend (`webgpu`, `canvas2d`, or `none` before init).
+     */
+    rendererBackend(): string;
+    /**
      * Resize the terminal in logical grid coordinates (cols/rows).
      */
     resize(cols: number, rows: number): void;
@@ -166,6 +339,30 @@ export class FrankenTermWeb {
      * Build plain-text viewport mirror for screen readers.
      */
     screenReaderMirrorText(): string;
+    /**
+     * Scroll viewport by signed line count (positive = older, negative = newer).
+     */
+    scrollLines(lines: number): any;
+    /**
+     * Scroll viewport by signed page count.
+     *
+     * One page equals current viewport row count.
+     */
+    scrollPages(pages: number): any;
+    /**
+     * Jump viewport to newest output (follow-output position).
+     */
+    scrollToBottom(): any;
+    /**
+     * Jump viewport so target absolute history line is visible.
+     *
+     * `line_idx` uses unified history indexing (`0 = oldest retained line`).
+     */
+    scrollToLine(line_idx: number): any;
+    /**
+     * Jump viewport to oldest retained line.
+     */
+    scrollToTop(): any;
     /**
      * Jump to the next search match (wrap at end) and update highlight overlay.
      *
@@ -197,6 +394,15 @@ export class FrankenTermWeb {
      */
     setAccessibility(options: any): void;
     /**
+     * Configure clipboard policy defaults.
+     *
+     * Supported keys:
+     * - `copyEnabled` / `copy_enabled`: bool
+     * - `pasteEnabled` / `paste_enabled`: bool
+     * - `maxPasteBytes` / `max_paste_bytes`: number (1..=786432)
+     */
+    setClipboardPolicy(options: any): void;
+    /**
      * Configure cursor overlay.
      *
      * - `offset`: linear cell offset (`row * cols + col`), or `< 0` to clear.
@@ -212,6 +418,8 @@ export class FrankenTermWeb {
      * - `allowHttps` / `allow_https`: bool
      * - `allowedHosts` / `allowed_hosts`: string[]
      * - `blockedHosts` / `blocked_hosts`: string[]
+     *
+     * Defaults: `allowHttp=false`, `allowHttps=true`, empty allow/block host lists.
      */
     setLinkOpenPolicy(options: any): void;
     /**
@@ -262,11 +470,33 @@ export class FrankenTermWeb {
      */
     snapshotResizeStormFrameJsonl(run_id: string, seed: number, timestamp: string, frame_idx: number): string;
     /**
+     * Emit one JSONL `scrollback_frame` trace record for viewport telemetry.
+     *
+     * This mirrors `frame_harness::scrollback_virtualization_frame_jsonl` and
+     * is intended for deterministic E2E/perf evidence collection.
+     */
+    snapshotScrollbackFrameJsonl(run_id: string, timestamp: string, frame_idx: number, render_cost_us: number): string;
+    /**
      * Return current text shaping configuration.
      *
      * Shape: `{ enabled, engine, fallback }`
      */
     textShapingState(): any;
+    /**
+     * Return visible viewport text lines over unified history
+     * (`scrollback + visible grid`).
+     */
+    viewportLines(): Array<any>;
+    /**
+     * Return a deterministic viewport snapshot over unified history
+     * (`scrollback + visible grid`).
+     *
+     * Shape:
+     * `{ totalLines, scrollbackLines, gridRows, viewportStart, viewportEnd,
+     *    renderStart, renderEnd, scrollOffsetFromBottom, maxScrollOffset,
+     *    atBottom, followOutput, animating, subLineOffset }`
+     */
+    viewportState(): any;
 }
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
@@ -277,35 +507,71 @@ export interface InitOutput {
     readonly frankentermweb_accessibilityClassNames: (a: number) => number;
     readonly frankentermweb_accessibilityDomSnapshot: (a: number) => number;
     readonly frankentermweb_accessibilityState: (a: number) => number;
+    readonly frankentermweb_apiContract: (a: number) => number;
+    readonly frankentermweb_apiVersion: (a: number, b: number) => void;
     readonly frankentermweb_applyPatch: (a: number, b: number, c: number) => void;
     readonly frankentermweb_applyPatchBatch: (a: number, b: number, c: number) => void;
     readonly frankentermweb_applyPatchBatchFlat: (a: number, b: number, c: number, d: number) => void;
+    readonly frankentermweb_attachClose: (a: number, b: number, c: number, d: number) => number;
+    readonly frankentermweb_attachConnect: (a: number, b: number) => number;
+    readonly frankentermweb_attachHandshakeAck: (a: number, b: number, c: number, d: number, e: number) => void;
+    readonly frankentermweb_attachProtocolError: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+    readonly frankentermweb_attachReset: (a: number, b: number) => number;
+    readonly frankentermweb_attachSessionEnded: (a: number, b: number, c: number, d: number) => number;
+    readonly frankentermweb_attachState: (a: number) => number;
+    readonly frankentermweb_attachTick: (a: number, b: number) => number;
+    readonly frankentermweb_attachTransportClosed: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
+    readonly frankentermweb_attachTransportOpened: (a: number, b: number) => number;
     readonly frankentermweb_clearSearch: (a: number) => void;
     readonly frankentermweb_clearSelection: (a: number) => void;
+    readonly frankentermweb_clipboardPolicy: (a: number) => number;
+    readonly frankentermweb_closeEventSubscription: (a: number, b: number) => number;
     readonly frankentermweb_copySelection: (a: number, b: number) => void;
+    readonly frankentermweb_createDecoration: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
+    readonly frankentermweb_createEventSubscription: (a: number, b: number, c: number) => void;
+    readonly frankentermweb_createMarker: (a: number, b: number, c: number, d: number) => void;
+    readonly frankentermweb_decorationsState: (a: number) => number;
     readonly frankentermweb_destroy: (a: number) => void;
     readonly frankentermweb_drainAccessibilityAnnouncements: (a: number) => number;
+    readonly frankentermweb_drainAttachTransitionsJsonl: (a: number, b: number, c: number, d: number) => void;
     readonly frankentermweb_drainEncodedInputBytes: (a: number) => number;
     readonly frankentermweb_drainEncodedInputs: (a: number) => number;
+    readonly frankentermweb_drainEventSubscription: (a: number, b: number, c: number) => void;
+    readonly frankentermweb_drainEventSubscriptionJsonl: (a: number, b: number, c: number, d: number, e: number, f: bigint, g: number, h: number) => void;
+    readonly frankentermweb_drainImeCompositionJsonl: (a: number, b: number, c: number, d: bigint, e: number, f: number) => number;
     readonly frankentermweb_drainLinkClicks: (a: number) => number;
     readonly frankentermweb_drainLinkClicksJsonl: (a: number, b: number, c: number, d: bigint, e: number, f: number) => number;
+    readonly frankentermweb_drainMarkerDecorationJsonl: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+    readonly frankentermweb_drainReplyBytes: (a: number) => number;
+    readonly frankentermweb_dropDecoration: (a: number, b: number) => number;
+    readonly frankentermweb_dropMarker: (a: number, b: number) => number;
+    readonly frankentermweb_eventSubscriptionState: (a: number, b: number) => number;
     readonly frankentermweb_extractSelectionText: (a: number, b: number) => void;
     readonly frankentermweb_feed: (a: number, b: number, c: number) => void;
     readonly frankentermweb_fitToContainer: (a: number, b: number, c: number, d: number, e: number) => void;
+    readonly frankentermweb_imeState: (a: number) => number;
     readonly frankentermweb_init: (a: number, b: number, c: number) => number;
     readonly frankentermweb_input: (a: number, b: number, c: number) => void;
     readonly frankentermweb_linkAt: (a: number, b: number, c: number) => number;
     readonly frankentermweb_linkOpenPolicy: (a: number) => number;
     readonly frankentermweb_linkUrlAt: (a: number, b: number, c: number, d: number) => void;
+    readonly frankentermweb_markersState: (a: number) => number;
     readonly frankentermweb_new: () => number;
     readonly frankentermweb_pasteText: (a: number, b: number, c: number, d: number) => void;
     readonly frankentermweb_render: (a: number, b: number) => void;
+    readonly frankentermweb_rendererBackend: (a: number, b: number) => void;
     readonly frankentermweb_resize: (a: number, b: number, c: number) => void;
     readonly frankentermweb_screenReaderMirrorText: (a: number, b: number) => void;
+    readonly frankentermweb_scrollLines: (a: number, b: number) => number;
+    readonly frankentermweb_scrollPages: (a: number, b: number) => number;
+    readonly frankentermweb_scrollToBottom: (a: number) => number;
+    readonly frankentermweb_scrollToLine: (a: number, b: number) => number;
+    readonly frankentermweb_scrollToTop: (a: number) => number;
     readonly frankentermweb_searchNext: (a: number) => number;
     readonly frankentermweb_searchPrev: (a: number) => number;
     readonly frankentermweb_searchState: (a: number) => number;
     readonly frankentermweb_setAccessibility: (a: number, b: number, c: number) => void;
+    readonly frankentermweb_setClipboardPolicy: (a: number, b: number, c: number) => void;
     readonly frankentermweb_setCursor: (a: number, b: number, c: number, d: number) => void;
     readonly frankentermweb_setHoveredLinkId: (a: number, b: number) => void;
     readonly frankentermweb_setLinkOpenPolicy: (a: number, b: number, c: number) => void;
@@ -315,15 +581,19 @@ export interface InitOutput {
     readonly frankentermweb_setTextShaping: (a: number, b: number, c: number) => void;
     readonly frankentermweb_setZoom: (a: number, b: number, c: number) => void;
     readonly frankentermweb_snapshotResizeStormFrameJsonl: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
+    readonly frankentermweb_snapshotScrollbackFrameJsonl: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
     readonly frankentermweb_textShapingState: (a: number) => number;
-    readonly __wasm_bindgen_func_elem_1820: (a: number, b: number) => void;
-    readonly __wasm_bindgen_func_elem_2389: (a: number, b: number, c: number, d: number) => void;
-    readonly __wasm_bindgen_func_elem_1822: (a: number, b: number, c: number) => void;
+    readonly frankentermweb_viewportLines: (a: number) => number;
+    readonly frankentermweb_viewportState: (a: number) => number;
+    readonly __wasm_bindgen_func_elem_3005: (a: number, b: number, c: number, d: number) => void;
+    readonly __wasm_bindgen_func_elem_3007: (a: number, b: number, c: number, d: number) => void;
+    readonly __wasm_bindgen_func_elem_1604: (a: number, b: number, c: number) => void;
     readonly __wbindgen_export: (a: number, b: number) => number;
     readonly __wbindgen_export2: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_export3: (a: number) => void;
+    readonly __wbindgen_export4: (a: number, b: number) => void;
     readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
-    readonly __wbindgen_export4: (a: number, b: number, c: number) => void;
+    readonly __wbindgen_export5: (a: number, b: number, c: number) => void;
 }
 
 export type SyncInitInput = BufferSource | WebAssembly.Module;

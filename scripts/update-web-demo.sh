@@ -11,21 +11,30 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WEBSITE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-FRANKENTUI_ROOT="/dp/frankentui"
-FRANKENTUI_DIST="$FRANKENTUI_ROOT/dist"
+FRANKENTUI_ROOT="${FRANKENTUI_ROOT:-/dp/frankentui}"
+# build-wasm.sh requires a fresh absolute output directory outside the checkout
+# and writes the deployable bundle to <output>/site.
+BUILD_ROOT="${BUILD_ROOT:-${TMPDIR:-/tmp}/frankentui-web-build}"
 
 SKIP_BUILD=false
 NO_PUSH=false
 DRY_RUN=false
+SITE_DIR=""
 
 for arg in "$@"; do
   case "$arg" in
     --skip-build) SKIP_BUILD=true ;;
     --no-push) NO_PUSH=true ;;
     --dry-run) DRY_RUN=true ;;
+    --site=*) SITE_DIR="${arg#--site=}" ;;
     -*) echo "Unknown flag: $arg" >&2; exit 1 ;;
   esac
 done
+
+if $SKIP_BUILD && [[ -z "$SITE_DIR" ]]; then
+  echo "ERROR: --skip-build requires --site=/abs/NEW_OUTPUT_DIR/site" >&2
+  exit 1
+fi
 
 step() { echo ""; echo "=== [$1] $(date +%H:%M:%S) ===" ; }
 elapsed() { echo "  (${SECONDS}s elapsed)"; }
@@ -72,27 +81,38 @@ if ! $SKIP_BUILD; then
     exit 1
   fi
 
+  # A fresh directory per run: build-wasm.sh refuses an existing output path,
+  # which is what keeps a rebuild from reusing stale pkg files.
+  BUILD_OUT="$BUILD_ROOT/$(date +%Y%m%d-%H%M%S)"
+  SITE_DIR="$BUILD_OUT/site"
+
   if $DRY_RUN; then
-    echo "Would run: $FRANKENTUI_ROOT/build-wasm.sh"
+    echo "Would run: bash build-wasm.sh $BUILD_OUT"
   else
-    (cd "$FRANKENTUI_ROOT" && bash build-wasm.sh)
+    mkdir -p "$BUILD_ROOT"
+    (cd "$FRANKENTUI_ROOT" && bash build-wasm.sh "$BUILD_OUT")
+    echo "Bundle: $SITE_DIR"
   fi
   elapsed
 else
   step "Build WASM (SKIPPED)"
-  if [[ ! -d "$FRANKENTUI_DIST" ]]; then
-    echo "ERROR: dist/ not found — cannot skip build without existing artifacts" >&2
+  if [[ ! -d "$SITE_DIR" ]]; then
+    echo "ERROR: --site=$SITE_DIR not found — cannot skip build without existing artifacts" >&2
     exit 1
   fi
 fi
 
 # ── Step 3: Sync artifacts ────────────────────────────────────────
 step "Sync"
-SYNC_ARGS=("$FRANKENTUI_DIST")
-if $DRY_RUN; then
-  SYNC_ARGS+=("--dry-run")
+if $DRY_RUN && ! [[ -d "$SITE_DIR" ]]; then
+  echo "Would run: sync-showcase.sh $SITE_DIR"
+else
+  SYNC_ARGS=("$SITE_DIR")
+  if $DRY_RUN; then
+    SYNC_ARGS+=("--dry-run")
+  fi
+  FRANKENTUI_ROOT="$FRANKENTUI_ROOT" "$SCRIPT_DIR/sync-showcase.sh" "${SYNC_ARGS[@]}"
 fi
-"$SCRIPT_DIR/sync-showcase.sh" "${SYNC_ARGS[@]}"
 elapsed
 
 # ── Step 4: Commit ────────────────────────────────────────────────
@@ -110,7 +130,7 @@ else
     git -C "$WEBSITE_ROOT" commit -m "$(cat <<EOF
 chore(web): sync WASM showcase [$FRANKENTUI_SHA]
 
-Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
 EOF
 )"
     echo "Committed."

@@ -3,19 +3,24 @@ set -euo pipefail
 
 # sync-showcase.sh — Mirror WASM showcase demo artifacts into public/web/
 #
+# The source is the `site/` directory produced by frankentui's build-wasm.sh,
+# which writes to a fresh output directory:
+#
+#   bash build-wasm.sh /absolute/NEW_OUTPUT_DIR   # -> NEW_OUTPUT_DIR/site
+#
 # Usage:
-#   ./scripts/sync-showcase.sh                    # Default source: /dp/frankentui/dist/
-#   ./scripts/sync-showcase.sh /path/to/dist      # Custom source
-#   ./scripts/sync-showcase.sh --dry-run           # Preview without copying
-#   ./scripts/sync-showcase.sh /path/to/dist --dry-run
+#   ./scripts/sync-showcase.sh /abs/NEW_OUTPUT_DIR/site
+#   ./scripts/sync-showcase.sh /abs/NEW_OUTPUT_DIR/site --dry-run
+#
+# This script never deletes files in public/web/. Artifacts that the build no
+# longer emits are reported as stale and left in place for a human to remove.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-DEFAULT_SRC="/dp/frankentui/dist/"
 DEST="$REPO_ROOT/public/web/"
 
 DRY_RUN=false
-SRC="$DEFAULT_SRC"
+SRC=""
 
 # Parse args
 for arg in "$@"; do
@@ -26,6 +31,12 @@ for arg in "$@"; do
   esac
 done
 
+if [[ -z "$SRC" ]]; then
+  echo "ERROR: source site/ directory is required" >&2
+  echo "usage: $0 /abs/NEW_OUTPUT_DIR/site [--dry-run]" >&2
+  exit 1
+fi
+
 # Ensure trailing slash for rsync
 [[ "$SRC" != */ ]] && SRC="$SRC/"
 
@@ -35,7 +46,7 @@ if [[ ! -d "$SRC" ]]; then
   exit 1
 fi
 
-EXPECTED_FILES=("index.html" "pkg" "fonts" "assets")
+EXPECTED_FILES=("index.html" "pkg" "fonts" "assets" "pkg/manifest.json")
 for f in "${EXPECTED_FILES[@]}"; do
   if [[ ! -e "${SRC}${f}" ]]; then
     echo "ERROR: Expected file/dir missing in source: ${SRC}${f}" >&2
@@ -46,8 +57,9 @@ done
 # Create destination if needed
 mkdir -p "$DEST"
 
-# Build rsync args
-RSYNC_ARGS=(-av --delete --exclude='og.png' --exclude='version.json')
+# No --delete: removing files is a human decision (see header). og.png and
+# version.json are owned by this repo and are never sourced from the build.
+RSYNC_ARGS=(-av --exclude='og.png' --exclude='version.json')
 if $DRY_RUN; then
   RSYNC_ARGS+=(--dry-run)
   echo "=== DRY RUN ==="
@@ -59,79 +71,98 @@ echo ""
 
 rsync "${RSYNC_ARGS[@]}" "$SRC" "$DEST"
 
-# Remove wasm-pack's .gitignore that blocks all files from being committed
-if ! $DRY_RUN && [[ -f "${DEST}pkg/.gitignore" ]]; then
-  rm "${DEST}pkg/.gitignore"
-  echo "Removed wasm-pack .gitignore from pkg/ (blocks git tracking)"
+# Report (never remove) destination files the build no longer produces.
+if ! $DRY_RUN; then
+  STALE=$(rsync -an --delete --exclude='og.png' --exclude='version.json' \
+    --out-format='%n' "$SRC" "$DEST" | grep '^deleting ' || true)
+  if [[ -n "$STALE" ]]; then
+    echo ""
+    echo "NOTE: these files exist in public/web/ but are not produced by the build."
+    echo "      They were left in place; remove them by hand if they are obsolete."
+    echo "$STALE" | sed 's/^deleting /      /'
+  fi
 fi
 
-# Post-sync HTML injections
-if ! $DRY_RUN && [[ -f "${DEST}index.html" ]]; then
-  # 1. Inject <base href="/web/"> so relative paths resolve correctly under /web
-  if ! grep -q '<base href=' "${DEST}index.html"; then
-    sed -i 's|<head>|<head>\n<base href="/web/">|' "${DEST}index.html"
-    echo "Injected <base href=\"/web/\"> into index.html"
-  fi
+# Post-sync HTML rewrite.
+#
+# frankentui_showcase_demo.html is written to be served from the root of its own
+# bundle, so it uses relative "./pkg/", "./assets/" and "./fonts/" references.
+# Here it is served at /web (with no trailing slash), where "./pkg/x" would
+# resolve to /pkg/x. Rewrite those prefixes to absolute /web/ paths, and inject
+# <base href="/web/"> so any relative reference added upstream later still
+# resolves inside the bundle rather than at the site root.
+if ! $DRY_RUN; then
+  python3 - "${DEST}index.html" <<'PY'
+import pathlib, re, sys
 
-  # 2. Rewrite relative WASM/assets paths to absolute /web/ paths.
-  #    JavaScript import() and fetch() don't respect <base href>, so relative
-  #    paths break when the page is served at /web (no trailing slash) on Vercel.
-  #    Also map source-tree asset paths used by frankentui_showcase_demo.html
-  #    into the deployed /web/assets/ directory.
-  sed -i "s|\./pkg/|/web/pkg/|g; s|\./assets/|/web/assets/|g; s|\./crates/ftui-demo-showcase/data/shakespeare\.txt|/web/assets/shakespeare.txt|g; s|\./crates/ftui-demo-showcase/data/sqlite3\.c|/web/assets/sqlite3.c|g" "${DEST}index.html"
-  # Also fix import.meta.url references to use window.location.origin
-  sed -i 's|, import\.meta\.url)|, window.location.origin)|g' "${DEST}index.html"
-  echo "Rewrote relative paths to absolute /web/ paths"
+path = pathlib.Path(sys.argv[1])
+html = path.read_text(encoding="utf-8")
+original = html
+
+if "<base href=" not in html:
+    html = html.replace("<head>", '<head>\n<base href="/web/">', 1)
+
+for prefix in ("pkg", "assets", "fonts"):
+    html = html.replace(f"./{prefix}/", f"/web/{prefix}/")
+
+# The demo resolves nothing through import.meta.url today, but a bundler-style
+# `new URL("...", import.meta.url)` would break for an inline module script,
+# whose import.meta.url is the document URL and ignores <base href>.
+html = html.replace(", import.meta.url)", ", window.location.origin)")
+
+remaining = re.findall(r'["\'`(]\./[^"\'`)]+', html)
+if remaining:
+    raise SystemExit(f"unrewritten relative references remain: {sorted(set(remaining))}")
+
+path.write_text(html, encoding="utf-8")
+print("Rewrote relative paths to absolute /web/ paths" if html != original
+      else "index.html already absolute; no rewrite needed")
+PY
 fi
 
 # Summary and version manifest
 if ! $DRY_RUN; then
-  FILE_COUNT=$(find "$DEST" -type f ! -name "version.json" | wc -l)
-  TOTAL_SIZE=$(du -sh "$DEST" | cut -f1)
-
-  # Extract ASSET_VERSION from HTML if present
-  ASSET_VERSION=""
-  if [[ -f "${DEST}index.html" ]]; then
-    ASSET_VERSION=$(grep -oP "ASSET_VERSION\s*=\s*['\"]?\K[^'\";\s]+" "${DEST}index.html" 2>/dev/null || echo "")
-  fi
-
-  # Get frankentui git SHA if the source is in a git repo
+  # Provenance of the frankentui checkout the bundle was built from. SRC is
+  # NEW_OUTPUT_DIR/site, which lives outside the checkout, so the caller passes
+  # the source repo explicitly; fall back to the conventional location.
+  FRANKENTUI_ROOT="${FRANKENTUI_ROOT:-/dp/frankentui}"
   FRANKENTUI_GIT_SHA=""
-  SRC_NO_SLASH="${SRC%/}"
-  SRC_PARENT="$(dirname "$SRC_NO_SLASH")"
-  if git -C "$SRC_PARENT" rev-parse HEAD &>/dev/null; then
-    FRANKENTUI_GIT_SHA=$(git -C "$SRC_PARENT" rev-parse HEAD 2>/dev/null || echo "")
+  if git -C "$FRANKENTUI_ROOT" rev-parse HEAD &>/dev/null; then
+    FRANKENTUI_GIT_SHA=$(git -C "$FRANKENTUI_ROOT" rev-parse HEAD)
   fi
 
-  # Build file manifest with sizes and sha256
-  FILES_JSON="{"
-  FIRST=true
-  while IFS= read -r -d '' file; do
-    REL="${file#"$DEST"}"
-    SIZE=$(stat -c%s "$file" 2>/dev/null || stat -f%z "$file" 2>/dev/null || echo 0)
-    HASH=$(sha256sum "$file" 2>/dev/null | cut -d' ' -f1 || shasum -a 256 "$file" 2>/dev/null | cut -d' ' -f1 || echo "")
-    if ! $FIRST; then FILES_JSON+=","; fi
-    FILES_JSON+="\"$REL\":{\"size_bytes\":$SIZE,\"sha256\":\"$HASH\"}"
-    FIRST=false
-  done < <(find "$DEST" -type f ! -name "version.json" -print0 | sort -z)
-  FILES_JSON+="}"
+  python3 - "$DEST" "$SRC" "$FRANKENTUI_GIT_SHA" <<'PY'
+import hashlib, json, pathlib, subprocess, sys
 
-  # Write version.json
-  cat > "${DEST}version.json" <<MANIFEST
-{
-  "synced_at": "$(date -Iseconds)",
-  "source_dir": "$SRC",
-  "asset_version": "$ASSET_VERSION",
-  "frankentui_git_sha": "$FRANKENTUI_GIT_SHA",
-  "file_count": $FILE_COUNT,
-  "files": $FILES_JSON
+dest, src, git_sha = pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3]
+files = sorted(p for p in dest.rglob("*") if p.is_file() and p.name != "version.json")
+manifest = json.loads((dest / "pkg/manifest.json").read_text())
+stamp = subprocess.run(["date", "-Iseconds"], capture_output=True, text=True).stdout.strip()
+
+payload = {
+    "synced_at": stamp,
+    "source_dir": src,
+    "frankentui_git_sha": git_sha,
+    "toolchain": manifest["toolchain"],
+    "renderer_revision": manifest["renderer"]["revision"],
+    "source_inputs_sha256": manifest["source_inputs_sha256"],
+    "runner_lock_sha256": manifest["runner_lock_sha256"],
+    "file_count": len(files),
+    "files": {
+        p.relative_to(dest).as_posix(): {
+            "size_bytes": p.stat().st_size,
+            "sha256": hashlib.sha256(p.read_bytes()).hexdigest(),
+        }
+        for p in files
+    },
 }
-MANIFEST
+(dest / "version.json").write_text(json.dumps(payload, indent=2) + "\n")
+print(f"Files:    {len(files)}")
+print(f"Manifest: {dest / 'version.json'}")
+PY
 
   echo ""
   echo "=== Sync Complete ==="
-  echo "Files:     $FILE_COUNT"
-  echo "Total:     $TOTAL_SIZE"
-  echo "Manifest:  ${DEST}version.json"
+  echo "Total:     $(du -sh "$DEST" | cut -f1)"
   echo "Timestamp: $(date -Iseconds)"
 fi

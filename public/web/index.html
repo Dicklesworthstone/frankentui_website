@@ -5,11 +5,11 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>FrankenTUI — Showcase Demo</title>
-<link rel="preload" href="./fonts/pragmasevka-nf-subset.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/web/fonts/pragmasevka-nf-subset.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 	  @font-face {
 	    font-family: "Pragmasevka NF";
-	    src: url("./fonts/pragmasevka-nf-subset.woff2") format("woff2");
+	    src: url("/web/fonts/pragmasevka-nf-subset.woff2") format("woff2");
 	    font-weight: 400;
 	    font-style: normal;
 	    font-display: block;
@@ -191,7 +191,20 @@
 </head>
 <body>
 <div id="container">
-  <canvas id="terminal-canvas" tabindex="0"></canvas>
+  <canvas id="terminal-canvas" tabindex="0" role="application" aria-label="FrankenTUI terminal interface"></canvas>
+  <!-- Semantic proxy layer: screen-reader-accessible description of the
+       active TUI state. The WASM runtime should update this div with
+       semantic HTML elements that mirror the accessibility tree (A11yTree)
+       built on each render pass. This makes the canvas content visible to
+       assistive technology (AT) via the browser's accessibility API.
+       See: https://github.com/Dicklesworthstone/frankentui/issues/44 -->
+  <div id="a11y-proxy"
+       role="document"
+       aria-label="Terminal content (accessible proxy)"
+       aria-live="polite"
+       style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;">
+    <p>FrankenTUI demo application. Use Tab and Shift+Tab to navigate between screens. Press ? for help.</p>
+  </div>
 </div>
 <textarea
   id="mobile-kb-proxy"
@@ -229,8 +242,6 @@ const URL_ZOOM        = parseFloat(params.get("zoom")) || 0;
 // Console JSONL is extremely expensive at 60fps; enable only when debugging.
 const LOG_JSONL       = params.get("jsonl") === "1";
 const LOG_PERF        = false;  // Per-frame timing in console
-// Bump when deploying to bypass Cloudflare/browser caches for JS/WASM artifacts.
-const ASSET_VERSION = "2026-02-20.4";
 
 // ── DOM refs ───────────────────────────────────────────────────────────
 const canvas         = document.getElementById("terminal-canvas");
@@ -248,17 +259,35 @@ const paneGhostAlts  = [paneGhostAlt1, paneGhostAlt2];
 const paneDockHint   = document.getElementById("pane-dock-hint");
 const mobileKbToggle = document.getElementById("mobile-kb-toggle");
 const PANE_WORKSPACE_KEY = "ftui-pane-workspace-v1";
-let paneWorkspaceToken = "";
+const PANE_WORKSPACE_SAVE_RETRY_MS = 2000;
+let paneWorkspaceNextSaveRetryAt = 0;
+let paneWorkspaceSaveWarningShown = false;
 const paneActivePointers = new Set();
 const paneTouchPointers = new Set();
+const activeTouchPointerIds = new Set();
 let paneGhostDecay = null;
 let paneOverlaySyncFailed = false;
+let rejectedInputCount = 0;
+
+function updateInputRejectionStatus() {
+  if (!rejectedInputCount) return;
+  let counter = document.getElementById("input-rejection-count");
+  if (!counter) {
+    counter = document.createElement("span");
+    counter.id = "input-rejection-count";
+    counter.setAttribute("role", "status");
+    counter.setAttribute("aria-live", "polite");
+    status.append(counter);
+  }
+  counter.textContent = ` — ${rejectedInputCount} input rejected`;
+}
 
 function showError(msg) {
   errorDiv.textContent = msg;
   errorDiv.classList.add("visible");
   loadingOverlay.classList.add("hidden");
   status.textContent = "Error";
+  updateInputRejectionStatus();
   console.error("[ShowcaseDemo]", msg);
 }
 
@@ -290,8 +319,8 @@ const fontsReady = (async () => {
 // and, worse, slows instantiation due to large data-segment memcpy.
 const largeAssetsPromise = (async () => {
   try {
-    const shakespeareUrl = `/web/assets/shakespeare.txt?v=${ASSET_VERSION}`;
-    const sqliteUrl      = `/web/assets/sqlite3.c?v=${ASSET_VERSION}`;
+    const shakespeareUrl = "/web/assets/shakespeare.txt";
+    const sqliteUrl      = "/web/assets/sqlite3.c";
     const [shakespeare, sqlite] = await Promise.all([
       fetch(shakespeareUrl).then((r) => {
         if (!r.ok) throw new Error(`GET ${shakespeareUrl} -> ${r.status}`);
@@ -312,34 +341,54 @@ const largeAssetsPromise = (async () => {
 // ── WASM module loading ────────────────────────────────────────────────
 let termMod, runnerMod;
 let runnerWasmExports = null;
+async function loadVerifiedModule(manifest, name) {
+  async function fetchVerified(filename) {
+    const hash = manifest.files?.[filename];
+    if (typeof hash !== "string" || !/^[a-f0-9]{64}$/.test(hash)) {
+      throw new Error(`Missing package checksum: ${filename}`);
+    }
+    const bytes = Uint8Array.from(hash.match(/../g), (hex) => parseInt(hex, 16));
+    const integrity = `sha256-${btoa(String.fromCharCode(...bytes))}`;
+    const response = await fetch(`/web/pkg/${filename}?sha256=${hash}`, { integrity });
+    if (!response.ok) throw new Error(`GET ${filename} -> ${response.status}`);
+    return response;
+  }
+  const [js, wasm] = await Promise.all([
+    fetchVerified(`${name}.js`), fetchVerified(`${name}_bg.wasm`),
+  ]);
+  // Import the verified bytes themselves: a second URL import could race a
+  // deployment and execute different glue from the module we just checked.
+  const url = URL.createObjectURL(new Blob([await js.text()], { type: "text/javascript" }));
+  try {
+    const module = await import(url);
+    const exports = await module.default({ module_or_path: wasm });
+    return { module, exports };
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
 try {
-  // 1a. Download JS glue modules.
-  setProgress(0, "Downloading JS modules...");
-  const termJsUrl = `/web/pkg/FrankenTerm.js?v=${ASSET_VERSION}`;
-  const runnerJsUrl = `/web/pkg/ftui_showcase_wasm.js?v=${ASSET_VERSION}`;
-  [termMod, runnerMod] = await Promise.all([
-    import(termJsUrl),
-    import(runnerJsUrl),
+  setProgress(-1, "Loading verified browser packages...");
+  const response = await fetch("/web/pkg/manifest.json", { cache: "no-store" });
+  if (!response.ok) throw new Error(`GET package manifest -> ${response.status}`);
+  const manifest = await response.json();
+  if (manifest.schema !== "ftui-browser-package-v1") {
+    throw new Error("Unsupported browser package manifest");
+  }
+  if (manifest.renderer?.revision !== "88b402b8be9c70a4405895d4172e449940cab2fe") {
+    throw new Error("Unsupported renderer source revision");
+  }
+  const [renderer, showcase] = await Promise.all([
+    loadVerifiedModule(manifest, "FrankenTerm"),
+    loadVerifiedModule(manifest, "ftui_showcase_wasm"),
   ]);
-
-  // 1b. Initialize WASM modules directly from URLs.
-  // Let wasm-bindgen use the browser's streaming compilation path instead of
-  // buffering + copying full ArrayBuffers in JS first.
-  setProgress(-1, "Initializing WASM modules...");
-  const termWasmUrl = `/web/pkg/FrankenTerm_bg.wasm?v=${ASSET_VERSION}`;
-  const runnerWasmUrl = `/web/pkg/ftui_showcase_wasm_bg.wasm?v=${ASSET_VERSION}`;
-
-  [, runnerWasmExports] = await Promise.all([
-    termMod.default(termWasmUrl),
-    runnerMod.default(runnerWasmUrl),
-  ]);
-  setProgress(95, "Starting WebGPU...");
+  termMod = renderer.module;
+  runnerMod = showcase.module;
+  runnerWasmExports = showcase.exports;
+  setProgress(95, "Starting terminal renderer...");
 } catch (e) {
   showError(
-    `Failed to load WASM modules.\n\n` +
-    `Expected wasm-pack output at /web/pkg/FrankenTerm.js and /web/pkg/ftui_showcase_wasm.js\n\n` +
-    `Build with:\n` +
-    `  ./build-wasm.sh\n\n` +
+    `Failed to load the browser packages. Reload after the complete site bundle has been installed.\n\n` +
     `Error: ${e.message || e}`
   );
   throw e;
@@ -349,12 +398,30 @@ try {
 const { FrankenTermWeb }  = termMod;
 const { ShowcaseRunner }  = runnerMod;
 
-const term   = new FrankenTermWeb();
+let term;
 const dpr    = window.devicePixelRatio || 1.0;
 
 try {
+  if (typeof FrankenTermWeb !== "function" || typeof ShowcaseRunner !== "function") {
+    throw new Error("Browser package is missing its constructor");
+  }
+  term = new FrankenTermWeb();
+  const contract = typeof term.apiContract === "function" ? term.apiContract() : null;
+  if (
+    contract?.apiLine !== "frankenterm-js" || contract.apiVersion !== "1.0.0" ||
+    contract.packageName !== "frankenterm-web" || contract.packageVersion !== "0.2.0" ||
+    contract.protocolVersion !== "frankenterm-ws-v1" || contract.eventSchemaVersion !== "1.0.0"
+  ) {
+    throw new Error("Unsupported first-party renderer API contract");
+  }
+  for (const method of ["init", "applyPatchBatchFlat", "render", "input", "drainEncodedInputs", "drainEncodedInputBytes", "drainImeCompositionJsonl", "destroy"]) {
+    if (typeof term[method] !== "function") throw new Error(`Renderer is missing ${method}`);
+  }
+  for (const method of ["init", "step", "pushEncodedInput", "takeFlatPatches", "takePendingInputTrace"]) {
+    if (typeof ShowcaseRunner.prototype[method] !== "function") throw new Error(`Runner is missing ${method}`);
+  }
   await fontsReady;
-  setProgress(96, "Initializing WebGPU terminal...");
+  setProgress(96, "Initializing terminal renderer...");
   await term.init(canvas, {
     cols: INITIAL_COLS,
     rows: INITIAL_ROWS,
@@ -364,7 +431,7 @@ try {
     focused: true,
   });
 } catch (e) {
-  showError(`FrankenTermWeb.init() failed: ${e.message || e}\n\nWebGPU may not be supported in this browser.`);
+  showError(`Terminal initialization failed: ${e.message || e}`);
   throw e;
 }
 
@@ -381,8 +448,10 @@ function storageSet(key, value) {
   try {
     if (window.localStorage) {
       window.localStorage.setItem(key, value);
+      return true;
     }
   } catch (_) {}
+  return false;
 }
 
 function mediaQueryMatches(query) {
@@ -419,6 +488,7 @@ function addMediaQueryChangeListener(query, handler) {
 let userZoom = URL_ZOOM || parseFloat(storageGet("ftui-zoom")) || 1.0;
 
 function applyZoom() {
+  if (!runner.isRunning() || errorDiv.classList.contains("visible")) return;
   if (typeof term.setZoom === "function") {
     term.setZoom(userZoom);
   }
@@ -511,12 +581,75 @@ function paneStateSnapshot() {
   return null;
 }
 
-function paneWorkspaceSnapshotToken(state) {
-  if (!state) return "";
-  const layoutHash = state.layout_hash ?? "";
-  const timelineCursor = state.timeline_cursor ?? "";
-  const timelineLength = state.timeline_length ?? "";
-  return `${layoutHash}:${timelineCursor}:${timelineLength}`;
+function paneWorkspaceGenerationText(state) {
+  const fromState = state?.workspace_generation;
+  if (fromState !== null && fromState !== undefined) {
+    return String(fromState);
+  }
+  if (typeof runner.paneWorkspaceGeneration === "function") {
+    try {
+      return String(runner.paneWorkspaceGeneration());
+    } catch (_) {}
+  }
+  return "";
+}
+
+function paneWorkspaceSavedGenerationText(state) {
+  const fromState = state?.saved_generation;
+  if (fromState !== null && fromState !== undefined) {
+    return String(fromState);
+  }
+  if (typeof runner.paneSavedWorkspaceGeneration === "function") {
+    try {
+      return String(runner.paneSavedWorkspaceGeneration());
+    } catch (_) {}
+  }
+  return "";
+}
+
+function paneWorkspaceGenerationForAck(state) {
+  const generation = paneWorkspaceGenerationText(state);
+  if (!/^\d+$/.test(generation)) return null;
+  if (typeof BigInt === "function") {
+    return BigInt(generation);
+  }
+  const asNumber = Number(generation);
+  return Number.isSafeInteger(asNumber) && asNumber >= 0 ? asNumber : null;
+}
+
+function paneWorkspaceIsDirty(state) {
+  if (typeof runner.paneWorkspaceDirty === "function") {
+    try {
+      return Boolean(runner.paneWorkspaceDirty());
+    } catch (_) {}
+  }
+  if (state && typeof state.workspace_dirty === "boolean") {
+    return state.workspace_dirty;
+  }
+  const generation = paneWorkspaceGenerationText(state);
+  const savedGeneration = paneWorkspaceSavedGenerationText(state);
+  return generation !== "" && savedGeneration !== ""
+    ? generation !== savedGeneration
+    : false;
+}
+
+function paneWorkspaceHasActivePointer(state) {
+  if (state && state.active_pointer_id !== null && state.active_pointer_id !== undefined) {
+    return true;
+  }
+  if (typeof runner.paneActivePointerId === "function") {
+    try {
+      const pointerId = runner.paneActivePointerId();
+      return pointerId !== null && pointerId !== undefined;
+    } catch (_) {}
+  }
+  return paneActivePointers.size > 0;
+}
+
+function warnPaneWorkspaceSaveFailure(context) {
+  if (paneWorkspaceSaveWarningShown) return;
+  paneWorkspaceSaveWarningShown = true;
+  console.warn(`[ShowcaseDemo] Pane workspace save skipped: ${context}. Will retry after state changes or retry window.`);
 }
 
 function applyGhostVisualState(rectPx, strength, zone, alphaScale = 1.0) {
@@ -684,6 +817,7 @@ function renderPaneGhost(state) {
 
 function updatePaneStatusSuffix(state) {
   if (!state) return;
+  if (!runner.isRunning() || errorDiv.classList.contains("visible")) return;
   const timeline = `${state.timeline_cursor || 0}/${state.timeline_length || 0}`;
   const selected = Array.isArray(state.selected_ids) ? state.selected_ids.length : 0;
   const zone = state.dock_zone ? ` ${state.dock_zone}` : "";
@@ -699,10 +833,14 @@ function updatePaneStatusSuffix(state) {
     status.textContent =
       `${currentCols}\u00d7${currentRows} \u2014 panes ${timeline} sel ${selected}${modeText}${glideText}${snapText}`;
   }
+  updateInputRejectionStatus();
 }
 
 function syncPaneOverlayFromRunner() {
-  if (paneOverlaySyncFailed) return null;
+  if (paneOverlaySyncFailed) {
+    persistPaneWorkspaceIfChanged(null);
+    return null;
+  }
   try {
     const state = paneStateSnapshot();
     renderPaneGhost(state);
@@ -711,38 +849,63 @@ function syncPaneOverlayFromRunner() {
     return state;
   } catch (error) {
     disablePaneOverlaySync(error, "runtime sync");
+    persistPaneWorkspaceIfChanged(null);
     return null;
   }
 }
 
-function persistPaneWorkspace(state) {
-  if (paneOverlaySyncFailed) return;
-  if (typeof runner.paneExportWorkspaceSnapshot !== "function") return;
+function persistPaneWorkspace(state, options = {}) {
+  if (typeof runner.paneExportWorkspaceSnapshot !== "function") return false;
+  if (typeof runner.paneMarkWorkspaceSaved !== "function") return false;
+  const now = performance.now();
+  if (!options.force && now < paneWorkspaceNextSaveRetryAt) return false;
+  const tokenState = state || paneStateSnapshot();
+  const generationForAck = paneWorkspaceGenerationForAck(tokenState);
+  if (generationForAck === null) {
+    paneWorkspaceNextSaveRetryAt = now + PANE_WORKSPACE_SAVE_RETRY_MS;
+    warnPaneWorkspaceSaveFailure("workspace generation could not be decoded");
+    return false;
+  }
   let snapshot = null;
   try {
     snapshot = runner.paneExportWorkspaceSnapshot();
   } catch (error) {
-    disablePaneOverlaySync(error, "pane snapshot export");
-    return;
+    paneWorkspaceNextSaveRetryAt = now + PANE_WORKSPACE_SAVE_RETRY_MS;
+    warnPaneWorkspaceSaveFailure(`snapshot export failed: ${error?.message || error}`);
+    return false;
   }
-  if (snapshot) {
-    storageSet(PANE_WORKSPACE_KEY, snapshot);
-    const tokenState = state || paneStateSnapshot();
-    paneWorkspaceToken = paneWorkspaceSnapshotToken(tokenState);
+  if (!snapshot) return false;
+  if (!storageSet(PANE_WORKSPACE_KEY, snapshot)) {
+    paneWorkspaceNextSaveRetryAt = now + PANE_WORKSPACE_SAVE_RETRY_MS;
+    warnPaneWorkspaceSaveFailure("localStorage write failed");
+    return false;
   }
+  let saveAcknowledged = false;
+  try {
+    saveAcknowledged = runner.paneMarkWorkspaceSaved(generationForAck);
+  } catch (error) {
+    paneWorkspaceNextSaveRetryAt = now + PANE_WORKSPACE_SAVE_RETRY_MS;
+    warnPaneWorkspaceSaveFailure(`save acknowledgement failed: ${error?.message || error}`);
+    return false;
+  }
+  if (!saveAcknowledged) {
+    paneWorkspaceNextSaveRetryAt = now + PANE_WORKSPACE_SAVE_RETRY_MS;
+    return false;
+  }
+  paneWorkspaceNextSaveRetryAt = 0;
+  paneWorkspaceSaveWarningShown = false;
+  return true;
 }
 
 function persistPaneWorkspaceIfChanged(state) {
-  if (state && state.active_pointer_id !== null && state.active_pointer_id !== undefined) {
+  if (paneWorkspaceHasActivePointer(state)) {
     return;
   }
-  const token = paneWorkspaceSnapshotToken(state);
-  if (!token || token === paneWorkspaceToken) return;
+  if (!paneWorkspaceIsDirty(state)) return;
   persistPaneWorkspace(state);
 }
 
 function restorePaneWorkspace() {
-  if (paneOverlaySyncFailed) return false;
   if (typeof runner.paneImportWorkspaceSnapshot !== "function") return false;
   const snapshot = storageGet(PANE_WORKSPACE_KEY);
   if (!snapshot) return false;
@@ -750,11 +913,12 @@ function restorePaneWorkspace() {
   try {
     restored = runner.paneImportWorkspaceSnapshot(snapshot);
   } catch (error) {
-    disablePaneOverlaySync(error, "pane snapshot import");
+    console.warn("[ShowcaseDemo] Pane workspace restore failed:", error);
     return false;
   }
   if (restored) {
-    paneWorkspaceToken = paneWorkspaceSnapshotToken(paneStateSnapshot());
+    paneWorkspaceNextSaveRetryAt = 0;
+    paneWorkspaceSaveWarningShown = false;
   }
   return restored;
 }
@@ -827,20 +991,36 @@ function touchStartsOnPaneHandle(e) {
     point.y >= rect.y && point.y < rect.y + rect.height);
 }
 
-function paneDispatchPointerDown(e) {
+function paneDispatchPointerDown(e, activeTouchPoints = 1) {
   if (typeof runner.panePointerDownAt !== "function") return null;
-  if (e.pointerType && e.pointerType !== "mouse" &&
-      (paneTouchPointers.size > 0 || !touchStartsOnPaneHandle(e))) return null;
+  if (e.pointerType && e.pointerType !== "mouse" && activeTouchPoints === 1 &&
+      !touchStartsOnPaneHandle(e)) return null;
   const point = domMouseToInput(e, "down");
   const pointerId = panePointerIdFromEvent(e);
-  const dispatch = runner.panePointerDownAt(
-    pointerId,
-    paneButtonFromDomEvent(e),
-    point.x,
-    point.y,
-    paneModsFromDomEvent(e),
-  );
+  const touchPoints = Number.isFinite(activeTouchPoints)
+    ? Math.max(1, Math.min(255, Math.trunc(activeTouchPoints)))
+    : 1;
+  const dispatch =
+    e && e.pointerType !== "mouse" && typeof runner.paneTouchPointerDownAt === "function"
+      ? runner.paneTouchPointerDownAt(
+          pointerId,
+          point.x,
+          point.y,
+          touchPoints,
+          paneModsFromDomEvent(e),
+        )
+      : runner.panePointerDownAt(
+          pointerId,
+          paneButtonFromDomEvent(e),
+          point.x,
+          point.y,
+          paneModsFromDomEvent(e),
+        );
   return applyPaneCaptureCommand(dispatch);
+}
+
+function paneDispatchYieldedToNativeTouch(dispatch) {
+  return dispatch && dispatch.phase === "native_touch_gesture";
 }
 
 function paneDispatchPointerMove(e) {
@@ -963,6 +1143,83 @@ function takeRunnerPatches() {
   };
 }
 
+// Install the initial full frame before any admission retry can step the runner.
+const initPatches = takeRunnerPatches();
+if (initPatches.cells.length > 0) {
+  term.applyPatchBatchFlat(initPatches.spans, initPatches.cells);
+}
+term.render();
+
+let lastTs = 0;
+let totalFrames = 0;
+
+// Retain the accepted quit tail in a downloadable input fragment. Do not log
+// pasted/IME/clipboard contents or execute them after the application stops.
+function retainPendingRunnerInput(destination = status) {
+  const inputTrace = runner.takePendingInputTrace();
+  if (!inputTrace) return;
+  const count = inputTrace.trimEnd().split("\n").length;
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(new Blob([inputTrace], { type: "application/x-ndjson" }));
+  link.download = "frankentui-unprocessed-input.jsonl";
+  link.textContent = `Save ${count} unprocessed input event${count === 1 ? "" : "s"}`;
+  link.style.color = "inherit";
+  link.style.pointerEvents = "auto";
+  destination.append(" — ", link);
+  jsonl({ event: "input_recovered", count, ts: Date.now() });
+}
+
+// Drain before retrying capacity-limited input. Present every intermediate
+// patch batch: later diffs depend on these frames having reached the terminal.
+function stepAndPresentRunner() {
+  const result = runner.step();
+  if (result.events_processed > 0 || !result.running) {
+    jsonl({ event: "step", ...result, ts: Date.now() });
+  }
+  if (result.rendered) {
+    const patches = takeRunnerPatches();
+    if (patches.cells.length > 0) {
+      term.applyPatchBatchFlat(patches.spans, patches.cells);
+    }
+    term.render();
+    totalFrames++;
+    if (LOG_JSONL) {
+      const stats = runner.patchStats();
+      jsonl({
+        event: "frame",
+        frame_idx: result.frame_idx,
+        events_processed: result.events_processed,
+        patch_hash: runner.patchHash(),
+        dirty_cells: stats ? stats.dirty_cells : 0,
+        patch_count: stats ? stats.patch_count : 0,
+        ts: Date.now(),
+      });
+    }
+  }
+  for (const text of runner.takeLogs()) {
+    jsonl({ event: "log", text, frame_idx: result.frame_idx, ts: Date.now() });
+  }
+  return result;
+}
+
+function pushRunnerInput(input) {
+  if (!runner.isRunning()) return "rejected";
+  if (runner.pushEncodedInput(input)) return "queued";
+  // These events belong to the display surface and have no runner mapping.
+  let decoded;
+  try { decoded = JSON.parse(input); } catch (_) { /* Report without parser text below. */ }
+  const kind = decoded?.kind;
+  if (kind === "touch" || kind === "accessibility" ||
+      (kind === "wheel" && (decoded.dx ?? 0) === 0 && (decoded.dy ?? 0) === 0)) return "surface_only";
+  if (!stepAndPresentRunner().running) {
+    return "rejected";
+  }
+  if (runner.pushEncodedInput(input)) return "queued";
+  // A retry on an empty queue can still reject malformed/unsupported input or
+  // a payload that exceeds the byte cap. Report the rejection without its text.
+  return "rejected";
+}
+
 // Navigate to a specific screen if requested via URL.
 if (START_SCREEN > 0) {
   const screenIdx = START_SCREEN - 1;
@@ -970,23 +1227,14 @@ if (START_SCREEN > 0) {
   // For screens > 10, we send repeated Tab presses.
   if (screenIdx < 10) {
     const key = screenIdx === 9 ? "0" : String(screenIdx + 1);
-    runner.pushEncodedInput(JSON.stringify({ kind: "key", phase: "down", key, code: `Digit${key}`, mods: 0, repeat: false }));
+    pushRunnerInput(JSON.stringify({ kind: "key", phase: "down", key, code: `Digit${key}`, mods: 0, repeat: false }));
   } else {
     // Navigate with Tab presses.
     for (let i = 0; i < screenIdx; i++) {
-      runner.pushEncodedInput(JSON.stringify({ kind: "key", phase: "down", key: "Tab", code: "Tab", mods: 0, repeat: false }));
+      pushRunnerInput(JSON.stringify({ kind: "key", phase: "down", key: "Tab", code: "Tab", mods: 0, repeat: false }));
     }
   }
 }
-
-// `ShowcaseRunner.init()` renders frame 1 and produces a full repaint patch batch.
-// If we don't apply it immediately, the first `step()` often returns `rendered=false`
-// and the initial frame never becomes visible (or later diffs apply against an empty buffer).
-const initPatches = takeRunnerPatches();
-if (initPatches.cells.length > 0) {
-  term.applyPatchBatchFlat(initPatches.spans, initPatches.cells);
-}
-term.render();
 
 // Hide loading overlay, show status.
 setProgress(100, "Ready");
@@ -1020,18 +1268,21 @@ function jsonl(obj) {
   if (LOG_JSONL) console.log(JSON.stringify(obj));
 }
 
-jsonl({ event: "init", cols: currentCols, rows: currentRows, dpr, zoom: userZoom, ts: Date.now() });
+jsonl({ event: "init", cols: currentCols, rows: currentRows, dpr, zoom: userZoom,
+  renderer_backend: term.rendererBackend(), ts: Date.now() });
 
 function geometrySignature(cols, rows, dprValue, zoomValue) {
   return `${cols}x${rows}@${dprValue.toFixed(4)}:z${Math.round(zoomValue * 1000)}`;
 }
 
 function setRunningStatusText() {
+  if (!runner.isRunning() || errorDiv.classList.contains("visible")) return;
   if (Math.abs(userZoom - 1.0) > 0.01) {
     status.textContent = `${currentCols}\u00d7${currentRows} \u2014 zoom ${Math.round(userZoom * 100)}%`;
   } else {
     status.textContent = `${currentCols}\u00d7${currentRows} \u2014 running`;
   }
+  updateInputRejectionStatus();
 }
 
 let pendingGeometrySync = false;
@@ -1048,6 +1299,11 @@ function queueGeometrySync(reason) {
 
 function applyQueuedGeometrySync(trigger = "frame_tick") {
   if (!pendingGeometrySync) return;
+  // Make room while the renderer still has its old geometry, so draining
+  // cannot apply old-size patches to a surface that has already been resized.
+  if (!stepAndPresentRunner().running) {
+    throw new Error("Runner stopped before geometry could be synchronized");
+  }
   pendingGeometrySync = false;
   pendingGeometryReasons.add(trigger);
   const reasons = Array.from(pendingGeometryReasons).sort();
@@ -1074,7 +1330,9 @@ function applyQueuedGeometrySync(trigger = "frame_tick") {
     // Force a resize signal to the runner whenever host geometry semantics changed.
     // The runner now treats every resize signal as a repaint boundary, even if
     // cols/rows are numerically unchanged (e.g. DPR/zoom transitions).
-    runner.resize(currentCols, currentRows);
+    if (!runner.resize(currentCols, currentRows)) {
+      throw new Error("Runner rejected resize after draining input");
+    }
     lastGeometrySignature = nextSignature;
   }
 
@@ -1128,14 +1386,106 @@ if (window.visualViewport && typeof window.visualViewport.addEventListener === "
 }
 
 // ── Input forwarding ───────────────────────────────────────────────────
-// DOM events -> FrankenTermWeb.input() -> drainEncodedInputs() -> runner
+// Encode and forward in the same DOM callback. The pinned producer rewrites
+// one input into at most two records; never let its drop-oldest queue build up.
+// The runner is the only waiting input queue in this local showcase.
+const MAX_HOST_INPUT_TEXT_BYTES = 768 * 1024; // Pinned producer's paste limit.
+const inputTextEncoder = new TextEncoder();
+let inputSequence = 0;
+let rejectedComposition = false;
 
-function safeTermInput(ev) {
+function inputTextFits(ev) {
+  let bytes = 0;
+  for (const field of ["data", "key", "code"]) {
+    const text = ev[field];
+    if (typeof text !== "string") continue;
+    // Reject obviously huge strings before allocating an encoded copy.
+    if (text.length > MAX_HOST_INPUT_TEXT_BYTES - bytes) return false;
+    bytes += inputTextEncoder.encode(text).length;
+    if (bytes > MAX_HOST_INPUT_TEXT_BYTES) return false;
+  }
+  return true;
+}
+
+function forwardSurfaceInput(ev) {
+  let reason = null;
+  let inputs;
+  let vtChunks = 0;
+  let imeRecords = 0;
   try {
     term.input(ev);
-  } catch (e) {
-    console.error("[ShowcaseDemo] term.input failed:", e, ev);
+  } catch (_) {
+    reason = "terminal_input_failed";
+  } finally {
+    // This is a local application, with no remote PTY or IME trace consumer.
+    // Discard these duplicate/diagnostic copies explicitly, after every call;
+    // their old count-only queues otherwise retain arbitrarily large payloads.
+    inputs = term.drainEncodedInputs();
+    vtChunks = term.drainEncodedInputBytes().length;
+    imeRecords = term.drainImeCompositionJsonl("showcase-local", 0n, "").length;
   }
+  const normalized = [];
+  let runnerFailed = false;
+  for (let index = 0; index < inputs.length; index++) {
+    let outcome = "rejected";
+    if (!runnerFailed) {
+      try {
+        outcome = pushRunnerInput(inputs[index]);
+      } catch (_) {
+        runnerFailed = true;
+        reason = "runner_input_failed";
+      }
+    }
+    // Preserve a queued synthetic prefix if the primary is rejected after quit.
+    // Account for every remaining record; never throw past this drained suffix.
+    normalized.push({ index, outcome });
+  }
+  if (runnerFailed) {
+    showError("Input forwarding failed. Save unprocessed input before reloading.");
+    retainPendingRunnerInput(errorDiv);
+    runner.destroy();
+  }
+  return { normalized, reason, vt_chunks_discarded: vtChunks, ime_records_discarded: imeRecords };
+}
+
+function safeTermInput(ev) {
+  const sequence = inputSequence++;
+  let reason = null;
+  let result = { normalized: [], vt_chunks_discarded: 0, ime_records_discarded: 0 };
+  let cancellation = null;
+  if (!runner.isRunning() || errorDiv.classList.contains("visible")) {
+    reason = "stopped";
+  } else if (ev.kind === "composition" && rejectedComposition && ev.phase !== "start") {
+    reason = "composition_cancelled";
+    if (ev.phase === "end" || ev.phase === "cancel") rejectedComposition = false;
+  } else if (!inputTextFits(ev)) {
+    reason = "text_too_large";
+    if (ev.kind === "composition") {
+      // Do not leave stale preedit active or commit it on a trailing empty end.
+      rejectedComposition = ev.phase !== "end" && ev.phase !== "cancel";
+      cancellation = forwardSurfaceInput({ kind: "composition", phase: "cancel" });
+    }
+  } else {
+    if (ev.kind === "composition" && ev.phase === "start") rejectedComposition = false;
+    result = forwardSurfaceInput(ev);
+    reason = result.reason;
+  }
+  const queued = result.normalized.some((record) => record.outcome === "queued");
+  const rejected = Boolean(reason) || result.normalized.some((record) => record.outcome === "rejected");
+  const outcome = rejected ? (queued ? "partial" : "rejected")
+    : result.normalized.length ? "accepted" : "suppressed";
+  if (rejected) {
+    rejectedInputCount++;
+    // Preserve a stopped application's recovery link and never print input text.
+    if (runner.isRunning() && !errorDiv.classList.contains("visible")) {
+      status.textContent = `Input rejected: ${reason || "runner capacity or unsupported input"}`;
+    }
+    updateInputRejectionStatus();
+    jsonl({ event: "input_rejected", sequence, reason: reason || "runner_rejected", ts: Date.now() });
+  }
+  jsonl({ event: "input_admission", sequence, kind: ev.kind, outcome, ...result, reason,
+    cancellation, ts: Date.now() });
+  return !rejected;
 }
 
 function isCoarsePointerDevice() {
@@ -1223,6 +1573,7 @@ function startKeyboardLongPressTracker(pointerId, clientX, clientY) {
     }
     paneActivePointers.delete(tracker.pointerId);
     paneTouchPointers.delete(tracker.pointerId);
+    activeTouchPointerIds.delete(tracker.pointerId);
     touchGestureSuppressedByPane = false;
     touchState = TOUCH_IDLE;
     touchScrollAccX = 0;
@@ -1507,6 +1858,8 @@ function domWheelToInput(e) {
 }
 
 function shouldForwardKeyEvent(e) {
+  // Leave Tab/Enter and browser controls available for input recovery after stop.
+  if (!runner.isRunning() || errorDiv.classList.contains("visible")) return false;
   // Avoid double-encoding during IME composition.
   if (e.isComposing || e.key === "Process") return false;
   if (isEditableTarget(e.target)) return false;
@@ -1603,15 +1956,32 @@ let mouseButtonsDown = 0;
 let dragButton = 0;
 if ("PointerEvent" in window) {
 	  canvas.addEventListener("pointerdown", (e) => {
-	    e.preventDefault();
 	    const preferKeyboard = useMobileKeyboardForPointer(e.pointerType);
 	    focusTerminalInputTarget(preferKeyboard);
 	    const pointerId = panePointerIdFromEvent(e);
+	    const touchLikePointer = e.pointerType !== "mouse";
+	    if (touchLikePointer) {
+	      activeTouchPointerIds.add(pointerId);
+	    }
+	    const activeTouchPoints = touchLikePointer ? activeTouchPointerIds.size : 1;
 	    mouseButtonsDown = e.pointerType === "mouse" ? e.buttons : mouseButtonsDown;
 	    dragButton = e.pointerType === "mouse" ? e.button : dragButton;
-	    const dispatch = paneDispatchPointerDown(e);
-	    const paneAccepted = dispatch?.accepted === true;
-	    if (!paneAccepted && e.pointerType !== "mouse" && !preferKeyboard) {
+	    const dispatch = paneDispatchPointerDown(e, activeTouchPoints);
+	    const yieldedToNativeTouch = touchLikePointer && paneDispatchYieldedToNativeTouch(dispatch);
+	    const paneAccepted = !yieldedToNativeTouch && dispatch?.accepted === true;
+	    if (!yieldedToNativeTouch) {
+	      e.preventDefault();
+	    }
+	    if (yieldedToNativeTouch) {
+	      cancelKeyboardLongPressTracker();
+	      paneActivePointers.clear();
+	      paneTouchPointers.clear();
+	      touchGestureSuppressedByPane = false;
+	      touchState = TOUCH_IDLE;
+	      touchScrollAccX = 0;
+	      touchScrollAccY = 0;
+	      pinchStartDist = 0;
+	    } else if (!paneAccepted && e.pointerType !== "mouse" && !preferKeyboard) {
 	      // Smart keyboard mode should never steal pane drags/resizes; only allow
 	      // long-press keyboard activation when the pane layer rejects the pointer.
 	      startKeyboardLongPressTracker(pointerId, e.clientX, e.clientY);
@@ -1649,6 +2019,9 @@ if ("PointerEvent" in window) {
 	    const pointerId = panePointerIdFromEvent(e);
 	    paneActivePointers.delete(pointerId);
     paneTouchPointers.delete(pointerId);
+    if (e.pointerType !== "mouse") {
+      activeTouchPointerIds.delete(pointerId);
+    }
     if (e.pointerType === "mouse") {
       mouseButtonsDown = e.buttons;
     }
@@ -1696,6 +2069,9 @@ if ("PointerEvent" in window) {
 	    const hadMouseButtonsDown = e.pointerType === "mouse" && mouseButtonsDown !== 0;
 	    paneActivePointers.delete(pointerId);
     paneTouchPointers.delete(pointerId);
+    if (e.pointerType !== "mouse") {
+      activeTouchPointerIds.delete(pointerId);
+    }
     paneDispatchPointerCancel(e);
     syncPaneOverlayFromRunner();
     if (hadMouseButtonsDown) {
@@ -1717,6 +2093,9 @@ if ("PointerEvent" in window) {
 	    const pointerId = panePointerIdFromEvent(e);
 	    paneActivePointers.delete(pointerId);
 	    paneTouchPointers.delete(pointerId);
+	    if (e.pointerType !== "mouse") {
+	      activeTouchPointerIds.delete(pointerId);
+	    }
     paneDispatchLostPointerCapture(e);
     syncPaneOverlayFromRunner();
   });
@@ -1733,6 +2112,9 @@ if ("PointerEvent" in window) {
     }
     paneActivePointers.delete(pointerId);
     paneTouchPointers.delete(pointerId);
+    if (e.pointerType !== "mouse") {
+      activeTouchPointerIds.delete(pointerId);
+    }
     if (e.pointerType === "mouse") {
       if (hadMouseButtonsDown) {
         safeTermInput(domMouseToInput(e, "up"));
@@ -1787,9 +2169,10 @@ window.addEventListener("blur", () => {
     }
     syncPaneOverlayFromRunner();
   }
-  mouseButtonsDown = 0;
-  paneActivePointers.clear();
-  paneTouchPointers.clear();
+    mouseButtonsDown = 0;
+    paneActivePointers.clear();
+    paneTouchPointers.clear();
+    activeTouchPointerIds.clear();
 });
 	// Suppress context menu on canvas (right-click is forwarded to terminal).
 	canvas.addEventListener("contextmenu", (e) => { e.preventDefault(); });
@@ -1902,6 +2285,7 @@ document.addEventListener("visibilitychange", () => {
   if (document.hidden && typeof runner.paneVisibilityHidden === "function") {
     runner.paneVisibilityHidden();
     syncPaneOverlayFromRunner();
+    persistPaneWorkspace(undefined, { force: true });
   }
 });
 window.addEventListener("pagehide", () => {
@@ -1909,6 +2293,7 @@ window.addEventListener("pagehide", () => {
   if (typeof runner.paneVisibilityHidden === "function") {
     runner.paneVisibilityHidden();
     syncPaneOverlayFromRunner();
+    persistPaneWorkspace(undefined, { force: true });
   }
 });
 
@@ -1978,6 +2363,7 @@ function resetTransientPointerAndTouchState() {
   dragButton = 0;
   paneActivePointers.clear();
   paneTouchPointers.clear();
+  activeTouchPointerIds.clear();
   wheelAccX = 0;
   wheelAccY = 0;
   touchGestureSuppressedByPane = false;
@@ -2237,10 +2623,8 @@ canvas.addEventListener("touchcancel", (e) => {
 }, { passive: false });
 
 // ── Host frame loop ────────────────────────────────────────────────────
-let lastTs = 0;
-let totalFrames = 0;
-
 function frame(timestamp) {
+  if (errorDiv.classList.contains("visible")) return;
   try {
     const dt = lastTs === 0 ? 16.0 : timestamp - lastTs;
     lastTs = timestamp;
@@ -2251,43 +2635,8 @@ function frame(timestamp) {
     // 2. Advance deterministic clock.
     runner.advanceTime(dt);
 
-    // 3. Drain normalized inputs from FrankenTermWeb -> push to runner.
-    const inputs = term.drainEncodedInputs();
-    for (let i = 0; i < inputs.length; i++) {
-      runner.pushEncodedInput(inputs[i]);
-    }
-
-    // 4. Step the application.
-    const result = runner.step();
-
-    // 5. If a frame was rendered, apply patches and present.
-    if (result.rendered) {
-      const patches = takeRunnerPatches();
-      if (patches.cells.length > 0) {
-        term.applyPatchBatchFlat(patches.spans, patches.cells);
-      }
-      term.render();
-      totalFrames++;
-
-      if (LOG_JSONL) {
-        const stats = runner.patchStats();
-        jsonl({
-          event: "frame",
-          frame_idx: result.frame_idx,
-          events_processed: result.events_processed,
-          patch_hash: runner.patchHash(),
-          dirty_cells: stats ? stats.dirty_cells : 0,
-          patch_count: stats ? stats.patch_count : 0,
-          ts: Date.now(),
-        });
-      }
-    }
-
-    // 6. Drain logs.
-    const logs = runner.takeLogs();
-    for (let i = 0; i < logs.length; i++) {
-      jsonl({ event: "log", text: logs[i], frame_idx: result.frame_idx, ts: Date.now() });
-    }
+    // 3. Input already reached the bounded runner in its DOM callback.
+    const result = stepAndPresentRunner();
     syncPaneOverlayFromRunner();
 
     // 7. Continue or stop.
@@ -2295,7 +2644,9 @@ function frame(timestamp) {
       requestAnimationFrame(frame);
     } else {
       status.textContent = `${currentCols}\u00d7${currentRows} \u2014 stopped (${totalFrames} frames)`;
+      updateInputRejectionStatus();
       jsonl({ event: "quit", total_frames: totalFrames, ts: Date.now() });
+      retainPendingRunnerInput();
       runner.destroy();
     }
   } catch (e) {
@@ -2303,6 +2654,7 @@ function frame(timestamp) {
     jsonl({ event: "runtime_error", error: errorText, ts: Date.now() });
     showError(`Runtime error in frame loop:\n${errorText}`);
     try {
+      retainPendingRunnerInput(errorDiv);
       runner.destroy();
     } catch (_) {}
   }
