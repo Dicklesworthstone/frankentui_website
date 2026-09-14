@@ -132,12 +132,14 @@ if ! $DRY_RUN; then
   fi
 
   python3 - "$DEST" "$SRC" "$FRANKENTUI_GIT_SHA" <<'PY'
-import hashlib, json, pathlib, subprocess, sys
+import datetime, hashlib, json, pathlib, sys
 
 dest, src, git_sha = pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3]
 files = sorted(p for p in dest.rglob("*") if p.is_file() and p.name != "version.json")
 manifest = json.loads((dest / "pkg/manifest.json").read_text())
-stamp = subprocess.run(["date", "-Iseconds"], capture_output=True, text=True).stdout.strip()
+# Not `date -Iseconds`: -I is a GNU extension, and shelling out would record an
+# empty timestamp rather than failing if it is unsupported.
+stamp = datetime.datetime.now().astimezone().isoformat(timespec="seconds")
 
 payload = {
     "synced_at": stamp,

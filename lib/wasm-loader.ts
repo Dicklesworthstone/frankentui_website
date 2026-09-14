@@ -171,6 +171,8 @@ export async function loadFont(paths?: FrankenTerminalAssetPaths): Promise<void>
 let cachedModules: Promise<WasmModules> | null = null;
 let cachedPaths: FrankenTerminalAssetPaths | undefined;
 let cachedManifest: Promise<PackageManifest | null> | null = null;
+/** Which wasmBase `cachedManifest` was fetched from, so a different base refetches. */
+let cachedManifestBase: string | null = null;
 
 /**
  * Fetch the bundle's package manifest, or null if it is unavailable.
@@ -181,7 +183,8 @@ let cachedManifest: Promise<PackageManifest | null> | null = null;
  * redeploy is picked up automatically without a version constant to bump.
  */
 async function loadPackageManifest(wasmBase: string): Promise<PackageManifest | null> {
-  if (!cachedManifest) {
+  if (!cachedManifest || cachedManifestBase !== wasmBase) {
+    cachedManifestBase = wasmBase;
     cachedManifest = (async () => {
       try {
         const response = await fetch(`${wasmBase}manifest.json`, { cache: "no-store" });
@@ -219,6 +222,7 @@ export function resetWasmCache(): void {
   cachedModules = null;
   cachedPaths = undefined;
   cachedManifest = null;
+  cachedManifestBase = null;
 }
 
 async function doLoadWasmModules(paths?: FrankenTerminalAssetPaths): Promise<WasmModules> {

@@ -425,8 +425,19 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
 
           // Keyboard events
           if (captureKeys) {
+            // Ctrl/Cmd+V and Shift+Insert must reach the browser untouched:
+            // `paste` is a default action of this keydown, so preventDefault()
+            // below would stop the clipboard event from ever firing, and
+            // forwarding the chord would also type its letter into the widget.
+            const isClipboardPasteShortcut = (e: KeyboardEvent) => {
+              if (e.altKey) return false;
+              if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "v") return true;
+              return e.shiftKey && !e.ctrlKey && !e.metaKey && e.key === "Insert";
+            };
+
             canvas.addEventListener("keydown", (e) => {
               if (e.isComposing || e.key === "Process") return;
+              if (isClipboardPasteShortcut(e)) return;
 
               // Zoom: Ctrl/Cmd +/-/0
               const zoomMod = e.ctrlKey || e.metaKey;
@@ -455,6 +466,7 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
 
             canvas.addEventListener("keyup", (e) => {
               if (e.isComposing || e.key === "Process") return;
+              if (isClipboardPasteShortcut(e)) return;
               e.preventDefault();
               safeInput(domKeyToInput(e, "up"));
             }, { signal, capture: true });
@@ -496,7 +508,9 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
           // Paste
           canvas.addEventListener("paste", ((e: ClipboardEvent) => {
             const text = e.clipboardData?.getData("text");
-            if (text) safeInput({ kind: "paste", data: text });
+            if (!text) return;
+            e.preventDefault();
+            safeInput({ kind: "paste", data: text });
           }) as EventListener, { signal });
 
           // Focus/blur

@@ -1,10 +1,10 @@
 {
-  "synced_at": "2026-09-13T19:34:21-04:00",
-  "source_dir": "/private/tmp/claude-501/-Users-jemanuel-projects-frankentui/945addf3-d108-450e-8e00-64fc33f38eb4/scratchpad/wasmbuild8/site/",
-  "frankentui_git_sha": "485ad46b98f6faeb328a62bdaa7fcded25cae78d",
+  "synced_at": "2026-09-13T20:21:48-04:00",
+  "source_dir": "/private/tmp/claude-501/-Users-jemanuel-projects-frankentui/945addf3-d108-450e-8e00-64fc33f38eb4/scratchpad/wasmbuild10/site/",
+  "frankentui_git_sha": "ab9d05439f15d59f37b5add797aecc2f42e06e22",
   "toolchain": "nightly-2026-08-31",
   "renderer_revision": "88b402b8be9c70a4405895d4172e449940cab2fe",
-  "source_inputs_sha256": "1c0030e0389ac211b9ffcbb0c890cd83050d533cf3e5375d94caca5506020276",
+  "source_inputs_sha256": "c051656f2a4a0e69f525b581ba75203db1bbc9000158d185659fb24aba8ffc67",
   "runner_lock_sha256": "f167b7a13df94da7bf96a45e6102538db93ea37a066ded451351c3d6ce73b720",
   "file_count": 20,
   "files": {
@@ -37,8 +37,8 @@
       "sha256": "54bfc636093de7506c5785d9d08c7aa4b79bed672a2b5c9345d7b079d4f2cb00"
     },
     "index.html": {
-      "size_bytes": 101148,
-      "sha256": "7da4bb9c4aee79b51831a820b9da3882fcbce994edf5a59e00c2f9cea0449579"
+      "size_bytes": 101935,
+      "sha256": "c6ccb4b3a7570bf9363e40b90dac54777b963698b87b4b9f0fc8548c81728f6b"
     },
     "og.png": {
       "size_bytes": 87362,
@@ -73,8 +73,8 @@
       "sha256": "61ffbec203d592313bc6e83d52e29d84d36b300500c312a69072a13aced921a4"
     },
     "pkg/ftui_showcase_wasm_bg.wasm": {
-      "size_bytes": 4434826,
-      "sha256": "52fefeaecf4ad6e7cd10e9f04ee80470f51436402887dd6df5e38affc28f1e5f"
+      "size_bytes": 4435849,
+      "sha256": "7cc90f9ac228ecb6557a86418523d9b1f0371b055cc1184a6658f741d4719602"
     },
     "pkg/ftui_showcase_wasm_bg.wasm.d.ts": {
       "size_bytes": 5067,
@@ -82,7 +82,7 @@
     },
     "pkg/manifest.json": {
       "size_bytes": 983,
-      "sha256": "100b0ff006cff48e017512de88d076f29a2c3c2d1f079c48de5b15df45e4f817"
+      "sha256": "25a94e4fc3552ef63cef633a237cfab2f9c1b1cb5268ae40e0924b89427f21ee"
     },
     "pkg/package.json": {
       "size_bytes": 557,
