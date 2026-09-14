@@ -476,19 +476,80 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
           let mouseButtonsDown = 0;
           let dragButton = 0;
 
+          // Copy out: the widget captures the mouse, so Shift+drag is reserved
+          // for selecting text (the usual terminal convention) and the renderer
+          // extracts it for the clipboard.
+          let selectionAnchor: number | null = null;
+          let selectionActive = false;
+          let hasSelection = false;
+
+          const cellOffsetFromEvent = (e: MouseEvent) => {
+            const rect = canvas!.getBoundingClientRect();
+            const cols = Math.max(1, currentCols);
+            const rows = Math.max(1, currentRows);
+            const cw = rect.width / cols;
+            const ch = rect.height / rows;
+            const x = Math.max(0, Math.min(Math.floor((e.clientX - rect.left) / cw), cols - 1));
+            const y = Math.max(0, Math.min(Math.floor((e.clientY - rect.top) / ch), rows - 1));
+            return y * cols + x;
+          };
+          const clearSelection = () => {
+            selectionAnchor = null;
+            selectionActive = false;
+            if (!hasSelection) return;
+            hasSelection = false;
+            try { termRef.current?.clearSelection?.(); } catch { /* torn down */ }
+          };
+          const updateSelection = (e: MouseEvent) => {
+            if (selectionAnchor === null) return;
+            const head = cellOffsetFromEvent(e);
+            try {
+              termRef.current?.setSelectionRange?.(
+                Math.min(selectionAnchor, head),
+                Math.max(selectionAnchor, head) + 1,
+              );
+              hasSelection = true;
+            } catch { hasSelection = false; }
+          };
+
+          canvas.addEventListener("copy", ((e: ClipboardEvent) => {
+            let text: string | undefined;
+            try { text = termRef.current?.copySelection?.(); } catch { text = undefined; }
+            if (!text) return;
+            e.preventDefault();
+            e.clipboardData?.setData("text/plain", text);
+          }) as EventListener, { signal });
+
           canvas.addEventListener("mousedown", (e) => {
             e.preventDefault();
             canvas.focus();
+            if (e.shiftKey) {
+              selectionAnchor = cellOffsetFromEvent(e);
+              selectionActive = true;
+              updateSelection(e);
+              return;
+            }
+            clearSelection();
             mouseButtonsDown = e.buttons;
             dragButton = e.button;
             safeInput(domMouseToInput(e, "down"));
           }, { signal });
           canvas.addEventListener("mouseup", (e) => {
             e.preventDefault();
+            if (selectionActive) {
+              updateSelection(e);
+              selectionActive = false;
+              return;
+            }
             mouseButtonsDown = e.buttons;
             safeInput(domMouseToInput(e, "up"));
           }, { signal });
           canvas.addEventListener("mousemove", (e) => {
+            if (selectionActive) {
+              e.preventDefault();
+              updateSelection(e);
+              return;
+            }
             mouseButtonsDown = e.buttons;
             if (mouseButtonsDown) {
               const ev = domMouseToInput(e, "drag");

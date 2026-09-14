@@ -1,11 +1,11 @@
 {
-  "synced_at": "2026-09-13T20:21:48-04:00",
-  "source_dir": "/private/tmp/claude-501/-Users-jemanuel-projects-frankentui/945addf3-d108-450e-8e00-64fc33f38eb4/scratchpad/wasmbuild10/site/",
-  "frankentui_git_sha": "ab9d05439f15d59f37b5add797aecc2f42e06e22",
+  "synced_at": "2026-09-13T22:33:47-04:00",
+  "source_dir": "/private/tmp/claude-501/-Users-jemanuel-projects-frankentui/945addf3-d108-450e-8e00-64fc33f38eb4/scratchpad/wasmbuild14/site/",
+  "frankentui_git_sha": "2d09e22e8b0b8603a83614e559f59b4851a4f9b9",
   "toolchain": "nightly-2026-08-31",
   "renderer_revision": "88b402b8be9c70a4405895d4172e449940cab2fe",
-  "source_inputs_sha256": "c051656f2a4a0e69f525b581ba75203db1bbc9000158d185659fb24aba8ffc67",
-  "runner_lock_sha256": "f167b7a13df94da7bf96a45e6102538db93ea37a066ded451351c3d6ce73b720",
+  "source_inputs_sha256": "7da3f66d16507a0d6af1b131fe268cbc5ce36e623435798735a15a634f53609e",
+  "runner_lock_sha256": "1ab8fae1cc2d856e397c8624ea63bdfb8699964337f1773e7cde730a4d27844e",
   "file_count": 20,
   "files": {
     "LICENSE": {
@@ -37,8 +37,8 @@
       "sha256": "54bfc636093de7506c5785d9d08c7aa4b79bed672a2b5c9345d7b079d4f2cb00"
     },
     "index.html": {
-      "size_bytes": 101935,
-      "sha256": "c6ccb4b3a7570bf9363e40b90dac54777b963698b87b4b9f0fc8548c81728f6b"
+      "size_bytes": 107033,
+      "sha256": "efac603a654ad7e6e566a5f0c958608e5178b92a6a64edcf55bbdae2ad12cb3a"
     },
     "og.png": {
       "size_bytes": 87362,
@@ -73,8 +73,8 @@
       "sha256": "61ffbec203d592313bc6e83d52e29d84d36b300500c312a69072a13aced921a4"
     },
     "pkg/ftui_showcase_wasm_bg.wasm": {
-      "size_bytes": 4435849,
-      "sha256": "7cc90f9ac228ecb6557a86418523d9b1f0371b055cc1184a6658f741d4719602"
+      "size_bytes": 4434947,
+      "sha256": "485dbb8c1282295102f6ad6605973b3ed4587de497582af23e641daa6d79ea1d"
     },
     "pkg/ftui_showcase_wasm_bg.wasm.d.ts": {
       "size_bytes": 5067,
@@ -82,7 +82,7 @@
     },
     "pkg/manifest.json": {
       "size_bytes": 983,
-      "sha256": "25a94e4fc3552ef63cef633a237cfab2f9c1b1cb5268ae40e0924b89427f21ee"
+      "sha256": "627126760eeb7ff3b05fd78a14310c246f52f00f8e0c286f212d9bd14f437ff9"
     },
     "pkg/package.json": {
       "size_bytes": 557,

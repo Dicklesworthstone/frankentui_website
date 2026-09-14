@@ -40,6 +40,11 @@ export interface FrankenTermWebInstance {
   };
   input(event: unknown): void;
   drainEncodedInputs(): string[];
+  /** Half-open [start, end) range of cell offsets; negative values clear it. */
+  setSelectionRange?(start: number, end: number): void;
+  clearSelection?(): void;
+  /** Selected text, or undefined when the selection is empty. */
+  copySelection?(): string | undefined;
   applyPatchBatchFlat(spans: Uint32Array, cells: Uint32Array): void;
   render(): void;
   resize(cols: number, rows: number): void;
