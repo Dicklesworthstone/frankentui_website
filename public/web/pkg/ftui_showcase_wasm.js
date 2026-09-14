@@ -71,6 +71,18 @@ export class ShowcaseRunner {
         return BigInt.asUintN(64, ret);
     }
     /**
+     * Select an available screen by stable slug or one-based decimal position.
+     * Returns false for unknown slugs, malformed positions, or unavailable screens.
+     * @param {string} selector
+     * @returns {boolean}
+     */
+    gotoScreenSelector(selector) {
+        const ptr0 = passStringToWasm0(selector, wasm.__wbindgen_export2, wasm.__wbindgen_export3);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.showcaserunner_gotoScreenSelector(this.__wbg_ptr, ptr0, len0);
+        return ret !== 0;
+    }
+    /**
      * Select a screen by its zero-based index in the screen registry.
      *
      * Hosts previously deep-linked by synthesizing digit or Tab key presses,
@@ -171,7 +183,7 @@ export class ShowcaseRunner {
             return getStringFromWasm0(ptr1, len1);
         } finally {
             wasm.__wbindgen_add_to_stack_pointer(16);
-            wasm.__wbindgen_export2(deferred2_0, deferred2_1, 1);
+            wasm.__wbindgen_export4(deferred2_0, deferred2_1, 1);
         }
     }
     /**
@@ -192,7 +204,7 @@ export class ShowcaseRunner {
             return getStringFromWasm0(r0, r1);
         } finally {
             wasm.__wbindgen_add_to_stack_pointer(16);
-            wasm.__wbindgen_export2(deferred1_0, deferred1_1, 1);
+            wasm.__wbindgen_export4(deferred1_0, deferred1_1, 1);
         }
     }
     /**
@@ -208,7 +220,7 @@ export class ShowcaseRunner {
             let v1;
             if (r0 !== 0) {
                 v1 = getStringFromWasm0(r0, r1);
-                wasm.__wbindgen_export2(r0, r1 * 1, 1);
+                wasm.__wbindgen_export4(r0, r1 * 1, 1);
             }
             return v1;
         } finally {
@@ -221,7 +233,7 @@ export class ShowcaseRunner {
      * @returns {boolean}
      */
     paneImportWorkspaceSnapshot(json) {
-        const ptr0 = passStringToWasm0(json, wasm.__wbindgen_export3, wasm.__wbindgen_export4);
+        const ptr0 = passStringToWasm0(json, wasm.__wbindgen_export2, wasm.__wbindgen_export3);
         const len0 = WASM_VECTOR_LEN;
         const ret = wasm.showcaserunner_paneImportWorkspaceSnapshot(this.__wbg_ptr, ptr0, len0);
         return ret !== 0;
@@ -493,7 +505,7 @@ export class ShowcaseRunner {
             let v1;
             if (r0 !== 0) {
                 v1 = getStringFromWasm0(r0, r1);
-                wasm.__wbindgen_export2(r0, r1 * 1, 1);
+                wasm.__wbindgen_export4(r0, r1 * 1, 1);
             }
             return v1;
         } finally {
@@ -525,7 +537,7 @@ export class ShowcaseRunner {
      * @returns {boolean}
      */
     pushEncodedInput(json) {
-        const ptr0 = passStringToWasm0(json, wasm.__wbindgen_export3, wasm.__wbindgen_export4);
+        const ptr0 = passStringToWasm0(json, wasm.__wbindgen_export2, wasm.__wbindgen_export3);
         const len0 = WASM_VECTOR_LEN;
         const ret = wasm.showcaserunner_pushEncodedInput(this.__wbg_ptr, ptr0, len0);
         return ret !== 0;
@@ -551,7 +563,7 @@ export class ShowcaseRunner {
      * @returns {boolean}
      */
     setEvidenceJsonl(text) {
-        const ptr0 = passStringToWasm0(text, wasm.__wbindgen_export3, wasm.__wbindgen_export4);
+        const ptr0 = passStringToWasm0(text, wasm.__wbindgen_export2, wasm.__wbindgen_export3);
         const len0 = WASM_VECTOR_LEN;
         const ret = wasm.showcaserunner_setEvidenceJsonl(this.__wbg_ptr, ptr0, len0);
         return ret !== 0;
@@ -565,7 +577,7 @@ export class ShowcaseRunner {
      * @returns {boolean}
      */
     setShakespeareText(text) {
-        const ptr0 = passStringToWasm0(text, wasm.__wbindgen_export3, wasm.__wbindgen_export4);
+        const ptr0 = passStringToWasm0(text, wasm.__wbindgen_export2, wasm.__wbindgen_export3);
         const len0 = WASM_VECTOR_LEN;
         const ret = wasm.showcaserunner_setShakespeareText(this.__wbg_ptr, ptr0, len0);
         return ret !== 0;
@@ -579,7 +591,7 @@ export class ShowcaseRunner {
      * @returns {boolean}
      */
     setSqliteSource(text) {
-        const ptr0 = passStringToWasm0(text, wasm.__wbindgen_export3, wasm.__wbindgen_export4);
+        const ptr0 = passStringToWasm0(text, wasm.__wbindgen_export2, wasm.__wbindgen_export3);
         const len0 = WASM_VECTOR_LEN;
         const ret = wasm.showcaserunner_setSqliteSource(this.__wbg_ptr, ptr0, len0);
         return ret !== 0;
@@ -640,7 +652,7 @@ export class ShowcaseRunner {
             return getStringFromWasm0(r0, r1);
         } finally {
             wasm.__wbindgen_add_to_stack_pointer(16);
-            wasm.__wbindgen_export2(deferred1_0, deferred1_1, 1);
+            wasm.__wbindgen_export4(deferred1_0, deferred1_1, 1);
         }
     }
 }

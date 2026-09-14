@@ -39,6 +39,11 @@ export class ShowcaseRunner {
      */
     frameIdx(): bigint;
     /**
+     * Select an available screen by stable slug or one-based decimal position.
+     * Returns false for unknown slugs, malformed positions, or unavailable screens.
+     */
+    gotoScreenSelector(selector: string): boolean;
+    /**
      * Select a screen by its zero-based index in the screen registry.
      *
      * Hosts previously deep-linked by synthesizing digit or Tab key presses,
@@ -299,6 +304,7 @@ export interface InitOutput {
     readonly showcaserunner_flatSpansPtr: (a: number) => number;
     readonly showcaserunner_frameIdx: (a: number) => bigint;
     readonly showcaserunner_gotoScreen: (a: number, b: number) => number;
+    readonly showcaserunner_gotoScreenSelector: (a: number, b: number, c: number) => number;
     readonly showcaserunner_init: (a: number) => void;
     readonly showcaserunner_isRunning: (a: number) => number;
     readonly showcaserunner_new: (a: number, b: number) => number;
@@ -348,10 +354,10 @@ export interface InitOutput {
     readonly showcaserunner_takePendingInputTrace: (a: number, b: number) => void;
     readonly wasm_start: () => void;
     readonly __wbindgen_export: (a: number) => void;
+    readonly __wbindgen_export2: (a: number, b: number) => number;
+    readonly __wbindgen_export3: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
-    readonly __wbindgen_export2: (a: number, b: number, c: number) => void;
-    readonly __wbindgen_export3: (a: number, b: number) => number;
-    readonly __wbindgen_export4: (a: number, b: number, c: number, d: number) => number;
+    readonly __wbindgen_export4: (a: number, b: number, c: number) => void;
     readonly __wbindgen_start: () => void;
 }
 
