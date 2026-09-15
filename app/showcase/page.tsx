@@ -148,6 +148,9 @@ export default function ShowcasePage() {
         </p>
         <Link
           href="/web"
+          // Static export under public/, not an app route: the prefetch can
+          // only ever 404.
+          prefetch={false}
           className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-green-500 text-black font-black text-lg hover:bg-white transition-all shadow-[0_0_30px_rgba(34,197,94,0.2)] active:scale-95"
         >
           <Play className="h-5 w-5" />
