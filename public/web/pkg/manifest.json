@@ -7,7 +7,7 @@
     "lock_sha256": "86bc2e58e019d10c029c1081a271db4eb71378ac6e525314a32ce522ddc47ebb",
     "license": "MIT License (with OpenAI/Anthropic Rider)"
   },
-  "source_inputs_sha256": "daaa4748d935fe358be0a7bc9001643b25c81f343baa9537bd1599d9900555b5",
+  "source_inputs_sha256": "7b3f533513b142df14507e71aab67b0b1ab1e52b95aab4bb07dac98905e4a3aa",
   "runner_lock_sha256": "1ab8fae1cc2d856e397c8624ea63bdfb8699964337f1773e7cde730a4d27844e",
   "files": {
     "FrankenTerm.js": "28c8d76037198d9aae7a4268d8819deb94c91e4e5f6965190e32995e45b1883e",
