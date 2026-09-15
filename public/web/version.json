@@ -1,10 +1,10 @@
 {
-  "synced_at": "2026-09-14T21:12:14-04:00",
-  "source_dir": "/private/tmp/claude-501/-Users-jemanuel-projects-frankentui/945addf3-d108-450e-8e00-64fc33f38eb4/scratchpad/wasmbuild25/site/",
-  "frankentui_git_sha": "d766093333e4c41fefa47788434a85fbd21a4d68",
+  "synced_at": "2026-09-14T22:02:49-04:00",
+  "source_dir": "/private/tmp/claude-501/-Users-jemanuel-projects-frankentui/945addf3-d108-450e-8e00-64fc33f38eb4/scratchpad/wasmbuild26/site/",
+  "frankentui_git_sha": "5adb2b6165b2824a063dba110e2feebdff38fb6e",
   "toolchain": "nightly-2026-08-31",
   "renderer_revision": "88b402b8be9c70a4405895d4172e449940cab2fe",
-  "source_inputs_sha256": "54c2458b62f6dfe88289d9dd718df97d5f7c2261aae476c6bb5fc51cf772d8d2",
+  "source_inputs_sha256": "a2d8251b07e0e2acbb7f6369c84d107e294abab0fdba13bd6b2bc2b7258b2016",
   "runner_lock_sha256": "1ab8fae1cc2d856e397c8624ea63bdfb8699964337f1773e7cde730a4d27844e",
   "file_count": 20,
   "files": {
@@ -73,8 +73,8 @@
       "sha256": "2531d04f1e8cbafe63b2038d6e874b31749dff2e398894a1d4b10b77b1e8a08b"
     },
     "pkg/ftui_showcase_wasm_bg.wasm": {
-      "size_bytes": 4454756,
-      "sha256": "ec5d1d812f433adc5d8846e86164afc0952774690535ec252dc809dbcf6aaf89"
+      "size_bytes": 4456087,
+      "sha256": "d222ba3b18d35963df6c012676589106b43a991c08835c881608f59691d7e932"
     },
     "pkg/ftui_showcase_wasm_bg.wasm.d.ts": {
       "size_bytes": 5224,
@@ -82,7 +82,7 @@
     },
     "pkg/manifest.json": {
       "size_bytes": 983,
-      "sha256": "b3085cf13ff2e4e94f8a707c5303a35569d037c67842de0602a5df16f67131f8"
+      "sha256": "183778732a9c5b1d1f71597d8496c38eb9649e3fe4eb41a0ee45b82f9f1172b4"
     },
     "pkg/package.json": {
       "size_bytes": 557,
