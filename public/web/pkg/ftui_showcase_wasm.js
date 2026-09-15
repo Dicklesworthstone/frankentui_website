@@ -554,6 +554,14 @@ export class ShowcaseRunner {
         return ret !== 0;
     }
     /**
+     * Ordered stable slugs for screens enabled in this compiled module.
+     * @returns {Array<any>}
+     */
+    screenSlugs() {
+        const ret = wasm.showcaserunner_screenSlugs(this.__wbg_ptr);
+        return takeObject(ret);
+    }
+    /**
      * Provide the evidence JSONL for the `ExplainabilityCockpit` screen.
      *
      * Native builds poll this log from a local path; a browser has no such

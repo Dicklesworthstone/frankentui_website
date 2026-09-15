@@ -238,6 +238,10 @@ export class ShowcaseRunner {
      */
     resize(cols: number, rows: number): boolean;
     /**
+     * Ordered stable slugs for screens enabled in this compiled module.
+     */
+    screenSlugs(): Array<any>;
+    /**
      * Provide the evidence JSONL for the `ExplainabilityCockpit` screen.
      *
      * Native builds poll this log from a local path; a browser has no such
@@ -344,6 +348,7 @@ export interface InitOutput {
     readonly showcaserunner_prepareFlatPatches: (a: number) => void;
     readonly showcaserunner_pushEncodedInput: (a: number, b: number, c: number) => number;
     readonly showcaserunner_resize: (a: number, b: number, c: number) => number;
+    readonly showcaserunner_screenSlugs: (a: number) => number;
     readonly showcaserunner_setEvidenceJsonl: (a: number, b: number, c: number) => number;
     readonly showcaserunner_setShakespeareText: (a: number, b: number, c: number) => number;
     readonly showcaserunner_setSqliteSource: (a: number, b: number, c: number) => number;

@@ -50,6 +50,7 @@ export const showcaserunner_patchStats: (a: number) => number;
 export const showcaserunner_prepareFlatPatches: (a: number) => void;
 export const showcaserunner_pushEncodedInput: (a: number, b: number, c: number) => number;
 export const showcaserunner_resize: (a: number, b: number, c: number) => number;
+export const showcaserunner_screenSlugs: (a: number) => number;
 export const showcaserunner_setEvidenceJsonl: (a: number, b: number, c: number) => number;
 export const showcaserunner_setShakespeareText: (a: number, b: number, c: number) => number;
 export const showcaserunner_setSqliteSource: (a: number, b: number, c: number) => number;
