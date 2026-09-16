@@ -19,6 +19,14 @@ export class ShowcaseRunner {
      */
     destroy(): void;
     /**
+     * True when terminal cell `(x, y)` is on something a pointer can drag.
+     *
+     * Out-of-range coordinates are not drag handles rather than an error: a
+     * host asks this on every touch, including ones off the edge of a stale
+     * canvas rect.
+     */
+    dragHandleAt(x: number, y: number): boolean;
+    /**
      * Length (in `u32` words) of the prepared flat cell payload.
      */
     flatCellsLen(): number;
@@ -291,6 +299,15 @@ export class ShowcaseRunner {
      * This is an input fragment, not a complete replay trace or encoded DOM input.
      */
     takePendingInputTrace(): string;
+    /**
+     * The current screen's keys as JSON: `[{label, action, key, mods}]`.
+     *
+     * `key` and `mods` are what `pushEncodedInput` expects back in a key
+     * record, so a host can turn each entry straight into a button. The list
+     * tracks the screen - and its mode, and whether the tour is running - so
+     * poll it rather than reading it once.
+     */
+    touchActionsJson(): string;
 }
 
 export function wasm_start(): void;
@@ -302,6 +319,7 @@ export interface InitOutput {
     readonly __wbg_showcaserunner_free: (a: number, b: number) => void;
     readonly showcaserunner_advanceTime: (a: number, b: number) => void;
     readonly showcaserunner_destroy: (a: number) => void;
+    readonly showcaserunner_dragHandleAt: (a: number, b: number, c: number) => number;
     readonly showcaserunner_flatCellsLen: (a: number) => number;
     readonly showcaserunner_flatCellsPtr: (a: number) => number;
     readonly showcaserunner_flatSpansLen: (a: number) => number;
@@ -357,6 +375,7 @@ export interface InitOutput {
     readonly showcaserunner_takeFlatPatches: (a: number) => number;
     readonly showcaserunner_takeLogs: (a: number) => number;
     readonly showcaserunner_takePendingInputTrace: (a: number, b: number) => void;
+    readonly showcaserunner_touchActionsJson: (a: number, b: number) => void;
     readonly wasm_start: () => void;
     readonly __wbindgen_export: (a: number) => void;
     readonly __wbindgen_export2: (a: number, b: number) => number;

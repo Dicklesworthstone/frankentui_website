@@ -31,6 +31,20 @@ export class ShowcaseRunner {
         wasm.showcaserunner_destroy(this.__wbg_ptr);
     }
     /**
+     * True when terminal cell `(x, y)` is on something a pointer can drag.
+     *
+     * Out-of-range coordinates are not drag handles rather than an error: a
+     * host asks this on every touch, including ones off the edge of a stale
+     * canvas rect.
+     * @param {number} x
+     * @param {number} y
+     * @returns {boolean}
+     */
+    dragHandleAt(x, y) {
+        const ret = wasm.showcaserunner_dragHandleAt(this.__wbg_ptr, x, y);
+        return ret !== 0;
+    }
+    /**
      * Length (in `u32` words) of the prepared flat cell payload.
      * @returns {number}
      */
@@ -653,6 +667,31 @@ export class ShowcaseRunner {
         try {
             const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
             wasm.showcaserunner_takePendingInputTrace(retptr, this.__wbg_ptr);
+            var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+            var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+            deferred1_0 = r0;
+            deferred1_1 = r1;
+            return getStringFromWasm0(r0, r1);
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+            wasm.__wbindgen_export4(deferred1_0, deferred1_1, 1);
+        }
+    }
+    /**
+     * The current screen's keys as JSON: `[{label, action, key, mods}]`.
+     *
+     * `key` and `mods` are what `pushEncodedInput` expects back in a key
+     * record, so a host can turn each entry straight into a button. The list
+     * tracks the screen - and its mode, and whether the tour is running - so
+     * poll it rather than reading it once.
+     * @returns {string}
+     */
+    touchActionsJson() {
+        let deferred1_0;
+        let deferred1_1;
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.showcaserunner_touchActionsJson(retptr, this.__wbg_ptr);
             var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
             var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
             deferred1_0 = r0;
