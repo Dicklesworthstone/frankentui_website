@@ -26,6 +26,13 @@ export default defineConfig({
 
   projects: [
     {
+      // If `browserType.launch` reports the executable is missing and
+      // `playwright install chromium` never finishes: on some machines the
+      // download completes (170MB zip) and extraction then stalls mid-write -
+      // open write handle, no bytes landing, ~0% CPU - leaving a skeleton
+      // browser directory. It is not a lock and not slowness; waiting does not
+      // help, and bunx and npx behave identically. To run the suite anyway,
+      // add `channel: "chrome"` here and use the installed Google Chrome.
       name: "chromium",
       use: {
         ...devices["Desktop Chrome"],
