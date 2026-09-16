@@ -9,6 +9,7 @@ import { navItems, siteConfig } from "@/lib/content";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 import { cn } from "@/lib/utils";
 import { FrankenBolt, NeuralPulse } from "./franken-elements";
+import NavLink from "./nav-link";
 import { useSite } from "@/lib/site-state";
 import { Magnetic } from "./motion-wrapper";
 
@@ -105,7 +106,7 @@ export default function SiteHeader() {
               {navItems.map((item) => {
                 const active = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
                 return (
-                  <Link
+                  <NavLink
                     key={item.href}
                     href={item.href}
                     className={cn(
@@ -115,12 +116,12 @@ export default function SiteHeader() {
                   >
                     {item.label}
                     {active && (
-                      <motion.div 
+                      <motion.div
                         layoutId="nav-underline"
-                        className="absolute -bottom-1 left-4 right-4 h-px bg-green-500 shadow-[0_0_8px_#22c55e]" 
+                        className="absolute -bottom-1 left-4 right-4 h-px bg-green-500 shadow-[0_0_8px_#22c55e]"
                       />
                     )}
-                  </Link>
+                  </NavLink>
                 );
               })}
             </nav>
@@ -161,7 +162,7 @@ export default function SiteHeader() {
               "Get Started": "Start",
             };
             return (
-              <Link
+              <NavLink
                 key={item.href}
                 href={item.href}
                 className={cn(
@@ -171,7 +172,7 @@ export default function SiteHeader() {
               >
                 <Icon className="h-5 w-5 mb-1" />
                 <span className="text-[7px] font-black uppercase tracking-tighter">{shortLabel[item.label] ?? item.label.split(' ')[0]}</span>
-              </Link>
+              </NavLink>
             );
           })}
           <button 
@@ -210,7 +211,7 @@ export default function SiteHeader() {
 
               <nav className="flex flex-col gap-6">
                 {navItems.map((item) => (
-                  <Link
+                  <NavLink
                     key={item.href}
                     href={item.href}
                     onClick={() => setOpen(false)}
@@ -220,7 +221,7 @@ export default function SiteHeader() {
                       {item.label}
                     </span>
                     <ChevronRight className="h-5 w-5 text-slate-800" />
-                  </Link>
+                  </NavLink>
                 ))}
               </nav>
 

@@ -6,6 +6,7 @@ import { siteConfig, navItems } from "@/lib/content";
 import { FrankenContainer } from "./franken-elements";
 import { Magnetic } from "./motion-wrapper";
 import FrankenGlitch from "./franken-glitch";
+import NavLink from "./nav-link";
 import { motion, useReducedMotion } from "framer-motion";
 
 const socialLinks = [
@@ -79,9 +80,9 @@ export default function SiteFooter() {
                 <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20">Library</h4>
                 <nav className="flex flex-col gap-4">
                   {navItems.slice(0, 4).map((item) => (
-                    <Link key={item.href} href={item.href} className="text-sm font-bold text-slate-500 hover:text-green-400 transition-colors uppercase tracking-widest hover:translate-x-1 duration-200">
+                    <NavLink key={item.href} href={item.href} className="text-sm font-bold text-slate-500 hover:text-green-400 transition-colors uppercase tracking-widest hover:translate-x-1 duration-200">
                       {item.label}
-                    </Link>
+                    </NavLink>
                   ))}
                 </nav>
               </div>
@@ -89,9 +90,9 @@ export default function SiteFooter() {
                 <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20">Resources</h4>
                 <nav className="flex flex-col gap-4">
                   {navItems.slice(4).map((item) => (
-                    <Link key={item.href} href={item.href} className="text-sm font-bold text-slate-500 hover:text-green-400 transition-colors uppercase tracking-widest hover:translate-x-1 duration-200">
+                    <NavLink key={item.href} href={item.href} className="text-sm font-bold text-slate-500 hover:text-green-400 transition-colors uppercase tracking-widest hover:translate-x-1 duration-200">
                       {item.label}
-                    </Link>
+                    </NavLink>
                   ))}
                 </nav>
               </div>

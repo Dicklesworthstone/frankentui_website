@@ -8,7 +8,7 @@ import { Terminal as TerminalIcon, X, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NeuralPulse } from "./franken-elements";
 import FrankenGlitch from "./franken-glitch";
-import { navItems } from "@/lib/content";
+import { navItems, isNonRoutePath } from "@/lib/content";
 
 interface CommandResult {
   command: string;
@@ -73,7 +73,13 @@ export default function SiteTerminal() {
           if (matchedItem || targetSlug === "home") {
             const target = targetSlug === "home" ? "/" : matchedItem!.href;
             output = `INITIATING_NEURAL_TRANSFER to ${target}...`;
-            router.push(target);
+            if (isNonRoutePath(target)) {
+              // Served from public/, so the router does not own it: pushing
+              // would ask for an RSC payload that cannot exist first.
+              window.location.href = target;
+            } else {
+              router.push(target);
+            }
             setTimeout(() => setTerminalOpen(false), 600);
           } else {
             output = (

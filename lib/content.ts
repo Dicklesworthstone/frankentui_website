@@ -12,6 +12,21 @@ export const siteConfig = {
   },
 };
 
+/**
+ * Paths served straight out of `public/` rather than by the router.
+ *
+ * `<Link>` to one of these asks for an RSC payload that cannot exist and takes
+ * a 404 for it - on every page, when the path is in the nav - and
+ * `prefetch={false}` only moves that request from the viewport to hover.
+ * Anything listed here is rendered as a plain anchor instead.
+ */
+export const nonRoutePaths = ["/web"];
+
+/** True when `href` is served from `public/` and must not go through the router. */
+export function isNonRoutePath(href: string): boolean {
+  return nonRoutePaths.some((path) => href === path || href.startsWith(`${path}/`));
+}
+
 // Navigation items
 export const navItems = [
   { href: "/", label: "Home" },
