@@ -93,19 +93,20 @@ export default function HomePage() {
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
               <Magnetic strength={0.1}>
-                <Link
+                {/* A plain anchor, not <Link>: /web is a static export under
+                    public/, not an app route. The router would ask for an RSC
+                    payload that cannot exist and take a 404 for it, and
+                    prefetch={false} only defers that to hover rather than
+                    calling it off. Clicking it is a document load either way. */}
+                <a
                   href="/web"
-                  // /web is a static export under public/, not an app route,
-                  // so the router prefetch asks for an RSC payload that does
-                  // not exist and takes a 404 on every page view.
-                  prefetch={false}
                   data-magnetic="true"
                   className="relative px-10 py-5 rounded-2xl bg-green-500 text-black font-black text-lg hover:bg-white transition-all flex items-center justify-center gap-3 shadow-[0_0_40px_rgba(34,197,94,0.3)] active:scale-95"
                 >
                   <span className="absolute inset-0 rounded-2xl animate-pulse bg-green-400/20" />
                   <Play className="relative h-5 w-5" />
                   <span className="relative">TRY LIVE DEMO</span>
-                </Link>
+                </a>
               </Magnetic>
               <Magnetic strength={0.1}>
                 <Link
@@ -393,17 +394,16 @@ export default function HomePage() {
 
         {/* CTA */}
         <div className="mt-10 flex justify-center">
-          <Link
+          {/* Plain anchor: /web is a static export under public/, and the
+              router's prefetch can only ever 404 on it. */}
+          <a
             href="/web"
-            // Static export under public/, not an app route: the prefetch can
-            // only ever 404.
-            prefetch={false}
             className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-green-500 text-black font-black text-lg hover:bg-white transition-all shadow-[0_0_30px_rgba(34,197,94,0.2)] active:scale-95"
           >
             <Play className="h-5 w-5" />
             Try the Live Demo
             <ArrowRight className="h-5 w-5" />
-          </Link>
+          </a>
         </div>
       </SectionShell>
 

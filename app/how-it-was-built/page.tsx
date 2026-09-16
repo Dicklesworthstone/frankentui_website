@@ -399,17 +399,16 @@ export default function HowItWasBuiltPage() {
         <p className="text-lg text-slate-400 mb-6">
           See the result — try the live demo.
         </p>
-        <Link
+        {/* Plain anchor: /web is a static export under public/, and the
+            router's prefetch can only ever 404 on it. */}
+        <a
           href="/web"
-          // Static export under public/, not an app route: the prefetch can
-          // only ever 404.
-          prefetch={false}
           className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-green-500 text-black font-black text-lg hover:bg-white transition-all shadow-[0_0_30px_rgba(34,197,94,0.2)] active:scale-95"
         >
           <Play className="h-5 w-5" />
           Try the Live Demo
           <ArrowRight className="h-5 w-5" />
-        </Link>
+        </a>
         <p className="mt-3 text-xs text-slate-600">Requires Chrome or Edge (WebGPU)</p>
       </div>
 
