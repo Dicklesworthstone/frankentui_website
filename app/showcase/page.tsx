@@ -42,7 +42,7 @@ function LazyTerminalSection() {
         id="interactive-demo"
         icon="terminal"
         title="Interactive Demo"
-        kicker="Don't just look at screenshots — try FrankenTUI live. Use Tab to switch screens, number keys for direct navigation, and arrow keys to scroll."
+        kicker="Don't just look at screenshots — try FrankenTUI live. Use Tab to switch screens, number keys for direct navigation, and arrow keys to scroll. On a touch screen, swipe in from either edge to change screens and use the button bar for everything else."
       >
         <div className="mx-auto max-w-5xl">
           {visible ? (
