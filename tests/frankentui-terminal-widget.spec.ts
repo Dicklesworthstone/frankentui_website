@@ -714,51 +714,50 @@ test.describe("E. Coexistence", () => {
    F. NON-WEBGPU BROWSER FALLBACK
    ═══════════════════════════════════════════════════════════════════ */
 
-test.describe("F. Non-WebGPU fallback", () => {
+test.describe("F. Browsers without WebGPU", () => {
   test.skip(
     ({ browserName }) => browserName === "chromium",
-    "Fallback tests for browsers without WebGPU"
+    "These are about the browsers that have no WebGPU"
   );
 
-  test("F1: Widget shows fallback in Firefox/WebKit", async ({ page }) => {
-    test.setTimeout(30_000);
+  test("F1: the widget runs — it does not degrade to a fallback", async ({ page }) => {
+    // This used to assert the opposite: that Firefox and WebKit get a
+    // "not available in your browser" card. The widget dropped its WebGPU
+    // gate deliberately (see components/franken-terminal.tsx) because the
+    // renderer falls back to WebGL/Canvas2D on its own, so those browsers now
+    // get the real thing. Measured on the shipped bundle: with WebGPU disabled
+    // the runner reports renderer_backend=canvas2d and draws the whole
+    // dashboard, and the demo runs under WebKit with no page errors.
+    test.setTimeout(45_000);
     const start = Date.now();
+    const pageErrors: string[] = [];
+    page.on("pageerror", (error) => pageErrors.push(String(error)));
 
     await page.goto(`${BASE_URL}/showcase`, { waitUntil: "domcontentloaded" });
     await page.locator(WIDGET_SECTION).scrollIntoViewIfNeeded();
-    await page.waitForTimeout(5_000);
 
-    // Without WebGPU, FrankenTerminal should show the DefaultFallback component.
-    // We check for text UNIQUE to DefaultFallback (not the static paragraph below
-    // the widget which always says "Requires Chrome or Edge with WebGPU support").
-    // DefaultFallback renders: "not available in your browser" and "Chrome 113+"
-    const fallbackState = await page.evaluate((sel) => {
-      const section = document.querySelector(sel);
-      if (!section) return { found: false, text: "" };
-      const text = section.textContent ?? "";
-      return {
-        found: true,
-        // These strings are unique to DefaultFallback, not in the static page text
-        hasFallbackMessage: text.includes("not available in your browser"),
-        hasSupportedBrowsers: text.includes("Chrome 113+") || text.includes("Edge 113+"),
-        text: text.substring(0, 500),
-      };
-    }, WIDGET_SECTION);
+    // The widget has to actually mount a canvas, not print an apology.
+    await expect(page.locator(WIDGET_CANVAS).first()).toBeAttached({ timeout: 30_000 });
+    const text = (await page.locator(WIDGET_SECTION).textContent()) ?? "";
+    expect(text).not.toContain("not available in your browser");
+    expect(pageErrors).toEqual([]);
+    stepLog(`widget mounted without a fallback in ${test.info().project.name}`, start);
+  });
 
-    stepLog(`fallback: ${JSON.stringify(fallbackState)}`, start);
+  test("F2: the demo page itself runs, and reports its terminal geometry", async ({ page }) => {
+    // The widget is an embed; this is the real thing at /web. On WebKit it
+    // reaches 160x45 and draws with no page errors, which is the closest this
+    // suite gets to checking an iPhone - the platform the touch controls in
+    // web-demo.spec.ts exist for.
+    test.setTimeout(60_000);
+    const start = Date.now();
+    const pageErrors: string[] = [];
+    page.on("pageerror", (error) => pageErrors.push(String(error)));
 
-    logDiag({
-      test: "F1",
-      timestamp: new Date().toISOString(),
-      fallback_state: fallbackState,
-      elapsed_ms: elapsed(start),
-    });
-
-    // The section must exist and display the DefaultFallback component
-    expect(fallbackState.found).toBe(true);
-    // "This demo requires WebGPU, which is not available in your browser."
-    expect(fallbackState.hasFallbackMessage).toBe(true);
-    // "Supported: Chrome 113+, Edge 113+, Opera 99+"
-    expect(fallbackState.hasSupportedBrowsers).toBe(true);
+    await page.goto(`${BASE_URL}/web?zoom=1&screen=dashboard`);
+    await expect(page.locator("#status")).toContainText("×", { timeout: 40_000 });
+    await expect(page.locator("#error-overlay")).not.toHaveClass(/visible/);
+    expect(pageErrors).toEqual([]);
+    stepLog(`demo ran under ${test.info().project.name}: ${await page.locator("#status").textContent()}`, start);
   });
 });
