@@ -2,6 +2,12 @@ import { test, expect, type Page } from "@playwright/test";
 
 async function loadLabAndWaitForData(page: Page) {
   const baseUrl = process.env.BASE_URL ?? "http://localhost:3100";
+  // The search box lives in a `hidden xl:flex` container, so it only exists
+  // at >=1280px. The Desktop Safari profile renders 1270 CSS px wide - ten
+  // short - which hid the input and failed every test in this file the moment
+  // WebKit was installed. Ask for a window the control is actually meant for
+  // rather than inheriting whichever profile the project happens to use.
+  await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(`${baseUrl}/how-it-was-built/spec-evolution-lab`, {
     waitUntil: "domcontentloaded",
   });
