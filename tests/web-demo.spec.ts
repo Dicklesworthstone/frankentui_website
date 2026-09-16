@@ -164,6 +164,195 @@ test.describe("G. Touch navigation — real WASM", () => {
   });
 });
 
+/* ══════════════════════════════════════════════════════════════════
+   H. Touch controls — the action bar, and dragging with a finger
+   ══════════════════════════════════════════════════════════════════
+
+   Two things a phone could not do before: press any of the letter keys
+   the screens are driven by, and drag anything, because a finger that
+   moves means scroll. The bar is built from each screen's own published
+   keybindings, so these check the wiring rather than a fixed key list.
+
+   These read the demo's own `?jsonl=1` diagnostics rather than patching
+   the renderer: what is being tested is the host's gesture layer, and
+   every input it admits is already reported there.                      */
+
+type DemoLog = {
+  event?: string;
+  kind?: string;
+  outcome?: string;
+  key?: string;
+  phase?: string;
+  x?: number;
+  y?: number;
+};
+
+/// Open the demo with its diagnostics on, collecting what it reports.
+async function openTouchDemo(page: Page, screen = "dashboard") {
+  const log: DemoLog[] = [];
+  page.on("console", (message) => {
+    const text = message.text();
+    if (!text.startsWith("{")) return;
+    try {
+      log.push(JSON.parse(text) as DemoLog);
+    } catch {
+      // Not every console line is a diagnostic record.
+    }
+  });
+  await page.goto(`${BASE_URL}/web?jsonl=1&zoom=1&screen=${screen}`);
+  await expect(page.locator("canvas")).toBeVisible();
+  // The status line carries the terminal geometry once the runner has drawn.
+  await expect(page.locator("#status")).toContainText("×");
+  return log;
+}
+
+/// Where a fraction of the way across the terminal lands, in page pixels.
+async function canvasPoint(page: Page, fx: number, fy: number) {
+  const box = await page.locator("canvas").boundingBox();
+  if (!box) throw new Error("the terminal canvas has no box");
+  return { x: box.x + box.width * fx, y: box.y + box.height * fy };
+}
+
+/// Terminal rows, read off the status line ("48×49 — panes 0/0 sel 0").
+async function terminalRows(page: Page) {
+  const status = (await page.locator("#status").textContent()) ?? "";
+  return Number(status.match(/(\d+)×(\d+)/)?.[2] ?? 0);
+}
+
+test.describe("H. Touch controls — real WASM", () => {
+  test.skip(({ browserName }) => browserName !== "chromium", "Trusted touch injection uses Chromium CDP");
+  // isMobile, not just hasTouch: the bar is gated on (pointer: coarse), which
+  // is exactly the question of whether this device is driven by a finger.
+  test.use({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });
+
+  test("the bar offers this screen's keys, and tapping one presses it", async ({ page }) => {
+    const log = await openTouchDemo(page);
+    const buttons = page.locator("#touch-actions-list button");
+    await expect(page.locator("#touch-actions")).toBeVisible();
+    await expect.poll(() => buttons.count()).toBeGreaterThan(4);
+
+    const keys = await buttons.evaluateAll((els) =>
+      els.map((el) => (el as HTMLElement).dataset.key ?? ""),
+    );
+    // `g` cycles the dashboard's chart mode and is the screen's own; `?` opens
+    // the help overlay and is on every screen. One of each proves the bar is
+    // built from the screen plus the globals, not from a hard-coded strip.
+    expect(keys).toContain("g");
+    expect(keys).toContain("?");
+    // Every button says what its key does, taken from the screen's own help.
+    const labelled = await buttons.evaluateAll((els) =>
+      els.every((el) => (el.getAttribute("aria-label") ?? "").includes(":")),
+    );
+    expect(labelled).toBe(true);
+
+    const keysBefore = log.filter((r) => r.event === "input_admission" && r.kind === "key").length;
+    await page.locator('#touch-actions-list button[data-key="g"]').tap();
+    await expect.poll(() => log.filter((r) => r.event === "touch_action" && r.key === "g").length).toBe(1);
+    // It has to arrive as a key the runner accepts - a button that only looks
+    // pressed is the failure this is here to catch.
+    await expect.poll(
+      () => log.filter((r) => r.event === "input_admission" && r.kind === "key").length - keysBefore,
+    ).toBe(2);
+    const admitted = log.filter((r) => r.event === "input_admission" && r.kind === "key").slice(keysBefore);
+    expect(admitted.every((r) => r.outcome === "accepted")).toBe(true);
+    await expect(page.locator("#error-overlay")).not.toHaveClass(/visible/);
+  });
+
+  test("the bar follows the screen and gives the terminal back its rows when folded", async ({ page }) => {
+    await openTouchDemo(page);
+    const keysNow = () =>
+      page.locator("#touch-actions-list button").evaluateAll((els) =>
+        els.map((el) => (el as HTMLElement).dataset.key ?? "").join(","),
+      );
+    const onDashboard = await keysNow();
+    expect(onDashboard).toContain("g");
+
+    // Swiping in from a bezel is how a phone changes screens, and the next one
+    // publishes different keys. The bar is polled rather than pushed, so this
+    // also checks that it keeps up.
+    const session = await page.context().newCDPSession(page);
+    const box = (await page.locator("canvas").boundingBox())!;
+    const y = box.y + box.height * 0.5;
+    const from = box.x + box.width - 8;
+    await session.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: from, y, id: 1 }] });
+    for (let step = 1; step <= 12; step++) {
+      await session.send("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [{ x: from - step * 12, y, id: 1 }],
+      });
+      await page.waitForTimeout(20);
+    }
+    await session.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    await expect.poll(keysNow).not.toBe(onDashboard);
+
+    // Folding the bar is worth rows, which is the whole reason it folds.
+    const expanded = await terminalRows(page);
+    expect(expanded).toBeGreaterThan(0);
+    await page.locator("#touch-actions-toggle").tap();
+    await expect(page.locator("#touch-actions-list")).toBeHidden();
+    await expect.poll(() => terminalRows(page)).toBeGreaterThan(expanded);
+  });
+
+  test("a held finger drags; a quick swipe still scrolls", async ({ page }) => {
+    const log = await openTouchDemo(page);
+    const session = await page.context().newCDPSession(page);
+    const start = await canvasPoint(page, 0.5, 0.5);
+    const contact = (x: number, y: number) => ({ x, y, id: 1 });
+    const drags = () => log.filter((r) => r.event === "touch_drag");
+
+    await session.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [contact(start.x, start.y)] });
+    // Past the arm threshold, holding still. Moving before this is a scroll.
+    await page.waitForTimeout(600);
+    for (let step = 1; step <= 6; step++) {
+      await session.send("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [contact(start.x - step * 10, start.y)],
+      });
+      await page.waitForTimeout(30);
+    }
+    await session.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+
+    await expect.poll(() => drags().filter((r) => r.phase === "up").length).toBe(1);
+    expect(drags().filter((r) => r.phase === "down")).toHaveLength(1);
+    // It has to have actually moved: down and up in the same cell is a click.
+    const [down] = drags().filter((r) => r.phase === "down");
+    const [up] = drags().filter((r) => r.phase === "up");
+    expect(up.x).not.toBe(down.x);
+    // A drag owns the gesture: it must not also scroll what is under it.
+    const wheelDuringDrag = log.filter((r) => r.event === "input_admission" && r.kind === "wheel").length;
+    expect(wheelDuringDrag).toBe(0);
+
+    // The same movement without the hold is still a scroll, not a drag.
+    const dragsBefore = drags().length;
+    await session.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [contact(start.x, start.y)] });
+    for (let step = 1; step <= 8; step++) {
+      await session.send("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [contact(start.x, start.y - step * 16)],
+      });
+    }
+    await session.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    await expect.poll(
+      () => log.filter((r) => r.event === "input_admission" && r.kind === "wheel").length,
+    ).toBeGreaterThan(0);
+    expect(drags().length).toBe(dragsBefore);
+    await expect(page.locator("#error-overlay")).not.toHaveClass(/visible/);
+  });
+});
+
+test.describe("H2. The action bar stays out of a desktop's way", () => {
+  test.use({ hasTouch: false, viewport: { width: 1280, height: 800 } });
+
+  test("a mouse-driven browser gets no bar and loses no rows", async ({ page }) => {
+    await openTouchDemo(page);
+    await expect(page.locator("#touch-actions")).toBeHidden();
+    const barHeight = await page.evaluate(() =>
+      getComputedStyle(document.documentElement).getPropertyValue("--touch-bar-h").trim(),
+    );
+    expect(barHeight).toBe("0px");
+  });
+});
+
 /* ─── Types ─────────────────────────────────────────────────────── */
 
 type ConsoleEvent = {
