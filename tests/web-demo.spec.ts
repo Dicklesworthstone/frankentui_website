@@ -25,44 +25,73 @@ async function observeTouchDemo(page: Page, screen = 2) {
   expect(manifest.schema).toBe("ftui-browser-package-v1");
   const termHash = manifest.files["FrankenTerm.js"];
   expect(termHash).toBeTruthy();
-  const moduleUrl = new URL(
-    `/web/pkg/FrankenTerm.js?sha256=${termHash}`,
-    manifestResponse.url(),
-  ).href;
-  await page.addInitScript(({ moduleUrl }) => {
+
+  // The page imports the renderer from a blob URL built out of bytes it has
+  // just integrity-checked ("Import the verified bytes themselves", demo page).
+  // So `import()`-ing the same file again here would hand back a *different*
+  // module instance with its own class object, and patching that prototype
+  // would change nothing the page ever calls - which is exactly how this probe
+  // came to report an empty screen for every test that used it. Instrument the
+  // module source on its way through instead, after the real fetch (and its
+  // integrity check) has already run.
+  await page.addInitScript(() => {
     const probe: TouchProbe = { cols: 0, rows: 0, cells: [], inputs: [], trustedTouches: 0 };
     (window as unknown as { ftuiTouchProbe: TouchProbe }).ftuiTouchProbe = probe;
     document.addEventListener("touchstart", (event) => {
       if (event.isTrusted) probe.trustedTouches++;
     }, { capture: true });
-    void import(moduleUrl).then(({ FrankenTermWeb }) => {
-      const proto = FrankenTermWeb.prototype;
-      const fit = proto.fitToContainer;
-      proto.fitToContainer = function (...args: unknown[]) {
-        const geometry = fit.apply(this, args);
-        if (probe.cols !== geometry.cols || probe.rows !== geometry.rows) probe.cells = [];
-        probe.cols = geometry.cols;
-        probe.rows = geometry.rows;
-        return geometry;
-      };
-      const patch = proto.applyPatchBatchFlat;
-      proto.applyPatchBatchFlat = function (spans: Uint32Array, cells: Uint32Array) {
-        let cursor = 0;
-        for (let i = 0; i < spans.length; i += 2) {
-          for (let j = 0; j < spans[i + 1]; j++) {
-            probe.cells[spans[i] + j] = cells[cursor * 4 + 2];
-            cursor++;
+
+    // Appended to the module, so `FrankenTermWeb` is the page's own binding.
+    const instrument = `
+      ;(() => {
+        const probe = window.ftuiTouchProbe;
+        if (!probe) return;
+        const proto = FrankenTermWeb.prototype;
+        const fit = proto.fitToContainer;
+        proto.fitToContainer = function (...args) {
+          const geometry = fit.apply(this, args);
+          if (probe.cols !== geometry.cols || probe.rows !== geometry.rows) probe.cells = [];
+          probe.cols = geometry.cols;
+          probe.rows = geometry.rows;
+          return geometry;
+        };
+        const patch = proto.applyPatchBatchFlat;
+        proto.applyPatchBatchFlat = function (spans, cells) {
+          let cursor = 0;
+          for (let i = 0; i < spans.length; i += 2) {
+            for (let j = 0; j < spans[i + 1]; j++) {
+              probe.cells[spans[i] + j] = cells[cursor * 4 + 2];
+              cursor++;
+            }
           }
-        }
-        return patch.call(this, spans, cells);
-      };
-      const input = proto.input;
-      proto.input = function (event: TouchProbe["inputs"][number]) {
-        probe.inputs.push({ ...event });
-        return input.call(this, event);
-      };
-    });
-  }, { moduleUrl });
+          return patch.call(this, spans, cells);
+        };
+        const input = proto.input;
+        proto.input = function (event) {
+          probe.inputs.push({ ...event });
+          return input.call(this, event);
+        };
+      })();
+    `;
+
+    const realFetch = window.fetch;
+    window.fetch = async function (this: unknown, ...args: Parameters<typeof fetch>) {
+      const response = await realFetch.apply(this as never, args);
+      const target = args[0];
+      const url = typeof target === "string"
+        ? target
+        : target instanceof URL
+          ? target.href
+          : (target as Request).url;
+      if (!/FrankenTerm\.js/.test(url ?? "")) return response;
+      // The bytes were verified by the fetch above; this copy is for the test.
+      return new Response(`${await response.text()}\n${instrument}`, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+      });
+    } as typeof fetch;
+  });
   await page.goto(`${BASE_URL}/web?zoom=1&screen=${screen}`);
   await expect.poll(() => touchDemoText(page)).toContain(screen === 3 ? "Shakespeare" : "Dashboard");
   if (screen === 3) {
@@ -496,9 +525,21 @@ test.describe("A. Page load — Chromium (WebGPU)", () => {
       stepLog(`found ${selector}`, start);
     }
 
-    // Verify WebGPU fallback div is present (injected by sync script)
-    await expect(page.locator("#webgpu-fallback")).toBeAttached();
-    stepLog("found #webgpu-fallback", start);
+    // There is no #webgpu-fallback element and there never has been: the
+    // string appears nowhere in the demo page's history, and nothing in
+    // scripts/sync-showcase.sh injects it. The fallback is internal - the
+    // renderer picks canvas2d when WebGPU is missing and says which it took
+    // through rendererBackend() - so the observable thing is that the page
+    // runs and reports a backend, not that a div exists.
+    const backend = await page.evaluate(async () => {
+      const status = document.getElementById("status");
+      for (let wait = 0; wait < 60 && !/\d+×\d+/.test(status?.textContent ?? ""); wait++) {
+        await new Promise((done) => setTimeout(done, 500));
+      }
+      return status?.textContent ?? "";
+    });
+    expect(backend).toMatch(/\d+×\d+/);
+    stepLog(`terminal reported geometry: ${backend}`, start);
   });
 
   test("A3: Canvas has non-zero dimensions after load", async ({ page }) => {

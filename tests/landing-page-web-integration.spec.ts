@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
 /**
  * E2E tests: Homepage /web live demo integration.
@@ -32,22 +32,29 @@ test.describe("Homepage /web integration", () => {
     expect(box!.y).toBeLessThan(1000);
   });
 
-  test("hero stat mentions browser rendering", async ({ page }) => {
-    // The stats grid should have a "Browser Render" or "60fps" stat
-    const statsArea = page.locator("#hero, header").first();
-    const browserStat = statsArea.locator("text=/browser|60.*fps|wasm/i").first();
+  test("hero mentions browser rendering", async ({ page }) => {
+    // There is no #hero on this page, so the old selector fell through to
+    // <header> - the nav bar - which says none of these words. Look in the
+    // first section of the page body, where the hero copy actually lives.
+    const hero = page.locator("main section").first();
+    const browserStat = hero.locator("text=/browser|60.*fps|wasm/i").first();
     await expect(browserStat).toBeVisible({ timeout: 5000 });
   });
 
   // ── (B) Browser Section ──────────────────────────────────────────
 
+  // `[id*='browser']` also matches `feature-title-browser-native`, a feature
+  // card that sorts earlier in the DOM, so `.first()` was picking a heading
+  // instead of the section: "section exists" passed against the wrong element
+  // while the two tests below failed on it. The section's id is `browser`.
+  const browserSection = (page: Page) => page.locator("section#browser");
+
   test("'Works in Browser' section exists", async ({ page }) => {
-    const section = page.locator("#works-in-browser, [id*='browser']").first();
-    await expect(section).toBeVisible();
+    await expect(browserSection(page)).toBeVisible();
   });
 
   test("browser section contains WASM/WebGPU content", async ({ page }) => {
-    const section = page.locator("#works-in-browser, [id*='browser']").first();
+    const section = browserSection(page);
     const text = await section.textContent();
     expect(text).toBeTruthy();
     const content = text!.toLowerCase();
@@ -61,8 +68,7 @@ test.describe("Homepage /web integration", () => {
   });
 
   test("browser section has CTA linking to /web", async ({ page }) => {
-    const section = page.locator("#works-in-browser, [id*='browser']").first();
-    const cta = section.locator("a[href='/web']");
+    const cta = browserSection(page).locator("a[href='/web']");
     await expect(cta.first()).toBeVisible();
   });
 

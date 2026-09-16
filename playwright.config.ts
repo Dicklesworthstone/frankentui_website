@@ -26,13 +26,21 @@ export default defineConfig({
 
   projects: [
     {
-      // If `browserType.launch` reports the executable is missing and
+      // If `browserType.launch` says the executable is missing and
       // `playwright install chromium` never finishes: on some machines the
-      // download completes (170MB zip) and extraction then stalls mid-write -
-      // open write handle, no bytes landing, ~0% CPU - leaving a skeleton
-      // browser directory. It is not a lock and not slowness; waiting does not
-      // help, and bunx and npx behave identically. To run the suite anyway,
-      // add `channel: "chrome"` here and use the installed Google Chrome.
+      // download completes and Playwright's own extractor then stalls mid-write
+      // - open write handle, no bytes landing, ~0% CPU - leaving a skeleton
+      // browser directory that looks installed. Waiting does not help and bunx
+      // and npx stall alike. Only the extraction is broken, so do it by hand:
+      //
+      //   bunx playwright install --dry-run chromium   # prints url + location
+      //   curl -fsSL -o /tmp/b.zip <download url>
+      //   ditto -x -k /tmp/b.zip <install location>
+      //   touch <install location>/INSTALLATION_COMPLETE
+      //   touch <install location>/DEPENDENCIES_VALIDATED
+      //
+      // ditto unpacks the same archive in under a second. Repeat for the
+      // headless shell, which is what a headless run actually launches.
       name: "chromium",
       use: {
         ...devices["Desktop Chrome"],
