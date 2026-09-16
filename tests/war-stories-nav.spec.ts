@@ -1,6 +1,7 @@
 import { appendFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { test, expect, type Page, type TestInfo } from "@playwright/test";
+import { withoutContainedErrors } from "./contained-errors";
 
 type Viewport = { width: number; height: number };
 
@@ -287,8 +288,11 @@ test("navbar: /architecture -> /how-it-was-built renders without refresh", async
   // making the page look blank until a refresh resets scroll.
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(200);
 
-  // If navigation "silently fails" due to a runtime exception, this will catch it.
-  expect(errors).toEqual([]);
+  // If navigation "silently fails" due to a runtime exception, this will catch
+  // it. Errors an ErrorBoundary announced it had caught are not that: the
+  // homepage's tweet embeds throw on a malformed syndication payload and are
+  // contained by design, and the engines word that throw differently.
+  expect(withoutContainedErrors(errors.map((text) => ({ text })))).toEqual([]);
 });
 
 test("spec evolution lab: loads and renders core UI without console errors", async ({ page }) => {

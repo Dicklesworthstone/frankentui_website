@@ -1,6 +1,7 @@
 import { appendFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { test, expect, type Page } from "@playwright/test";
+import { withoutContainedErrors } from "./contained-errors";
 
 /* ─── Types ─────────────────────────────────────────────────────── */
 
@@ -35,25 +36,6 @@ function stepLog(step: string, startMs: number, result: "pass" | "fail" = "pass"
   const msg = `[terminal-widget] step: ${step}, elapsed: ${elapsed(startMs)}ms, result: ${result}`;
   console.log(msg);
   return msg;
-}
-
-/**
- * True for the one console error the homepage is expected to produce.
- *
- * `react-tweet` iterates `tweet.entities.*` unguarded, and the X syndication
- * payload sometimes omits an entity array, so the embed throws during render
- * (frankentui#82). components/tweet-wall.tsx already handles that: each embed
- * sits in its own ErrorBoundary and degrades to a fallback card. React logs
- * every error a boundary catches, and the boundary logs its own line, so a
- * page with eleven embeds reports twenty-two console errors while behaving
- * exactly as designed.
- *
- * These tests are about the terminal widget's mount and unmount, so a
- * contained throw from an unrelated third-party embed is not their signal. Any
- * other console error still fails them.
- */
-function isContainedTweetEmbedError(text: string) {
-  return /is not iterable/.test(text);
 }
 
 /* ─── Console capture ───────────────────────────────────────────── */
@@ -563,14 +545,13 @@ test.describe("D. Lifecycle", () => {
     await page.waitForTimeout(2_000);
 
     // Check for errors that occurred during unmount
-    const errors = consoleEvents.filter(
+    const errors = withoutContainedErrors(consoleEvents).filter(
       (e) =>
         e.type === "error" &&
         !e.text.includes("favicon") &&
         !e.text.includes("404") &&
         // Ignore generic navigation errors
-        !e.text.includes("net::ERR_ABORTED") &&
-        !isContainedTweetEmbedError(e.text)
+        !e.text.includes("net::ERR_ABORTED")
     );
 
     stepLog(`unmount errors: ${errors.length}`, start, errors.length === 0 ? "pass" : "fail");
@@ -612,13 +593,12 @@ test.describe("D. Lifecycle", () => {
       return canvas ? window.getComputedStyle(canvas).display : "not-found";
     }, WIDGET_CANVAS);
 
-    const errors = consoleEvents.filter(
+    const errors = withoutContainedErrors(consoleEvents).filter(
       (e) =>
         e.type === "error" &&
         !e.text.includes("favicon") &&
         !e.text.includes("404") &&
-        !e.text.includes("net::ERR_ABORTED") &&
-        !isContainedTweetEmbedError(e.text)
+        !e.text.includes("net::ERR_ABORTED")
     );
 
     stepLog(`re-init: canvas display=${canvasDisplay}, errors=${errors.length}`, start);
