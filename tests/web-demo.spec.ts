@@ -732,57 +732,57 @@ test.describe("C. Browser compat — no WebGPU", () => {
     "Skipped in Chromium — WebGPU is available"
   );
 
-  test("C2: Firefox/WebKit — fallback page shown", async ({ page }) => {
+  // These asserted a `#webgpu-fallback` element that is visible, mentions
+  // WebGPU and carries escape-hatch links. No such element exists, or ever
+  // has - the string appears nowhere in the demo page's history and nothing
+  // injects it - and the premise is wrong anyway: the renderer falls back to
+  // canvas2d on its own, so a browser without WebGPU gets the demo rather than
+  // an apology. Measured: with WebGPU disabled the runner reports
+  // renderer_backend=canvas2d and draws the whole dashboard.
+  test("C2: the demo runs on an engine with no WebGPU", async ({ page }) => {
     const start = Date.now();
-    await page.goto(`${BASE_URL}/web`, { waitUntil: "load" });
-    await page.waitForTimeout(2_000);
+    const pageErrors: string[] = [];
+    page.on("pageerror", (error) => pageErrors.push(String(error)));
 
-    // Without WebGPU, the fallback div should become visible
-    const fallbackState = await page.evaluate(() => {
-      const fb = document.getElementById("webgpu-fallback");
-      if (!fb) return { exists: false, visible: false, hasContent: false };
-      return {
-        exists: true,
-        visible: fb.classList.contains("visible"),
-        hasContent: fb.textContent?.includes("WebGPU") ?? false,
-      };
-    });
+    await page.goto(`${BASE_URL}/web?zoom=1&screen=dashboard`);
+    await expect(page.locator("#status")).toContainText("×", { timeout: 40_000 });
+    await expect(page.locator("#error-overlay")).not.toHaveClass(/visible/);
+    expect(page.locator("#webgpu-fallback")).toHaveCount(0);
+    expect(pageErrors).toEqual([]);
 
-    stepLog(`fallback state: ${JSON.stringify(fallbackState)}`, start);
-
-    logDiag({
-      test: "C2",
-      timestamp: new Date().toISOString(),
-      fallbackState,
-    });
-
-    expect(fallbackState.exists).toBe(true);
-    expect(fallbackState.visible).toBe(true);
-    expect(fallbackState.hasContent).toBe(true);
+    const geometry = await page.locator("#status").textContent();
+    logDiag({ test: "C2", timestamp: new Date().toISOString(), geometry });
+    stepLog(`demo ran without WebGPU: ${geometry}`, start);
   });
 
-  test("C3: Firefox/WebKit — fallback has nav links", async ({ page }) => {
+  test("C3: input reaches the app on an engine with no WebGPU", async ({ page }) => {
+    // Rendering without WebGPU is half of it; the demo is only usable if what
+    // you press still lands. Tab is the demo's own screen-switch key.
     const start = Date.now();
-    await page.goto(`${BASE_URL}/web`, { waitUntil: "load" });
-    await page.waitForTimeout(2_000);
-
-    const links = await page.evaluate(() => {
-      const fb = document.getElementById("webgpu-fallback");
-      if (!fb) return [];
-      return Array.from(fb.querySelectorAll("a")).map((a) => ({
-        href: a.getAttribute("href"),
-        text: a.textContent?.trim(),
-      }));
+    const log: DemoLog[] = [];
+    page.on("console", (message) => {
+      const text = message.text();
+      if (!text.startsWith("{")) return;
+      try {
+        log.push(JSON.parse(text) as DemoLog);
+      } catch {
+        /* not a diagnostic record */
+      }
     });
 
-    stepLog(`fallback links: ${links.length}`, start);
+    await page.goto(`${BASE_URL}/web?jsonl=1&zoom=1&screen=dashboard`);
+    await expect(page.locator("#status")).toContainText("×", { timeout: 40_000 });
 
-    logDiag({ test: "C3", timestamp: new Date().toISOString(), links });
+    await page.locator("canvas").click();
+    await page.keyboard.press("Tab");
+    await expect
+      .poll(() => log.filter((r) => r.event === "input_admission" && r.kind === "key").length)
+      .toBeGreaterThan(0);
 
-    // Should have "Back to FrankenTUI" and "View Screenshots" links
-    expect(links.length).toBeGreaterThanOrEqual(2);
-    expect(links.some((l) => l.href === "/")).toBe(true);
-    expect(links.some((l) => l.href === "/showcase")).toBe(true);
+    const admitted = log.filter((r) => r.event === "input_admission" && r.kind === "key");
+    expect(admitted.every((r) => r.outcome === "accepted")).toBe(true);
+    logDiag({ test: "C3", timestamp: new Date().toISOString(), admitted: admitted.length });
+    stepLog(`keys admitted without WebGPU: ${admitted.length}`, start);
   });
 });
 
