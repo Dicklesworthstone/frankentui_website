@@ -249,7 +249,10 @@ async function terminalRows(page: Page) {
 }
 
 test.describe("H. Touch controls — real WASM", () => {
-  test.skip(({ browserName }) => browserName !== "chromium", "Trusted touch injection uses Chromium CDP");
+  // WebKit is what an iPhone runs, so the bar is worth checking there and not
+  // only on Chromium. Firefox is out because Playwright cannot emulate a
+  // mobile device on it, and `(pointer: coarse)` is the whole question here.
+  test.skip(({ browserName }) => browserName === "firefox", "isMobile is unsupported on Firefox");
   // isMobile, not just hasTouch: the bar is gated on (pointer: coarse), which
   // is exactly the question of whether this device is driven by a finger.
   test.use({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });
@@ -296,22 +299,12 @@ test.describe("H. Touch controls — real WASM", () => {
     const onDashboard = await keysNow();
     expect(onDashboard).toContain("g");
 
-    // Swiping in from a bezel is how a phone changes screens, and the next one
-    // publishes different keys. The bar is polled rather than pushed, so this
-    // also checks that it keeps up.
-    const session = await page.context().newCDPSession(page);
-    const box = (await page.locator("canvas").boundingBox())!;
-    const y = box.y + box.height * 0.5;
-    const from = box.x + box.width - 8;
-    await session.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: from, y, id: 1 }] });
-    for (let step = 1; step <= 12; step++) {
-      await session.send("Input.dispatchTouchEvent", {
-        type: "touchMove",
-        touchPoints: [{ x: from - step * 12, y, id: 1 }],
-      });
-      await page.waitForTimeout(20);
-    }
-    await session.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    // Change screens by tapping the first tab, which every engine can do -
+    // the bezel swipe needs timed touch points and so only runs on Chromium.
+    // What is under test is that the bar keeps up, not how the screen changed:
+    // it is polled rather than pushed.
+    const firstTab = await canvasPoint(page, 0.06, 0.012);
+    await page.touchscreen.tap(firstTab.x, firstTab.y);
     await expect.poll(keysNow).not.toBe(onDashboard);
 
     // Folding the bar is worth rows, which is the whole reason it folds.
@@ -322,7 +315,11 @@ test.describe("H. Touch controls — real WASM", () => {
     await expect.poll(() => terminalRows(page)).toBeGreaterThan(expanded);
   });
 
-  test("a held finger drags; a quick swipe still scrolls", async ({ page }) => {
+  test("a held finger drags; a quick swipe still scrolls", async ({ page, browserName }) => {
+    // A hold-then-drag needs individually timed touch points, which means
+    // driving Input.dispatchTouchEvent over CDP. Playwright's cross-browser
+    // touchscreen only taps, so this one gesture is Chromium-only.
+    test.skip(browserName !== "chromium", "timed touch injection needs Chromium CDP");
     const log = await openTouchDemo(page);
     const session = await page.context().newCDPSession(page);
     const start = await canvasPoint(page, 0.5, 0.5);
