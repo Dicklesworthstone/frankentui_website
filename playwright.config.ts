@@ -26,6 +26,19 @@ export default defineConfig({
     // while the rest went to 3100, and whichever server you started, the other
     // half failed with ERR_CONNECTION_REFUSED - which reads as a broken build
     // rather than a missing server.
+    //
+    // To run the suite locally, serve a build rather than the dev server:
+    //
+    //     bun run build && bunx next start -p 3100
+    //     npx playwright test --project=chromium
+    //
+    // That is green (132 pass, 4 skipped). Against `next dev` the same suite
+    // loses three widget tests - C2 resize, D1 navigate away, D2 navigate back -
+    // to 35-50s timeouts, because turbopack compiles routes on demand and those
+    // three navigate or re-initialise the widget. They pass against production,
+    // so the timeouts are compile latency rather than defects.
+    //
+    // Set BASE_URL to test a deployed site: BASE_URL=https://frankentui.com
     baseURL: process.env.BASE_URL || "http://localhost:3100",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
