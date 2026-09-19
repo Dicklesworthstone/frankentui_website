@@ -19,7 +19,14 @@ export default defineConfig({
     : "list",
 
   use: {
-    baseURL: process.env.BASE_URL || "http://localhost:3000",
+    // 3100, not Next's default 3000: fifteen references across the specs
+    // already hard-code `BASE_URL ?? "http://localhost:3100"`, so a config
+    // default of 3000 meant no single local server could satisfy the suite.
+    // Specs that navigate to relative paths through this baseURL went to 3000
+    // while the rest went to 3100, and whichever server you started, the other
+    // half failed with ERR_CONNECTION_REFUSED - which reads as a broken build
+    // rather than a missing server.
+    baseURL: process.env.BASE_URL || "http://localhost:3100",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },

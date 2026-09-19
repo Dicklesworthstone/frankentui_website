@@ -16,7 +16,12 @@ type DiagnosticRecord = Record<string, unknown>;
 
 /* ─── Diagnostics helpers ───────────────────────────────────────── */
 
-const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
+// 3100 to match every other spec in this suite. This file was the only one
+// defaulting to Next's 3000, so a single local dev server could never serve
+// the whole suite: start it on 3100 and these nineteen tests failed with
+// ERR_CONNECTION_REFUSED, start it on 3000 and the other fifteen references
+// did. Both look like a broken build rather than a port mismatch.
+const BASE_URL = process.env.BASE_URL ?? "http://localhost:3100";
 
 function diagnosticsLogPath() {
   const dir = path.join(process.cwd(), "test-results", "logs");
