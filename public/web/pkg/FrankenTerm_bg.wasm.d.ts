@@ -9,44 +9,125 @@ export const frankentermweb_apiContract: (a: number) => number;
 export const frankentermweb_apiVersion: (a: number, b: number) => void;
 export const frankentermweb_applyPatch: (a: number, b: number, c: number) => void;
 export const frankentermweb_applyPatchBatch: (a: number, b: number, c: number) => void;
-export const frankentermweb_applyPatchBatchFlat: (a: number, b: number, c: number, d: number) => void;
+export const frankentermweb_applyPatchBatchFlat: (
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+) => void;
 export const frankentermweb_attachClose: (a: number, b: number, c: number, d: number) => number;
 export const frankentermweb_attachConnect: (a: number, b: number) => number;
-export const frankentermweb_attachHandshakeAck: (a: number, b: number, c: number, d: number, e: number) => void;
-export const frankentermweb_attachProtocolError: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+export const frankentermweb_attachHandshakeAck: (
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+  e: number,
+) => void;
+export const frankentermweb_attachProtocolError: (
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+  e: number,
+  f: number,
+) => void;
 export const frankentermweb_attachReset: (a: number, b: number) => number;
-export const frankentermweb_attachSessionEnded: (a: number, b: number, c: number, d: number) => number;
+export const frankentermweb_attachSessionEnded: (
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+) => number;
 export const frankentermweb_attachState: (a: number) => number;
 export const frankentermweb_attachTick: (a: number, b: number) => number;
-export const frankentermweb_attachTransportClosed: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
+export const frankentermweb_attachTransportClosed: (
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+  e: number,
+  f: number,
+) => number;
 export const frankentermweb_attachTransportOpened: (a: number, b: number) => number;
 export const frankentermweb_clearSearch: (a: number) => void;
 export const frankentermweb_clearSelection: (a: number) => void;
 export const frankentermweb_clipboardPolicy: (a: number) => number;
 export const frankentermweb_closeEventSubscription: (a: number, b: number) => number;
 export const frankentermweb_copySelection: (a: number, b: number) => void;
-export const frankentermweb_createDecoration: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
+export const frankentermweb_createDecoration: (
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+  e: number,
+  f: number,
+  g: number,
+  h: number,
+) => void;
 export const frankentermweb_createEventSubscription: (a: number, b: number, c: number) => void;
 export const frankentermweb_createMarker: (a: number, b: number, c: number, d: number) => void;
 export const frankentermweb_decorationsState: (a: number) => number;
 export const frankentermweb_destroy: (a: number) => void;
 export const frankentermweb_drainAccessibilityAnnouncements: (a: number) => number;
-export const frankentermweb_drainAttachTransitionsJsonl: (a: number, b: number, c: number, d: number) => void;
+export const frankentermweb_drainAttachTransitionsJsonl: (
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+) => void;
 export const frankentermweb_drainEncodedInputBytes: (a: number) => number;
 export const frankentermweb_drainEncodedInputs: (a: number) => number;
 export const frankentermweb_drainEventSubscription: (a: number, b: number, c: number) => void;
-export const frankentermweb_drainEventSubscriptionJsonl: (a: number, b: number, c: number, d: number, e: number, f: bigint, g: number, h: number) => void;
-export const frankentermweb_drainImeCompositionJsonl: (a: number, b: number, c: number, d: bigint, e: number, f: number) => number;
+export const frankentermweb_drainEventSubscriptionJsonl: (
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+  e: number,
+  f: bigint,
+  g: number,
+  h: number,
+) => void;
+export const frankentermweb_drainImeCompositionJsonl: (
+  a: number,
+  b: number,
+  c: number,
+  d: bigint,
+  e: number,
+  f: number,
+) => number;
 export const frankentermweb_drainLinkClicks: (a: number) => number;
-export const frankentermweb_drainLinkClicksJsonl: (a: number, b: number, c: number, d: bigint, e: number, f: number) => number;
-export const frankentermweb_drainMarkerDecorationJsonl: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+export const frankentermweb_drainLinkClicksJsonl: (
+  a: number,
+  b: number,
+  c: number,
+  d: bigint,
+  e: number,
+  f: number,
+) => number;
+export const frankentermweb_drainMarkerDecorationJsonl: (
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+  e: number,
+  f: number,
+  g: number,
+) => void;
 export const frankentermweb_drainReplyBytes: (a: number) => number;
 export const frankentermweb_dropDecoration: (a: number, b: number) => number;
 export const frankentermweb_dropMarker: (a: number, b: number) => number;
 export const frankentermweb_eventSubscriptionState: (a: number, b: number) => number;
 export const frankentermweb_extractSelectionText: (a: number, b: number) => void;
 export const frankentermweb_feed: (a: number, b: number, c: number) => void;
-export const frankentermweb_fitToContainer: (a: number, b: number, c: number, d: number, e: number) => void;
+export const frankentermweb_fitToContainer: (
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+  e: number,
+) => void;
 export const frankentermweb_imeState: (a: number) => number;
 export const frankentermweb_init: (a: number, b: number, c: number) => number;
 export const frankentermweb_input: (a: number, b: number, c: number) => void;
@@ -74,12 +155,36 @@ export const frankentermweb_setCursor: (a: number, b: number, c: number, d: numb
 export const frankentermweb_setHoveredLinkId: (a: number, b: number) => void;
 export const frankentermweb_setLinkOpenPolicy: (a: number, b: number, c: number) => void;
 export const frankentermweb_setScale: (a: number, b: number, c: number, d: number) => void;
-export const frankentermweb_setSearchQuery: (a: number, b: number, c: number, d: number, e: number) => void;
+export const frankentermweb_setSearchQuery: (
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+  e: number,
+) => void;
 export const frankentermweb_setSelectionRange: (a: number, b: number, c: number, d: number) => void;
 export const frankentermweb_setTextShaping: (a: number, b: number, c: number) => void;
 export const frankentermweb_setZoom: (a: number, b: number, c: number) => void;
-export const frankentermweb_snapshotResizeStormFrameJsonl: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
-export const frankentermweb_snapshotScrollbackFrameJsonl: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
+export const frankentermweb_snapshotResizeStormFrameJsonl: (
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+  e: number,
+  f: number,
+  g: number,
+  h: number,
+) => void;
+export const frankentermweb_snapshotScrollbackFrameJsonl: (
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+  e: number,
+  f: number,
+  g: number,
+  h: number,
+) => void;
 export const frankentermweb_textShapingState: (a: number) => number;
 export const frankentermweb_viewportLines: (a: number) => number;
 export const frankentermweb_viewportState: (a: number) => number;

@@ -22,26 +22,85 @@ export const showcaserunner_paneContextLost: (a: number) => number;
 export const showcaserunner_paneExecutionStatusJson: (a: number, b: number) => void;
 export const showcaserunner_paneExecutionStrategy: (a: number, b: number) => void;
 export const showcaserunner_paneExportWorkspaceSnapshot: (a: number, b: number) => void;
-export const showcaserunner_paneImportWorkspaceSnapshot: (a: number, b: number, c: number) => number;
+export const showcaserunner_paneImportWorkspaceSnapshot: (
+  a: number,
+  b: number,
+  c: number,
+) => number;
 export const showcaserunner_paneLayoutState: (a: number) => number;
 export const showcaserunner_paneLostPointerCapture: (a: number, b: number) => number;
 export const showcaserunner_paneMarkWorkspaceSaved: (a: number, b: bigint) => number;
 export const showcaserunner_panePointerCancel: (a: number, b: number) => number;
 export const showcaserunner_panePointerCaptureAcquired: (a: number, b: number) => number;
-export const showcaserunner_panePointerDown: (a: number, b: bigint, c: number, d: number, e: number, f: number, g: number, h: number) => number;
-export const showcaserunner_panePointerDownAt: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
+export const showcaserunner_panePointerDown: (
+  a: number,
+  b: bigint,
+  c: number,
+  d: number,
+  e: number,
+  f: number,
+  g: number,
+  h: number,
+) => number;
+export const showcaserunner_panePointerDownAt: (
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+  e: number,
+  f: number,
+) => number;
 export const showcaserunner_panePointerLeave: (a: number, b: number) => number;
-export const showcaserunner_panePointerMove: (a: number, b: number, c: number, d: number, e: number) => number;
-export const showcaserunner_panePointerMoveAt: (a: number, b: number, c: number, d: number, e: number) => number;
-export const showcaserunner_panePointerUp: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
-export const showcaserunner_panePointerUpAt: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
+export const showcaserunner_panePointerMove: (
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+  e: number,
+) => number;
+export const showcaserunner_panePointerMoveAt: (
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+  e: number,
+) => number;
+export const showcaserunner_panePointerUp: (
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+  e: number,
+  f: number,
+) => number;
+export const showcaserunner_panePointerUpAt: (
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+  e: number,
+  f: number,
+) => number;
 export const showcaserunner_paneRedoLayout: (a: number) => number;
 export const showcaserunner_paneRenderStalled: (a: number) => number;
 export const showcaserunner_paneReplayLayout: (a: number) => number;
 export const showcaserunner_paneSavedWorkspaceGeneration: (a: number) => bigint;
-export const showcaserunner_paneSetExecutionPolicy: (a: number, b: number, c: number, d: number, e: number) => void;
+export const showcaserunner_paneSetExecutionPolicy: (
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+  e: number,
+) => void;
 export const showcaserunner_paneSplitterPrimitives: (a: number) => number;
-export const showcaserunner_paneTouchPointerDownAt: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
+export const showcaserunner_paneTouchPointerDownAt: (
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+  e: number,
+  f: number,
+) => number;
 export const showcaserunner_paneUndoLayout: (a: number) => number;
 export const showcaserunner_paneVisibilityHidden: (a: number) => number;
 export const showcaserunner_paneWorkspaceDirty: (a: number) => number;
