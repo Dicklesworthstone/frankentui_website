@@ -1,24 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Activity, ArrowRight, Check, Copy, Layers, Play, Rocket, Terminal } from "lucide-react";
 import Link from "next/link";
-import {
-  Terminal,
-  Layers,
-  ArrowRight,
-  Rocket,
-  Activity,
-  Copy,
-  Check,
-  Play,
-} from "lucide-react";
 import { useState } from "react";
-import { codeExample, faq } from "@/lib/content";
-import SectionShell from "@/components/section-shell";
-import RustCodeBlock from "@/components/rust-code-block";
-import FrankenEye from "@/components/franken-eye";
 import { FrankenContainer } from "@/components/franken-elements";
+import FrankenEye from "@/components/franken-eye";
 import FrankenGlitch from "@/components/franken-glitch";
+import RustCodeBlock from "@/components/rust-code-block";
+import SectionShell from "@/components/section-shell";
+import { codeExample, faq } from "@/lib/content";
 
 export default function GettingStartedPage() {
   const [copied, setCopied] = useState(false);
@@ -34,13 +25,13 @@ export default function GettingStartedPage() {
       {/* ── CINEMATIC HEADER ─────────────────────────────────── */}
       <header className="relative pt-44 pb-20 overflow-hidden border-b border-white/5">
         <div className="absolute inset-0 z-0">
-           <div className="absolute top-[-5%] right-[-5%] w-[600px] h-[600px] bg-green-500/5 rounded-full blur-[80px]" />
-           <div className="absolute bottom-0 left-[5%] w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[100px]" />
+          <div className="absolute top-[-5%] right-[-5%] w-[600px] h-[600px] bg-green-500/5 rounded-full blur-[80px]" />
+          <div className="absolute bottom-0 left-[5%] w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[100px]" />
         </div>
 
         <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8">
           <div className="flex flex-col items-start">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-green-500/20 bg-green-500/5 text-[10px] font-black uppercase tracking-[0.3em] text-green-500 mb-8"
@@ -48,25 +39,22 @@ export default function GettingStartedPage() {
               <Rocket className="h-3 w-3" />
               Quick Start Protocol
             </motion.div>
-            
+
             <FrankenGlitch trigger="random" intensity="low">
               <h1 className="text-6xl md:text-8xl font-black tracking-tight text-white mb-8 leading-none">
                 Get <br />
-                <span className="text-animate-green">
-                  Started.
-                </span>
+                <span className="text-animate-green">Started.</span>
               </h1>
             </FrankenGlitch>
-            
-            <motion.p 
+
+            <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1, duration: 1 }}
               className="text-xl md:text-2xl text-slate-400 font-medium max-w-2xl leading-relaxed text-left"
             >
-              Install the kernel, write your first model, 
-              and breathe life into your terminal in under 
-              five minutes.
+              Install the kernel, write your first model, and breathe life into your terminal in
+              under five minutes.
             </motion.p>
           </div>
         </div>
@@ -104,17 +92,26 @@ export default function GettingStartedPage() {
       >
         <div className="grid lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-7">
-            <FrankenContainer withStitches={false} className="glass-modern overflow-hidden group/install">
+            <FrankenContainer
+              withStitches={false}
+              className="glass-modern overflow-hidden group/install"
+            >
               <div className="flex items-center justify-between px-6 py-4 bg-white/5 border-b border-white/5">
                 <div className="flex items-center gap-3">
                   <Terminal className="h-4 w-4 text-green-500" />
-                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Command Line</span>
+                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                    Command Line
+                  </span>
                 </div>
-                <button 
+                <button
                   onClick={copyInstall}
                   className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors"
                 >
-                  {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+                  {copied ? (
+                    <Check className="h-3 w-3 text-green-500" />
+                  ) : (
+                    <Copy className="h-3 w-3" />
+                  )}
                   {copied ? "Copied" : "Copy"}
                 </button>
               </div>
@@ -126,19 +123,26 @@ export default function GettingStartedPage() {
               </div>
             </FrankenContainer>
           </div>
-          
+
           <div className="lg:col-span-5">
             <div className="space-y-6">
-               <h3 className="text-xl font-black text-white uppercase tracking-tight">Manual Stitching</h3>
-               <p className="text-slate-400 font-medium leading-relaxed">
-                 Prefer fine-grained control? You can depend on individual crates 
-                 to minimize your binary footprint.
-               </p>
-               <div className="flex flex-wrap gap-2">
-                  {["ftui-core", "ftui-render", "ftui-runtime"].map(c => (
-                    <span key={c} className="px-3 py-1 rounded-full bg-white/5 border border-white/5 text-[10px] font-bold text-slate-500 uppercase tracking-widest">{c}</span>
-                  ))}
-               </div>
+              <h3 className="text-xl font-black text-white uppercase tracking-tight">
+                Manual Stitching
+              </h3>
+              <p className="text-slate-400 font-medium leading-relaxed">
+                Prefer fine-grained control? You can depend on individual crates to minimize your
+                binary footprint.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {["ftui-core", "ftui-render", "ftui-runtime"].map((c) => (
+                  <span
+                    key={c}
+                    className="px-3 py-1 rounded-full bg-white/5 border border-white/5 text-[10px] font-bold text-slate-500 uppercase tracking-widest"
+                  >
+                    {c}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -164,36 +168,51 @@ export default function GettingStartedPage() {
         kicker="The foundational invariants that set FrankenTUI apart."
       >
         <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
-          <FrankenContainer withStitches={false} className="group glass-modern p-8 md:p-10 hover:bg-white/[0.03] transition-all">
+          <FrankenContainer
+            withStitches={false}
+            className="group glass-modern p-8 md:p-10 hover:bg-white/[0.03] transition-all"
+          >
             <div className="flex flex-col h-full">
               <div className="h-12 w-12 rounded-xl bg-green-500/5 flex items-center justify-center text-green-400 mb-8 group-hover:scale-110 transition-transform">
                 <Layers className="h-6 w-6" />
               </div>
-              <h3 className="text-2xl font-black text-white mb-4 group-hover:text-green-400 transition-colors">Elm Model</h3>
+              <h3 className="text-2xl font-black text-white mb-4 group-hover:text-green-400 transition-colors">
+                Elm Model
+              </h3>
               <p className="text-slate-400 font-medium leading-relaxed flex-1">
                 Pure state transitions. No hidden I/O. Logic stays clean and testable.
               </p>
             </div>
           </FrankenContainer>
 
-          <FrankenContainer withStitches={false} className="group glass-modern p-8 md:p-10 hover:bg-white/[0.03] transition-all">
+          <FrankenContainer
+            withStitches={false}
+            className="group glass-modern p-8 md:p-10 hover:bg-white/[0.03] transition-all"
+          >
             <div className="flex flex-col h-full">
               <div className="h-12 w-12 rounded-xl bg-green-500/5 flex items-center justify-center text-green-400 mb-8 group-hover:scale-110 transition-transform">
                 <Terminal className="h-6 w-6" />
               </div>
-              <h3 className="text-2xl font-black text-white mb-4 group-hover:text-green-400 transition-colors">Inline First</h3>
+              <h3 className="text-2xl font-black text-white mb-4 group-hover:text-green-400 transition-colors">
+                Inline First
+              </h3>
               <p className="text-slate-400 font-medium leading-relaxed flex-1">
                 Preserve terminal history while keeping UI chrome stable.
               </p>
             </div>
           </FrankenContainer>
 
-          <FrankenContainer withStitches={false} className="group glass-modern p-8 md:p-10 hover:bg-white/[0.03] transition-all">
+          <FrankenContainer
+            withStitches={false}
+            className="group glass-modern p-8 md:p-10 hover:bg-white/[0.03] transition-all"
+          >
             <div className="flex flex-col h-full">
               <div className="h-12 w-12 rounded-xl bg-green-500/5 flex items-center justify-center text-green-400 mb-8 group-hover:scale-110 transition-transform">
                 <Activity className="h-6 w-6" />
               </div>
-              <h3 className="text-2xl font-black text-white mb-4 group-hover:text-green-400 transition-colors">One-Writer</h3>
+              <h3 className="text-2xl font-black text-white mb-4 group-hover:text-green-400 transition-colors">
+                One-Writer
+              </h3>
               <p className="text-slate-400 font-medium leading-relaxed flex-1">
                 Zero race conditions. All output flows through a single serialized gate.
               </p>
@@ -211,11 +230,14 @@ export default function GettingStartedPage() {
       >
         <div className="grid gap-4">
           {faq.map((item) => (
-            <details key={item.question} className="group glass-modern overflow-hidden transition-all duration-500 open:bg-white/[0.03] open:border-green-500/30">
+            <details
+              key={item.question}
+              className="group glass-modern overflow-hidden transition-all duration-500 open:bg-white/[0.03] open:border-green-500/30"
+            >
               <summary className="flex cursor-pointer items-center justify-between p-8 text-lg font-black text-white tracking-tight group-hover:text-green-400 transition-colors [&::-webkit-details-marker]:hidden">
                 {item.question}
                 <div className="h-8 w-8 rounded-full border border-white/10 flex items-center justify-center text-slate-500 group-open:rotate-45 group-open:text-green-500 transition-all">
-                   <ArrowRight className="h-4 w-4" />
+                  <ArrowRight className="h-4 w-4" />
                 </div>
               </summary>
               <div className="px-8 pb-8 text-base font-medium leading-relaxed text-slate-400">
@@ -230,17 +252,19 @@ export default function GettingStartedPage() {
       <section className="relative mx-auto max-w-7xl px-6 pb-40">
         <FrankenContainer className="glass-modern bg-green-500/5 p-12 md:p-20 text-center overflow-hidden">
           <div className="relative z-10 max-w-2xl mx-auto">
-            <h2 className="text-4xl md:text-6xl font-black text-white mb-8 tracking-tight">Keep exploring.</h2>
+            <h2 className="text-4xl md:text-6xl font-black text-white mb-8 tracking-tight">
+              Keep exploring.
+            </h2>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link 
-                href="/architecture" 
+              <Link
+                href="/architecture"
                 data-magnetic="true"
                 className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white text-black font-black text-lg hover:bg-green-500 transition-all active:scale-95"
               >
                 ARCHITECTURE
               </Link>
-              <Link 
-                href="/glossary" 
+              <Link
+                href="/glossary"
                 data-magnetic="true"
                 className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-lg hover:bg-white/10 transition-all active:scale-95"
               >

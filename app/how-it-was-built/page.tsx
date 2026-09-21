@@ -1,15 +1,26 @@
 "use client";
 
-import Link from "next/link";
-import { ArrowRight, Clock, Link2, Play } from "lucide-react";
 import { motion } from "framer-motion";
-import { changelog, tweets, buildLogLines, devSessionInsights, devProcessStats } from "@/lib/content";
+import { ArrowRight, Clock, Link2, Play } from "lucide-react";
+import Link from "next/link";
+import {
+  FrankenBolt,
+  FrankenContainer,
+  FrankenStitch,
+  NeuralPulse,
+} from "@/components/franken-elements";
+import FrankenEye from "@/components/franken-eye";
+import FrankenGlitch from "@/components/franken-glitch";
 import SectionShell from "@/components/section-shell";
 import Timeline from "@/components/timeline";
 import TweetWall from "@/components/tweet-wall";
-import FrankenEye from "@/components/franken-eye";
-import { FrankenContainer, NeuralPulse, FrankenBolt, FrankenStitch } from "@/components/franken-elements";
-import FrankenGlitch from "@/components/franken-glitch";
+import {
+  buildLogLines,
+  changelog,
+  devProcessStats,
+  devSessionInsights,
+  tweets,
+} from "@/lib/content";
 
 const keyStats = [
   {
@@ -44,13 +55,13 @@ export default function HowItWasBuiltPage() {
       {/* ── CINEMATIC HEADER ─────────────────────────────────── */}
       <header className="relative pt-44 pb-20 overflow-hidden border-b border-white/5">
         <div className="absolute inset-0 z-0">
-           <div className="absolute top-[-5%] right-[-5%] w-[600px] h-[600px] bg-green-500/5 rounded-full blur-[80px]" />
-           <div className="absolute bottom-0 left-[5%] w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[60px]" />
+          <div className="absolute top-[-5%] right-[-5%] w-[600px] h-[600px] bg-green-500/5 rounded-full blur-[80px]" />
+          <div className="absolute bottom-0 left-[5%] w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[60px]" />
         </div>
 
         <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8">
           <div className="flex flex-col items-start text-left">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-green-500/20 bg-green-500/5 text-[10px] font-black uppercase tracking-[0.3em] text-green-500 mb-8"
@@ -58,25 +69,22 @@ export default function HowItWasBuiltPage() {
               <Clock className="h-3 w-3" />
               100-Hour Sprint
             </motion.div>
-            
+
             <FrankenGlitch trigger="random" intensity="low">
               <h1 className="text-6xl md:text-8xl font-black tracking-tight text-white mb-8">
                 Built in <br />
-                <span className="text-animate-green">
-                  5 Days.
-                </span>
+                <span className="text-animate-green">5 Days.</span>
               </h1>
             </FrankenGlitch>
-            
-            <motion.p 
+
+            <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1, duration: 1 }}
               className="text-xl md:text-2xl text-slate-400 font-medium max-w-3xl leading-relaxed text-left"
             >
-              From zero lines of code to a published Rust crate. 
-              The granular story of how FrankenTUI was stitched 
-              together in a single intense engineering cycle.
+              From zero lines of code to a published Rust crate. The granular story of how
+              FrankenTUI was stitched together in a single intense engineering cycle.
             </motion.p>
           </div>
         </div>
@@ -117,9 +125,7 @@ export default function HowItWasBuiltPage() {
               <dd className="mt-3 text-3xl font-bold tracking-tight text-slate-100 transition-[filter] duration-500 group-hover:drop-shadow-[0_0_8px_rgba(34,197,94,0.3)] sm:text-4xl">
                 {stat.value}
                 {stat.unit && (
-                  <span className="ml-1.5 text-base font-medium text-slate-500">
-                    {stat.unit}
-                  </span>
+                  <span className="ml-1.5 text-base font-medium text-slate-500">{stat.unit}</span>
                 )}
               </dd>
               <p className="mt-2 text-xs font-medium leading-relaxed text-slate-400/80">
@@ -214,9 +220,7 @@ export default function HowItWasBuiltPage() {
                 >
                   <NeuralPulse className="opacity-0 group-hover:opacity-40 transition-opacity" />
                   <div className="mb-3 flex flex-wrap items-center gap-3 relative z-10">
-                    <span className="font-mono text-[11px] text-slate-500">
-                      {insight.date}
-                    </span>
+                    <span className="font-mono text-[11px] text-slate-500">{insight.date}</span>
                     <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                       {insight.phase}
                     </span>
@@ -263,16 +267,19 @@ export default function HowItWasBuiltPage() {
                   <span className="h-1 w-1 rounded-full bg-green-300 animate-pulse" />
                   Interactive Lab
                 </div>
-                <h3 className="mt-4 text-xl font-black tracking-tight text-white uppercase tracking-wider">Time-lapse diff explorer</h3>
+                <h3 className="mt-4 text-xl font-black tracking-tight text-white uppercase tracking-wider">
+                  Time-lapse diff explorer
+                </h3>
                 <p className="mt-3 text-sm leading-relaxed text-slate-300 font-medium">
-                  Scrub through commits and inspect diffs, rendered markdown snapshots, and the evidence ledger for each
-                  categorized change-group.
+                  Scrub through commits and inspect diffs, rendered markdown snapshots, and the
+                  evidence ledger for each categorized change-group.
                 </p>
 
                 <ul className="mt-4 space-y-2 text-sm text-slate-300 font-medium">
                   <li className="flex gap-2">
                     <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-green-400/80 shadow-[0_0_5px_#4ade80]" />
-                    Stacked taxonomy bars (day/hour/15m/5m) with bucket legend and mobile-friendly bucket details.
+                    Stacked taxonomy bars (day/hour/15m/5m) with bucket legend and mobile-friendly
+                    bucket details.
                   </li>
                   <li className="flex gap-2">
                     <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-green-400/80 shadow-[0_0_5px_#4ade80]" />
@@ -280,7 +287,8 @@ export default function HowItWasBuiltPage() {
                   </li>
                   <li className="flex gap-2">
                     <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-green-400/80 shadow-[0_0_5px_#4ade80]" />
-                    Diff viewer (unified + side-by-side), plus rendered markdown snapshot with responsive tables.
+                    Diff viewer (unified + side-by-side), plus rendered markdown snapshot with
+                    responsive tables.
                   </li>
                 </ul>
 
@@ -307,24 +315,31 @@ export default function HowItWasBuiltPage() {
 
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 shadow-xl relative overflow-hidden group">
               <div className="absolute top-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-green-500/20 to-transparent" />
-              <h3 className="text-base font-black tracking-tight text-white uppercase tracking-wider">Origin Protocol</h3>
+              <h3 className="text-base font-black tracking-tight text-white uppercase tracking-wider">
+                Origin Protocol
+              </h3>
               <p className="mt-3 text-sm leading-relaxed text-slate-400 font-medium">
-                FrankenTUI’s spec corpus evolved extremely fast. This lab is the “forensics view”: it reconstructs what
-                changed, when it changed, and why, so the project is auditable and easier to extend.
+                FrankenTUI’s spec corpus evolved extremely fast. This lab is the “forensics view”:
+                it reconstructs what changed, when it changed, and why, so the project is auditable
+                and easier to extend.
               </p>
               <div className="mt-6 grid gap-4">
                 <div className="rounded-xl border border-white/5 bg-black/40 p-4 transition-colors hover:border-green-500/20">
-                  <div className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Revision_Taxonomy</div>
+                  <div className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
+                    Revision_Taxonomy
+                  </div>
                   <div className="mt-1.5 text-sm text-slate-300 font-medium leading-relaxed">
-                    Commits are manually grouped and labeled across 10 buckets (logic fixes, architecture, scrivening,
-                    alien-artifact math, etc.).
+                    Commits are manually grouped and labeled across 10 buckets (logic fixes,
+                    architecture, scrivening, alien-artifact math, etc.).
                   </div>
                 </div>
                 <div className="rounded-xl border border-white/5 bg-black/40 p-4 transition-colors hover:border-green-500/20">
-                  <div className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Forensic_Inspection</div>
+                  <div className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
+                    Forensic_Inspection
+                  </div>
                   <div className="mt-1.5 text-sm text-slate-300 font-medium leading-relaxed">
-                    Tables and dense evidence are rendered without horizontal scroll, using stacked key/value layouts
-                    and tap-to-open legends.
+                    Tables and dense evidence are rendered without horizontal scroll, using stacked
+                    key/value layouts and tap-to-open legends.
                   </div>
                 </div>
               </div>
@@ -347,7 +362,10 @@ export default function HowItWasBuiltPage() {
           title="Sprint Git Log"
           kicker="Selected, timestamped commit messages from the sprint (local tz)."
         >
-          <FrankenContainer withPulse={true} className="bg-black/60 p-0 overflow-hidden shadow-2xl border-green-500/10 group">
+          <FrankenContainer
+            withPulse={true}
+            className="bg-black/60 p-0 overflow-hidden shadow-2xl border-green-500/10 group"
+          >
             <div className="flex items-center gap-3 border-b border-white/5 bg-white/5 px-4 py-3 relative z-10">
               <div className="flex gap-1.5">
                 <div className="h-3 w-3 rounded-full bg-red-500/60" />
@@ -396,9 +414,7 @@ export default function HowItWasBuiltPage() {
 
       {/* ── Try Live Demo CTA ───────────────────────────────── */}
       <div className="mx-auto max-w-3xl px-6 py-16 text-center">
-        <p className="text-lg text-slate-400 mb-6">
-          See the result — try the live demo.
-        </p>
+        <p className="text-lg text-slate-400 mb-6">See the result — try the live demo.</p>
         {/* Plain anchor: /web is a static export under public/, and the
             router's prefetch can only ever 404 on it. */}
         <a
@@ -414,7 +430,7 @@ export default function HowItWasBuiltPage() {
 
       {/* ── CTA section ──────────────────────────────────────── */}
       <section className="relative mx-auto max-w-7xl px-4 pb-32 pt-8 sm:px-6 lg:px-8">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
@@ -428,8 +444,8 @@ export default function HowItWasBuiltPage() {
                 See what 100 hours produced
               </h2>
               <p className="mt-3 max-w-lg text-base leading-relaxed text-slate-400/90 md:text-lg">
-                Explore the screenshots and video demos, dive into the
-                architecture, or add FrankenTUI to your own Rust project.
+                Explore the screenshots and video demos, dive into the architecture, or add
+                FrankenTUI to your own Rust project.
               </p>
             </div>
 

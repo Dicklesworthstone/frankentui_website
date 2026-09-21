@@ -1,49 +1,48 @@
 "use client";
 
+import { motion } from "framer-motion";
+import {
+  Activity,
+  ArrowRight,
+  Blocks,
+  Cpu,
+  ExternalLink,
+  Github,
+  Package,
+  Play,
+  Rocket,
+  Shield,
+  Terminal,
+  Zap,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  Github,
-  ArrowRight,
-  Rocket,
-  Package,
-  Terminal,
-  Activity,
-  ExternalLink,
-  Play,
-  Zap,
-  Cpu,
-  Shield,
-  Blocks,
-} from "lucide-react";
-import { motion } from "framer-motion";
-
+import ComparisonTable from "@/components/comparison-table";
+import FeatureCard from "@/components/feature-card";
+import { FrankenContainer } from "@/components/franken-elements";
+import FrankenEye from "@/components/franken-eye";
+import FrankenFlywheel from "@/components/franken-flywheel";
+import FrankenGlitch from "@/components/franken-glitch";
+import GlowOrbits from "@/components/glow-orbits";
+import { BorderBeam, Magnetic } from "@/components/motion-wrapper";
+import RustCodeBlock from "@/components/rust-code-block";
+import ScreenshotGallery from "@/components/screenshot-gallery";
 import SectionShell from "@/components/section-shell";
 import StatsGrid from "@/components/stats-grid";
-import GlowOrbits from "@/components/glow-orbits";
-import FeatureCard from "@/components/feature-card";
-import ScreenshotGallery from "@/components/screenshot-gallery";
-import ComparisonTable from "@/components/comparison-table";
-import RustCodeBlock from "@/components/rust-code-block";
+import TerminalDemo from "@/components/terminal-demo";
 import Timeline from "@/components/timeline";
 import TweetWall from "@/components/tweet-wall";
-import FrankenFlywheel from "@/components/franken-flywheel";
-import FrankenEye from "@/components/franken-eye";
-import FrankenGlitch from "@/components/franken-glitch";
-import { FrankenContainer } from "@/components/franken-elements";
-import { Magnetic, BorderBeam } from "@/components/motion-wrapper";
 import {
-  siteConfig,
-  heroStats,
-  features,
-  screenshots,
-  codeExample,
-  changelog,
-  tweets,
   browserAdvantages,
   browserComparisonData,
+  changelog,
+  codeExample,
+  features,
+  heroStats,
+  screenshots,
+  siteConfig,
+  tweets,
 } from "@/lib/content";
-import TerminalDemo from "@/components/terminal-demo";
 
 export default function HomePage() {
   return (
@@ -72,23 +71,21 @@ export default function HomePage() {
               V0.1.1 Alive on Crates.io
             </motion.div>
 
-            <motion.h1 
+            <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
               className="text-[clamp(3.5rem,10vw,7rem)] font-black tracking-tight leading-[0.85] text-white mb-10 text-left"
             >
               The <br />
-              <span className="text-red-500">
-                Monster
-              </span> <br />
+              <span className="text-red-500">Monster</span> <br />
               Terminal Kernel.
             </motion.h1>
 
             <p className="text-lg md:text-xl text-slate-400 font-medium leading-relaxed max-w-2xl mb-12">
-              Stitched together from the finest Rust algorithms and
-              brought to life with deterministic math. Runs natively in your terminal
-              and at 60fps in the browser via WASM + WebGPU.
+              Stitched together from the finest Rust algorithms and brought to life with
+              deterministic math. Runs natively in your terminal and at 60fps in the browser via
+              WASM + WebGPU.
             </p>
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
@@ -143,7 +140,6 @@ export default function HomePage() {
             </div>
           </div>
 
-
           {/* Full-Width Video — the centrepiece */}
           <div className="relative mt-16 w-full max-w-[1200px] mx-auto group">
             {/* Floating Peeking Eye - Now visible on mobile with adjusted positioning */}
@@ -152,36 +148,45 @@ export default function HomePage() {
             </div>
 
             <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-[2rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
-            <FrankenContainer withBolts={false} className="relative glass-modern p-0 overflow-hidden shadow-2xl w-full">
+            <FrankenContainer
+              withBolts={false}
+              className="relative glass-modern p-0 overflow-hidden shadow-2xl w-full"
+            >
               <BorderBeam />
 
               {/* Auto-playing Rio Recording */}
               <div className="relative bg-black overflow-hidden">
-                 <video
+                <video
                   autoPlay
                   muted
                   loop
                   playsInline
                   poster="/screenshots/visual_effects_clifford_attractor.webp"
                   className="block w-full h-auto"
-                 >
+                >
                   <source src="/videos/frankentui-rio-crt.webm" type="video/webm" />
                   <source src="/videos/frankentui-rio-crt.mp4" type="video/mp4" />
-                 </video>
+                </video>
 
-                 {/* Console Metadata Overlay */}
-                 <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-md bg-black/60 backdrop-blur-md border border-white/10 opacity-60 group-hover:opacity-100 transition-opacity">
-                    <Terminal className="h-3.5 w-3.5 text-green-500" />
-                    <span className="text-[10px] font-black text-white uppercase tracking-widest">Rio_CRT_Active</span>
-                 </div>
+                {/* Console Metadata Overlay */}
+                <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-md bg-black/60 backdrop-blur-md border border-white/10 opacity-60 group-hover:opacity-100 transition-opacity">
+                  <Terminal className="h-3.5 w-3.5 text-green-500" />
+                  <span className="text-[10px] font-black text-white uppercase tracking-widest">
+                    Rio_CRT_Active
+                  </span>
+                </div>
               </div>
             </FrankenContainer>
 
             {/* Embedded Stats Card - Now visible on mobile with responsive sizing */}
             <div className="absolute -bottom-6 left-4 md:-bottom-10 md:left-6 z-30 glass-modern p-4 md:p-6 rounded-2xl border border-green-500/20 shadow-2xl animate-float flex">
               <div className="flex flex-col text-left">
-                <span className="text-2xl md:text-4xl font-black text-green-400 tabular-nums tracking-tighter">100h</span>
-                <span className="text-[8px] md:text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Build Time</span>
+                <span className="text-2xl md:text-4xl font-black text-green-400 tabular-nums tracking-tighter">
+                  100h
+                </span>
+                <span className="text-[8px] md:text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                  Build Time
+                </span>
               </div>
             </div>
           </div>
@@ -217,13 +222,17 @@ export default function HomePage() {
           <Link href="/how-it-was-built/spec-evolution-lab" className="group block relative">
             {/* Pulsing glow behind the container */}
             <div className="absolute -inset-10 bg-red-500/10 rounded-full blur-[120px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-            
-            <FrankenContainer withPulse={true} accentColor="#ef4444" className="glass-modern border-red-500/20 group-hover:border-red-500/50 transition-all duration-700 hover:shadow-[0_0_120px_rgba(239,68,68,0.25)] bg-black/60 backdrop-blur-md p-0 overflow-hidden">
+
+            <FrankenContainer
+              withPulse={true}
+              accentColor="#ef4444"
+              className="glass-modern border-red-500/20 group-hover:border-red-500/50 transition-all duration-700 hover:shadow-[0_0_120px_rgba(239,68,68,0.25)] bg-black/60 backdrop-blur-md p-0 overflow-hidden"
+            >
               <div className="relative flex flex-col md:flex-row items-center gap-10 md:gap-16 p-10 md:p-16 z-10">
                 {/* Frankenstein Head — Forensic Style */}
                 <div className="relative shrink-0">
                   <div className="absolute -inset-12 bg-red-500/25 rounded-full blur-3xl group-hover:bg-red-500/45 transition-all duration-700 animate-pulse" />
-                  
+
                   {/* Decorative corner brackets */}
                   <div className="absolute -top-6 -left-6 w-12 h-12 border-t-2 border-l-2 border-red-500/40 group-hover:border-red-500 transition-all duration-500 group-hover:scale-110" />
                   <div className="absolute -bottom-6 -right-6 w-12 h-12 border-b-2 border-r-2 border-red-500/40 group-hover:border-red-500 transition-all duration-500 group-hover:scale-110" />
@@ -242,7 +251,7 @@ export default function HomePage() {
                     {/* Scanline overlay */}
                     <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.3)_50%)] bg-[length:100%_4px] opacity-60" />
                     {/* Flickering red overlay */}
-                    <motion.div 
+                    <motion.div
                       animate={{ opacity: [0.1, 0.4, 0.1, 0.5, 0.2] }}
                       transition={{ duration: 1.5, repeat: Infinity }}
                       className="absolute inset-0 bg-red-500/10 pointer-events-none"
@@ -254,20 +263,20 @@ export default function HomePage() {
                     {[...Array(3)].map((_, i) => (
                       <motion.path
                         key={i}
-                        d={`M ${20 + i*20},${40 + i*10} Q ${40 + i*30},${30 - i*20} ${60 + i*40},${60 + i*30} T ${100 + i*50},${20 + i*40}`}
+                        d={`M ${20 + i * 20},${40 + i * 10} Q ${40 + i * 30},${30 - i * 20} ${60 + i * 40},${60 + i * 30} T ${100 + i * 50},${20 + i * 40}`}
                         stroke="#ef4444"
-                        strokeWidth={1 + i*0.5}
+                        strokeWidth={1 + i * 0.5}
                         fill="none"
-                        animate={{ 
+                        animate={{
                           pathLength: [0, 1, 0],
                           opacity: [0, 1, 0],
-                          strokeWidth: [1, 3, 1]
+                          strokeWidth: [1, 3, 1],
                         }}
                         transition={{
-                          duration: 0.3 + i*0.1,
+                          duration: 0.3 + i * 0.1,
                           repeat: Infinity,
-                          repeatDelay: 0.5 + [1.2, 0.8, 1.7][i] ,
-                          delay: i * 0.2
+                          repeatDelay: 0.5 + [1.2, 0.8, 1.7][i],
+                          delay: i * 0.2,
                         }}
                         style={{ filter: "drop-shadow(0 0 8px #ef4444)" }}
                         className="opacity-0 group-hover:opacity-100 transition-opacity"
@@ -297,13 +306,17 @@ export default function HomePage() {
                   </FrankenGlitch>
 
                   <p className="text-base md:text-xl text-slate-400 font-medium leading-relaxed max-w-xl group-hover:text-slate-300 transition-colors">
-                    Watch the FrankenTUI specification mutate through <strong className="text-white">50+ structural revisions.</strong> 
-                    Forensic diff analysis of every algorithm, stitched together in 5 days of madness.
+                    Watch the FrankenTUI specification mutate through{" "}
+                    <strong className="text-white">50+ structural revisions.</strong>
+                    Forensic diff analysis of every algorithm, stitched together in 5 days of
+                    madness.
                   </p>
 
                   <div className="mt-10 flex items-center gap-6">
                     <div className="flex items-center gap-2 group/btn">
-                      <span className="text-sm font-black text-white uppercase tracking-widest group-hover:text-red-500 transition-colors">Enter Laboratory</span>
+                      <span className="text-sm font-black text-white uppercase tracking-widest group-hover:text-red-500 transition-colors">
+                        Enter Laboratory
+                      </span>
                       <div className="h-10 w-10 rounded-full border border-red-500/30 flex items-center justify-center group-hover:bg-red-500 group-hover:border-red-500 transition-all duration-300">
                         <ArrowRight className="h-5 w-5 text-red-500 group-hover:text-white transition-colors" />
                       </div>
@@ -347,10 +360,18 @@ export default function HomePage() {
         {/* Advantage Cards */}
         <div className="grid gap-4 sm:grid-cols-2 md:gap-6 mb-12">
           {browserAdvantages.map((adv) => {
-            const iconMap: Record<string, React.ElementType> = { zap: Zap, cpu: Cpu, shield: Shield, activity: Activity };
+            const iconMap: Record<string, React.ElementType> = {
+              zap: Zap,
+              cpu: Cpu,
+              shield: Shield,
+              activity: Activity,
+            };
             const Icon = iconMap[adv.icon] || Zap;
             return (
-              <div key={adv.title} className="group relative rounded-2xl border border-white/5 bg-white/[0.02] p-8 transition-all hover:border-green-500/20 hover:bg-white/[0.04]">
+              <div
+                key={adv.title}
+                className="group relative rounded-2xl border border-white/5 bg-white/[0.02] p-8 transition-all hover:border-green-500/20 hover:bg-white/[0.04]"
+              >
                 <div className="flex items-center gap-4 mb-4">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-500/10 text-green-400">
                     <Icon className="h-5 w-5" />
@@ -366,21 +387,34 @@ export default function HomePage() {
         {/* Browser Comparison Table */}
         <div className="rounded-2xl border border-white/5 bg-white/[0.02] overflow-hidden">
           <div className="px-6 py-4 border-b border-white/5">
-            <h3 className="text-sm font-black uppercase tracking-widest text-slate-500">Architecture Comparison</h3>
+            <h3 className="text-sm font-black uppercase tracking-widest text-slate-500">
+              Architecture Comparison
+            </h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/5">
-                  <th className="px-6 py-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-500">Feature</th>
-                  <th className="px-6 py-3 text-left text-[10px] font-black uppercase tracking-widest text-green-400">FrankenTUI</th>
-                  <th className="px-6 py-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-500">xterm.js</th>
-                  <th className="px-6 py-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-500">hterm</th>
+                  <th className="px-6 py-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-500">
+                    Feature
+                  </th>
+                  <th className="px-6 py-3 text-left text-[10px] font-black uppercase tracking-widest text-green-400">
+                    FrankenTUI
+                  </th>
+                  <th className="px-6 py-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-500">
+                    xterm.js
+                  </th>
+                  <th className="px-6 py-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-500">
+                    hterm
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {browserComparisonData.map((row) => (
-                  <tr key={row.feature} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors">
+                  <tr
+                    key={row.feature}
+                    className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors"
+                  >
                     <td className="px-6 py-3 font-medium text-slate-300">{row.feature}</td>
                     <td className="px-6 py-3 text-green-400 font-medium">{row.frankentui}</td>
                     <td className="px-6 py-3 text-slate-500">{row.xtermjs}</td>
@@ -511,10 +545,7 @@ export default function HomePage() {
           ================================================================ */}
       <section className="relative overflow-hidden py-28 md:py-36 lg:py-44">
         {/* Background glow */}
-        <div
-          className="pointer-events-none absolute inset-0 -z-10"
-          aria-hidden="true"
-        >
+        <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
           <div className="absolute inset-0 bg-gradient-to-t from-green-950/20 via-transparent to-transparent" />
           <div className="absolute bottom-0 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-green-500/10 blur-3xl" />
         </div>
@@ -527,16 +558,14 @@ export default function HomePage() {
           </div>
 
           <FrankenGlitch trigger="hover" intensity="medium">
-            <h2
-              className="font-bold tracking-tighter text-white text-4xl md:text-6xl"
-            >
+            <h2 className="font-bold tracking-tighter text-white text-4xl md:text-6xl">
               Ready to Build?
             </h2>
           </FrankenGlitch>
 
           <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-slate-400 md:text-xl font-medium">
-            Add FrankenTUI to your Rust project with a single command. Ship
-            terminal interfaces with correctness guarantees from day one.
+            Add FrankenTUI to your Rust project with a single command. Ship terminal interfaces with
+            correctness guarantees from day one.
           </p>
 
           {/* Install command */}
@@ -549,7 +578,9 @@ export default function HomePage() {
                   <div className="h-3 w-3 rounded-full bg-yellow-500/60" />
                   <div className="h-3 w-3 rounded-full bg-green-500/60" />
                 </div>
-                <span className="text-xs text-slate-600 font-bold uppercase tracking-widest">terminal</span>
+                <span className="text-xs text-slate-600 font-bold uppercase tracking-widest">
+                  terminal
+                </span>
               </div>
 
               {/* Command */}
@@ -587,7 +618,7 @@ export default function HomePage() {
           ================================================================ */}
       <section className="relative py-32 border-t border-white/5 overflow-hidden">
         <div className="absolute inset-0 z-0 opacity-20">
-           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-green-500/5 rounded-full blur-[120px]" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-green-500/5 rounded-full blur-[120px]" />
         </div>
 
         <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8">
@@ -605,9 +636,9 @@ export default function HomePage() {
             </FrankenGlitch>
 
             <p className="mt-6 text-xl text-slate-400 font-medium leading-relaxed max-w-3xl">
-              This entire system was architected and built using the 
-              <strong className="text-white"> AI Flywheel</strong> — an interactive 
-              ecosystem of specialized autonomous agents.
+              This entire system was architected and built using the
+              <strong className="text-white"> AI Flywheel</strong> — an interactive ecosystem of
+              specialized autonomous agents.
             </p>
           </div>
 
@@ -617,9 +648,9 @@ export default function HomePage() {
             {/* Additional Info / CTA */}
             <div className="space-y-8 text-left">
               <p className="text-lg text-slate-400 font-medium leading-relaxed">
-                The development process for FrankenTUI was a recursive feedback loop. 
-                Specialized agents handled different layers of the kernel hierarchy, 
-                from the zero-unsafe core to the Bayesian diffing strategy.
+                The development process for FrankenTUI was a recursive feedback loop. Specialized
+                agents handled different layers of the kernel hierarchy, from the zero-unsafe core
+                to the Bayesian diffing strategy.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
@@ -653,32 +684,34 @@ export default function HomePage() {
             {/* Visual Side - 3D Tilted OG Image */}
             <div className="relative group perspective-1000">
               <motion.div
-                whileHover={{ 
-                  rotateY: -10, 
-                  rotateX: 5, 
+                whileHover={{
+                  rotateY: -10,
+                  rotateX: 5,
                   scale: 1.02,
-                  boxShadow: "0 20px 80px -20px rgba(34, 197, 94, 0.3)"
+                  boxShadow: "0 20px 80px -20px rgba(34, 197, 94, 0.3)",
                 }}
                 transition={{ type: "spring", stiffness: 200, damping: 20 }}
                 className="relative aspect-video rounded-2xl overflow-hidden border border-white/10 bg-black shadow-2xl transition-all"
               >
-                <Image 
-                  src="/images/frankentui_illustration.webp" 
-                  alt="FrankenTUI Origin" 
-                  fill 
+                <Image
+                  src="/images/frankentui_illustration.webp"
+                  alt="FrankenTUI Origin"
+                  fill
                   className="object-cover transition-transform duration-700 group-hover:scale-110"
                 />
-                
+
                 {/* Overlay scanlines */}
                 <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%)] bg-[length:100%_4px] opacity-20" />
-                
+
                 {/* HUD elements over image */}
                 <div className="absolute bottom-4 left-4 flex items-center gap-3 px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-md border border-white/5">
                   <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-ping" />
-                  <span className="text-[8px] font-black text-white uppercase tracking-widest">Flywheel_Generated</span>
+                  <span className="text-[8px] font-black text-white uppercase tracking-widest">
+                    Flywheel_Generated
+                  </span>
                 </div>
               </motion.div>
-              
+
               {/* Back decorative glow */}
               <div className="absolute -inset-4 bg-green-500/10 rounded-[2rem] blur-2xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             </div>

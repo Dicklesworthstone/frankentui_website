@@ -6,10 +6,6 @@ export const metadata: Metadata = {
     "60+ searchable terminal UI terms — from ANSI escape sequences to zero-width joiners",
 };
 
-export default function GlossaryLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function GlossaryLayout({ children }: { children: React.ReactNode }) {
   return children;
 }

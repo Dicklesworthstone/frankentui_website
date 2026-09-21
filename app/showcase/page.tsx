@@ -1,16 +1,16 @@
 "use client";
 
-import Link from "next/link";
-import { ArrowRight, Eye, Play } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState, useRef, useEffect, lazy, Suspense } from "react";
-import { screenshots, videos } from "@/lib/content";
-import type { Video } from "@/lib/content";
-import SectionShell from "@/components/section-shell";
-import ScreenshotGallery from "@/components/screenshot-gallery";
-import VideoPlayer from "@/components/video-player";
+import { ArrowRight, Eye, Play } from "lucide-react";
+import Link from "next/link";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import FrankenEye from "@/components/franken-eye";
 import FrankenGlitch from "@/components/franken-glitch";
+import ScreenshotGallery from "@/components/screenshot-gallery";
+import SectionShell from "@/components/section-shell";
+import VideoPlayer from "@/components/video-player";
+import type { Video } from "@/lib/content";
+import { screenshots, videos } from "@/lib/content";
 
 const FrankenTerminal = lazy(() => import("@/components/franken-terminal"));
 
@@ -23,8 +23,13 @@ function LazyTerminalSection() {
     const el = sentinelRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
-      { rootMargin: "200px" }
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" },
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -46,11 +51,13 @@ function LazyTerminalSection() {
       >
         <div className="mx-auto max-w-5xl">
           {visible ? (
-            <Suspense fallback={
-              <div className="w-full h-[500px] rounded-2xl bg-[#0a0a0a] border border-white/5 flex items-center justify-center text-slate-500 font-mono text-sm">
-                Loading interactive demo...
-              </div>
-            }>
+            <Suspense
+              fallback={
+                <div className="w-full h-[500px] rounded-2xl bg-[#0a0a0a] border border-white/5 flex items-center justify-center text-slate-500 font-mono text-sm">
+                  Loading interactive demo...
+                </div>
+              }
+            >
               <FrankenTerminal
                 width="100%"
                 height={500}
@@ -67,7 +74,8 @@ function LazyTerminalSection() {
             </div>
           )}
           <p className="mt-4 text-center text-xs text-slate-600">
-            The full WASM kernel runs in your browser at 60fps. Works in Chrome, Edge, Safari, and Firefox.
+            The full WASM kernel runs in your browser at 60fps. Works in Chrome, Edge, Safari, and
+            Firefox.
           </p>
         </div>
       </SectionShell>
@@ -81,13 +89,13 @@ export default function ShowcasePage() {
       {/* ── CINEMATIC HEADER ─────────────────────────────────── */}
       <header className="relative pt-44 pb-20 overflow-hidden border-b border-white/5">
         <div className="absolute inset-0 z-0">
-           <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-green-500/5 rounded-full blur-[80px]" />
-           <div className="absolute bottom-0 left-[10%] w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[60px]" />
+          <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-green-500/5 rounded-full blur-[80px]" />
+          <div className="absolute bottom-0 left-[10%] w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[60px]" />
         </div>
 
         <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8">
           <div className="flex flex-col items-start text-left">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-green-500/20 bg-green-500/5 text-[10px] font-black uppercase tracking-[0.3em] text-green-500 mb-8"
@@ -95,24 +103,21 @@ export default function ShowcasePage() {
               <Eye className="h-3 w-3" />
               Visual Gallery
             </motion.div>
-            
+
             <FrankenGlitch trigger="random" intensity="low">
               <h1 className="text-6xl md:text-8xl font-black tracking-tight text-white mb-8">
                 The <br />
-                <span className="text-animate-green">
-                  Showcase.
-                </span>
+                <span className="text-animate-green">Showcase.</span>
               </h1>
             </FrankenGlitch>
-            
-            <motion.p 
+
+            <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1, duration: 1 }}
               className="text-xl md:text-2xl text-slate-400 font-medium max-w-2xl leading-relaxed"
             >
-              Explore dashboards, data visualizations, 
-              and complex visual effects rendered entirely 
+              Explore dashboards, data visualizations, and complex visual effects rendered entirely
               within the terminal grid.
             </motion.p>
           </div>
@@ -193,7 +198,7 @@ export default function ShowcasePage() {
 
       {/* ── CTA section ──────────────────────────────────────── */}
       <section className="relative mx-auto max-w-7xl px-4 pb-32 pt-8 sm:px-6 lg:px-8">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
@@ -207,8 +212,8 @@ export default function ShowcasePage() {
                 Ready to build with FrankenTUI?
               </h2>
               <p className="mt-3 max-w-lg text-base leading-relaxed text-slate-400/90 md:text-lg">
-                Get started in minutes with our step-by-step guide. Add the
-                crate, write your first Model, and see it render.
+                Get started in minutes with our step-by-step guide. Add the crate, write your first
+                Model, and see it render.
               </p>
             </div>
 

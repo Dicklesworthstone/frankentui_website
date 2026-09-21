@@ -1,10 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Link from "next/link";
 import { ArrowRight, Network } from "lucide-react";
-import FrankenEye from "@/components/franken-eye";
 import dynamic from "next/dynamic";
+import Link from "next/link";
+import FrankenEye from "@/components/franken-eye";
 
 const BeadsView = dynamic(() => import("@/components/beads/beads-view"), {
   ssr: false,
@@ -12,7 +12,7 @@ const BeadsView = dynamic(() => import("@/components/beads/beads-view"), {
     <div className="flex flex-col items-center justify-center min-h-[600px] w-full bg-black/40 rounded-3xl border border-green-500/10 backdrop-blur-xl">
       <div className="h-12 w-12 border-4 border-green-500/20 border-t-green-500 rounded-full animate-spin" />
     </div>
-  )
+  ),
 });
 
 export default function BeadsPage() {
@@ -21,8 +21,8 @@ export default function BeadsPage() {
       {/* ── CINEMATIC HEADER ─────────────────────────────────── */}
       <header className="relative pt-44 pb-20 overflow-hidden border-b border-white/5">
         <div className="absolute inset-0 z-0">
-           <div className="absolute top-[-5%] left-[-5%] w-[500px] h-[500px] bg-green-500/5 rounded-full blur-[80px]" />
-           <div className="absolute bottom-0 right-[5%] w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[100px]" />
+          <div className="absolute top-[-5%] left-[-5%] w-[500px] h-[500px] bg-green-500/5 rounded-full blur-[80px]" />
+          <div className="absolute bottom-0 right-[5%] w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[100px]" />
         </div>
 
         <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8">
@@ -38,9 +38,7 @@ export default function BeadsPage() {
 
             <h1 className="text-6xl md:text-8xl font-black tracking-tight text-white mb-8">
               Project <br />
-              <span className="text-animate-green">
-                Graph.
-              </span>
+              <span className="text-animate-green">Graph.</span>
             </h1>
 
             <motion.p
@@ -49,9 +47,9 @@ export default function BeadsPage() {
               transition={{ delay: 1, duration: 1 }}
               className="text-xl md:text-2xl text-slate-400 font-medium max-w-2xl leading-relaxed"
             >
-              The entire FrankenTUI build was tracked as a directed acyclic graph
-              of &ldquo;beads&rdquo;&mdash;interconnected tasks with explicit
-              dependencies, priorities, and completion states.
+              The entire FrankenTUI build was tracked as a directed acyclic graph of
+              &ldquo;beads&rdquo;&mdash;interconnected tasks with explicit dependencies, priorities,
+              and completion states.
             </motion.p>
           </div>
         </div>
@@ -70,7 +68,7 @@ export default function BeadsPage() {
       {/* ── WHAT ARE BEADS ────────────────────────────────────── */}
       <section className="mx-auto max-w-7xl px-6 lg:px-8 py-16 md:py-24 border-t border-white/5">
         <div className="max-w-3xl space-y-8 text-left">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
@@ -82,7 +80,7 @@ export default function BeadsPage() {
             </span>
           </motion.div>
 
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -91,7 +89,7 @@ export default function BeadsPage() {
             What are Beads?
           </motion.h2>
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
@@ -99,21 +97,19 @@ export default function BeadsPage() {
             className="space-y-4 text-base text-slate-400 font-medium leading-relaxed"
           >
             <p>
-              During the 5-day sprint that produced FrankenTUI, every unit of
-              work was modeled as a <strong className="text-white">bead</strong>&mdash;a
-              node in a directed acyclic graph (DAG) with typed dependency edges,
-              priority scores, and completion criteria.
+              During the 5-day sprint that produced FrankenTUI, every unit of work was modeled as a{" "}
+              <strong className="text-white">bead</strong>&mdash;a node in a directed acyclic graph
+              (DAG) with typed dependency edges, priority scores, and completion criteria.
             </p>
             <p>
-              The graph served as the single source of truth for what to build
-              next. Critical path analysis determined the optimal build order,
-              while blocker detection prevented wasted effort on tasks whose
-              prerequisites were incomplete.
+              The graph served as the single source of truth for what to build next. Critical path
+              analysis determined the optimal build order, while blocker detection prevented wasted
+              effort on tasks whose prerequisites were incomplete.
             </p>
             <p>
-              This viewer reconstructs that execution graph from the project&apos;s
-              SQLite database, letting you explore how a complex 12-crate Rust
-              workspace was orchestrated from scratch in under a week.
+              This viewer reconstructs that execution graph from the project&apos;s SQLite database,
+              letting you explore how a complex 12-crate Rust workspace was orchestrated from
+              scratch in under a week.
             </p>
           </motion.div>
         </div>
@@ -121,7 +117,7 @@ export default function BeadsPage() {
 
       {/* ── CTA ───────────────────────────────────────────────── */}
       <section className="relative mx-auto max-w-7xl px-4 pb-32 pt-8 sm:px-6 lg:px-8">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
@@ -135,8 +131,8 @@ export default function BeadsPage() {
                 See how it was built?
               </h2>
               <p className="mt-3 max-w-lg text-base leading-relaxed text-slate-400/90 md:text-lg">
-                Dive into the full story of how FrankenTUI went from zero
-                to a 12-crate workspace in five days.
+                Dive into the full story of how FrankenTUI went from zero to a 12-crate workspace in
+                five days.
               </p>
             </div>
 

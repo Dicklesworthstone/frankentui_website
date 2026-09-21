@@ -1,22 +1,20 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
-import { Search, Binary, ArrowRight, X } from "lucide-react";
 import { motion } from "framer-motion";
-import { getAllJargon, searchJargon, type JargonTerm } from "@/lib/jargon";
-import BottomSheet from "@/components/ui/bottom-sheet";
-import FrankenEye from "@/components/franken-eye";
+import { ArrowRight, Binary, Search, X } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
 import { FrankenContainer } from "@/components/franken-elements";
+import FrankenEye from "@/components/franken-eye";
 import FrankenGlitch from "@/components/franken-glitch";
+import BottomSheet from "@/components/ui/bottom-sheet";
 import Streamdown from "@/components/ui/streamdown";
+import { getAllJargon, type JargonTerm, searchJargon } from "@/lib/jargon";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function groupByLetter(
-  entries: [string, JargonTerm][]
-): Map<string, [string, JargonTerm][]> {
+function groupByLetter(entries: [string, JargonTerm][]): Map<string, [string, JargonTerm][]> {
   const groups = new Map<string, [string, JargonTerm][]>();
   for (const entry of entries) {
     const letter = entry[1].term.charAt(0).toUpperCase();
@@ -29,7 +27,7 @@ function groupByLetter(
       if (a === "#") return 1;
       if (b === "#") return -1;
       return a.localeCompare(b);
-    })
+    }),
   );
 }
 
@@ -41,18 +39,25 @@ function TermDetail({ entry }: { entry: JargonTerm }) {
   return (
     <div className="space-y-8 text-sm leading-relaxed text-slate-400">
       <div className="space-y-4 text-left">
-        <p className="text-2xl md:text-3xl font-black text-white leading-tight tracking-tight">{entry.short}</p>
+        <p className="text-2xl md:text-3xl font-black text-white leading-tight tracking-tight">
+          {entry.short}
+        </p>
         <div className="text-lg font-medium leading-relaxed">
           <Streamdown content={entry.long} />
         </div>
       </div>
 
       {entry.analogy && (
-        <FrankenContainer withBolts={false} className="glass-modern p-8 bg-green-500/5 text-left border-green-500/20">
+        <FrankenContainer
+          withBolts={false}
+          className="glass-modern p-8 bg-green-500/5 text-left border-green-500/20"
+        >
           <p className="mb-3 text-[10px] font-black uppercase tracking-[0.3em] text-green-400">
             Monster Analogy
           </p>
-          <p className="text-slate-200 font-medium leading-relaxed italic text-lg">&ldquo;{entry.analogy}&rdquo;</p>
+          <p className="text-slate-200 font-medium leading-relaxed italic text-lg">
+            &ldquo;{entry.analogy}&rdquo;
+          </p>
         </FrankenContainer>
       )}
 
@@ -96,7 +101,7 @@ export default function GlossaryPage() {
 
   const entries = useMemo(
     () => (query.trim() === "" ? getAllJargon() : searchJargon(query)),
-    [query]
+    [query],
   );
 
   const grouped = useMemo(() => groupByLetter(entries), [entries]);
@@ -115,13 +120,13 @@ export default function GlossaryPage() {
       {/* ── CINEMATIC HEADER ─────────────────────────────────── */}
       <header className="relative pt-44 pb-20 overflow-hidden border-b border-white/5 text-left">
         <div className="absolute inset-0 z-0">
-           <div className="absolute top-[-5%] right-[-5%] w-[600px] h-[600px] bg-green-500/5 rounded-full blur-[80px]" />
-           <div className="absolute bottom-0 right-[5%] w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[60px]" />
+          <div className="absolute top-[-5%] right-[-5%] w-[600px] h-[600px] bg-green-500/5 rounded-full blur-[80px]" />
+          <div className="absolute bottom-0 right-[5%] w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[60px]" />
         </div>
 
         <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8">
           <div className="flex flex-col items-start">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-green-500/20 bg-green-500/5 text-[10px] font-black uppercase tracking-[0.3em] text-green-500 mb-8"
@@ -129,24 +134,21 @@ export default function GlossaryPage() {
               <Binary className="h-3 w-3" />
               Machine Lexicon
             </motion.div>
-            
+
             <FrankenGlitch trigger="random" intensity="low">
               <h1 className="text-6xl md:text-8xl font-black tracking-tight text-white mb-8">
                 The <br />
-                <span className="text-animate-green">
-                  Glossary.
-                </span>
+                <span className="text-animate-green">Glossary.</span>
               </h1>
             </FrankenGlitch>
-            
-            <motion.p 
+
+            <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1, duration: 1 }}
               className="text-xl md:text-2xl text-slate-400 font-medium max-w-2xl leading-relaxed text-left"
             >
-              {totalCount}+ technical terms, demystified. 
-              The language of the FrankenTUI kernel.
+              {totalCount}+ technical terms, demystified. The language of the FrankenTUI kernel.
             </motion.p>
           </div>
         </div>
@@ -170,7 +172,7 @@ export default function GlossaryPage() {
               className="w-full h-16 pl-16 pr-8 bg-white/[0.03] border border-white/5 rounded-2xl text-xl font-medium text-white placeholder-slate-600 outline-none focus:border-green-500/30 focus:bg-white/[0.05] transition-all shadow-inner"
             />
             {query && (
-              <button 
+              <button
                 type="button"
                 onClick={() => setQuery("")}
                 aria-label="Clear search"
@@ -180,7 +182,9 @@ export default function GlossaryPage() {
               </button>
             )}
             <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-2">
-               <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">{entries.length} Terms Found</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">
+                {entries.length} Terms Found
+              </span>
             </div>
           </div>
         </div>
@@ -191,12 +195,14 @@ export default function GlossaryPage() {
         {entries.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-40 text-center opacity-40">
             <Binary className="h-16 w-16 mb-8 text-green-500 animate-pulse" />
-            <p className="text-2xl font-black text-white uppercase tracking-widest">No Matches Found</p>
+            <p className="text-2xl font-black text-white uppercase tracking-widest">
+              No Matches Found
+            </p>
           </div>
         ) : (
           <div className="space-y-32">
             {[...grouped.entries()].map(([letter, items]) => (
-              <motion.section 
+              <motion.section
                 key={letter}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -208,10 +214,14 @@ export default function GlossaryPage() {
                 <div className="lg:col-span-3">
                   <div className="sticky top-48">
                     <div className="flex items-center gap-4">
-                      <span className="text-7xl font-black text-white/10 leading-none select-none tracking-tighter">{letter}</span>
+                      <span className="text-7xl font-black text-white/10 leading-none select-none tracking-tighter">
+                        {letter}
+                      </span>
                       <div className="h-px flex-1 bg-gradient-to-r from-green-500/20 to-transparent" />
                     </div>
-                    <p className="mt-2 text-[10px] font-black text-green-500 uppercase tracking-[0.4em]">{items.length} Definitions</p>
+                    <p className="mt-2 text-[10px] font-black text-green-500 uppercase tracking-[0.4em]">
+                      {items.length} Definitions
+                    </p>
                   </div>
                 </div>
 
@@ -225,7 +235,11 @@ export default function GlossaryPage() {
                       data-magnetic="true"
                       className="group text-left focus:outline-none"
                     >
-                      <FrankenContainer withStitches={false} withPulse={true} className="h-full glass-modern p-8 md:p-10 transition-all duration-500 group-hover:bg-white/[0.03] group-hover:border-green-500/30 group-hover:-translate-y-1 shadow-lg hover:shadow-green-500/5 border-white/5">
+                      <FrankenContainer
+                        withStitches={false}
+                        withPulse={true}
+                        className="h-full glass-modern p-8 md:p-10 transition-all duration-500 group-hover:bg-white/[0.03] group-hover:border-green-500/30 group-hover:-translate-y-1 shadow-lg hover:shadow-green-500/5 border-white/5"
+                      >
                         <div className="flex flex-col h-full items-start">
                           <FrankenGlitch trigger="hover" intensity="low">
                             <h3 className="text-2xl font-black text-white mb-4 group-hover:text-green-400 transition-colors tracking-tight">

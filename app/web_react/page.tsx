@@ -1,12 +1,12 @@
 "use client";
 
-import { lazy, Suspense, useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Blocks, Play, Copy, Check, GripVertical } from "lucide-react";
-import { browserUseCases } from "@/lib/content";
-import SectionShell from "@/components/section-shell";
+import { Blocks, Check, Copy, GripVertical, Play } from "lucide-react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import FrankenEye from "@/components/franken-eye";
 import FrankenGlitch from "@/components/franken-glitch";
+import SectionShell from "@/components/section-shell";
+import { browserUseCases } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
 const FrankenTerminal = lazy(() => import("@/components/franken-terminal"));
@@ -32,15 +32,45 @@ const codeSnippet = `import FrankenTerminal from "@/components/franken-terminal"
 // ── Props reference ───────────────────────────────────────────────────────
 const propsRef = [
   { prop: "width", type: "number | string", default: '"100%"', desc: "CSS width of the container" },
-  { prop: "height", type: "number | string", default: '"400px"', desc: "CSS height of the container" },
-  { prop: "captureKeys", type: "boolean", default: "true", desc: "Capture keyboard events when focused" },
+  {
+    prop: "height",
+    type: "number | string",
+    default: '"400px"',
+    desc: "CSS height of the container",
+  },
+  {
+    prop: "captureKeys",
+    type: "boolean",
+    default: "true",
+    desc: "Capture keyboard events when focused",
+  },
   { prop: "showStatus", type: "boolean", default: "true", desc: "Show cols\u00d7rows overlay" },
-  { prop: "loadTextAssets", type: "boolean", default: "true", desc: "Load 14MB text assets (Shakespeare, SQLite)" },
+  {
+    prop: "loadTextAssets",
+    type: "boolean",
+    default: "true",
+    desc: "Load 14MB text assets (Shakespeare, SQLite)",
+  },
   { prop: "autoFocus", type: "boolean", default: "false", desc: "Focus the canvas on mount" },
   { prop: "zoom", type: "number", default: "1.0", desc: "Initial zoom level" },
-  { prop: "onReady", type: "() => void", default: "\u2014", desc: "Fired when WASM loads and first frame renders" },
-  { prop: "onResize", type: "(cols, rows) => void", default: "\u2014", desc: "Fired when terminal grid resizes" },
-  { prop: "onError", type: "(error) => void", default: "\u2014", desc: "Fired on WASM load failure" },
+  {
+    prop: "onReady",
+    type: "() => void",
+    default: "\u2014",
+    desc: "Fired when WASM loads and first frame renders",
+  },
+  {
+    prop: "onResize",
+    type: "(cols, rows) => void",
+    default: "\u2014",
+    desc: "Fired when terminal grid resizes",
+  },
+  {
+    prop: "onError",
+    type: "(error) => void",
+    default: "\u2014",
+    desc: "Fired on WASM load failure",
+  },
 ];
 
 // ── Resize handle hook ────────────────────────────────────────────────────
@@ -62,16 +92,19 @@ function useResize(
     [size],
   );
 
-  const onPointerMove = useCallback((e: React.PointerEvent) => {
-    if (!dragging.current) return;
-    const dx = e.clientX - start.current.mx;
-    const dy = e.clientY - start.current.my;
-    const maxW = containerRef.current?.parentElement?.clientWidth ?? 1200;
-    setSize((prev) => ({
-      w: dragging.current === "y" ? prev.w : Math.max(320, Math.min(start.current.w + dx, maxW)),
-      h: dragging.current === "x" ? prev.h : Math.max(200, Math.min(start.current.h + dy, 900)),
-    }));
-  }, [containerRef]);
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (!dragging.current) return;
+      const dx = e.clientX - start.current.mx;
+      const dy = e.clientY - start.current.my;
+      const maxW = containerRef.current?.parentElement?.clientWidth ?? 1200;
+      setSize((prev) => ({
+        w: dragging.current === "y" ? prev.w : Math.max(320, Math.min(start.current.w + dx, maxW)),
+        h: dragging.current === "x" ? prev.h : Math.max(200, Math.min(start.current.h + dy, 900)),
+      }));
+    },
+    [containerRef],
+  );
 
   const onPointerUp = useCallback(() => {
     dragging.current = null;
@@ -89,7 +122,11 @@ function CodeBlock({ code }: { code: string }) {
         <code>{code}</code>
       </pre>
       <button
-        onClick={() => { navigator.clipboard.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+        onClick={() => {
+          navigator.clipboard.writeText(code);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        }}
         className="absolute top-3 right-3 p-2 rounded-lg bg-white/5 border border-white/10 text-slate-500 hover:text-white hover:bg-white/10 transition-all opacity-0 group-hover:opacity-100"
       >
         {copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
@@ -99,13 +136,7 @@ function CodeBlock({ code }: { code: string }) {
 }
 
 // ── Lazy terminal loader ──────────────────────────────────────────────────
-function LazyTerminal({
-  width,
-  height,
-}: {
-  width: number | string;
-  height: number | string;
-}) {
+function LazyTerminal({ width, height }: { width: number | string; height: number | string }) {
   const [visible, setVisible] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -126,7 +157,13 @@ function LazyTerminal({
   }, []);
 
   return (
-    <div ref={sentinelRef} style={{ width: typeof width === "number" ? width : width, height: typeof height === "number" ? height : height }}>
+    <div
+      ref={sentinelRef}
+      style={{
+        width: typeof width === "number" ? width : width,
+        height: typeof height === "number" ? height : height,
+      }}
+    >
       {visible ? (
         <Suspense
           fallback={
@@ -157,7 +194,8 @@ function LazyTerminal({
 // ── Page ──────────────────────────────────────────────────────────────────
 export default function WebReactPage() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const defaultW = typeof window !== "undefined" ? Math.min(80 * 8 + 24, window.innerWidth - 80) : 80 * 8 + 24;
+  const defaultW =
+    typeof window !== "undefined" ? Math.min(80 * 8 + 24, window.innerWidth - 80) : 80 * 8 + 24;
   const { size, setSize, onPointerDown, onPointerMove, onPointerUp } = useResize(containerRef, {
     w: defaultW,
     h: 24 * 16 + 24,
@@ -199,8 +237,8 @@ export default function WebReactPage() {
               transition={{ delay: 1, duration: 1 }}
               className="text-xl md:text-2xl text-slate-400 font-medium max-w-3xl leading-relaxed text-left"
             >
-              Embed a live FrankenTUI terminal in any React page. Three lines
-              of code, full GPU-accelerated rendering, automatic resize handling.
+              Embed a live FrankenTUI terminal in any React page. Three lines of code, full
+              GPU-accelerated rendering, automatic resize handling.
             </motion.p>
           </div>
         </div>
@@ -228,7 +266,10 @@ export default function WebReactPage() {
                   setSize({ w: containerRef.current?.parentElement?.clientWidth ?? 1200, h: p.h });
                 } else {
                   setFullWidth(false);
-                  setSize({ w: Math.min(p.w, containerRef.current?.parentElement?.clientWidth ?? 1200), h: p.h });
+                  setSize({
+                    w: Math.min(p.w, containerRef.current?.parentElement?.clientWidth ?? 1200),
+                    h: p.h,
+                  });
                 }
               }}
               className={cn(
@@ -254,10 +295,7 @@ export default function WebReactPage() {
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
           >
-            <LazyTerminal
-              width="100%"
-              height="100%"
-            />
+            <LazyTerminal width="100%" height="100%" />
 
             {/* Right drag handle */}
             {!fullWidth && (
@@ -292,7 +330,8 @@ export default function WebReactPage() {
         </div>
 
         <p className="mt-8 text-center text-xs text-slate-600">
-          The full WASM kernel runs in your browser at 60fps. Works in Chrome, Edge, Safari, and Firefox.
+          The full WASM kernel runs in your browser at 60fps. Works in Chrome, Edge, Safari, and
+          Firefox.
         </p>
       </SectionShell>
 
@@ -345,10 +384,18 @@ export default function WebReactPage() {
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-white/10">
-                <th className="py-3 pr-4 text-[10px] font-black uppercase tracking-widest text-green-500">Prop</th>
-                <th className="py-3 pr-4 text-[10px] font-black uppercase tracking-widest text-green-500">Type</th>
-                <th className="py-3 pr-4 text-[10px] font-black uppercase tracking-widest text-green-500">Default</th>
-                <th className="py-3 text-[10px] font-black uppercase tracking-widest text-green-500">Description</th>
+                <th className="py-3 pr-4 text-[10px] font-black uppercase tracking-widest text-green-500">
+                  Prop
+                </th>
+                <th className="py-3 pr-4 text-[10px] font-black uppercase tracking-widest text-green-500">
+                  Type
+                </th>
+                <th className="py-3 pr-4 text-[10px] font-black uppercase tracking-widest text-green-500">
+                  Default
+                </th>
+                <th className="py-3 text-[10px] font-black uppercase tracking-widest text-green-500">
+                  Description
+                </th>
               </tr>
             </thead>
             <tbody>

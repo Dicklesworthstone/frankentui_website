@@ -18,8 +18,7 @@ export default function GlobalError({
           </div>
           <h1 className="mb-2 text-2xl font-bold">Something went wrong</h1>
           <p className="mb-6 max-w-md text-white/50">
-            The renderer encountered a panic. Error digest:{" "}
-            {error.digest ?? "unknown"}
+            The renderer encountered a panic. Error digest: {error.digest ?? "unknown"}
           </p>
           <button
             onClick={reset}
