@@ -37,11 +37,14 @@ export default function Timeline({ items }: { items: ChangelogEntry[] }) {
 
                 {/* Content Block */}
                 <div className="lg:col-span-9">
-                  <FrankenContainer withStitches={false} className="glass-modern p-8 md:p-12 transition-all duration-500 group-hover:bg-white/[0.03] group-hover:border-green-500/20 group-hover:shadow-[0_0_40px_rgba(34,197,94,0.1)]">
+                  <FrankenContainer
+                    withStitches={false}
+                    className="glass-modern p-8 md:p-12 transition-all duration-500 group-hover:bg-white/[0.03] group-hover:border-green-500/20 group-hover:shadow-[0_0_40px_rgba(34,197,94,0.1)]"
+                  >
                     <h3 className="text-2xl md:text-3xl font-black text-white mb-8 group-hover:text-green-400 transition-colors tracking-tight">
                       {item.title}
                     </h3>
-                    
+
                     <ul className="space-y-5">
                       {item.items.map((text, i) => (
                         <li key={i} className="flex items-start gap-4 group/item">
@@ -55,12 +58,14 @@ export default function Timeline({ items }: { items: ChangelogEntry[] }) {
 
                     {/* Action Detail Detail */}
                     <div className="mt-10 pt-8 border-t border-white/5 flex items-center justify-between opacity-40 group-hover:opacity-100 transition-opacity">
-                       <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">System Log v0.1</span>
-                       <div className="flex gap-1.5">
-                          <div className="h-1 w-3 rounded-full bg-green-500 animate-pulse" />
-                          <div className="h-1 w-1 rounded-full bg-green-500/50" />
-                          <div className="h-1 w-1 rounded-full bg-green-500/20" />
-                       </div>
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">
+                        System Log v0.1
+                      </span>
+                      <div className="flex gap-1.5">
+                        <div className="h-1 w-3 rounded-full bg-green-500 animate-pulse" />
+                        <div className="h-1 w-1 rounded-full bg-green-500/50" />
+                        <div className="h-1 w-1 rounded-full bg-green-500/20" />
+                      </div>
                     </div>
                   </FrankenContainer>
                 </div>

@@ -38,9 +38,7 @@
         "id": "bd-3monr",
         "title": "Mermaid Compatibility Matrix + Fallback Policy",
         "score": 0.1604292271741102,
-        "reasons": [
-          "✅ Currently unclaimed - available for work"
-        ],
+        "reasons": ["✅ Currently unclaimed - available for work"],
         "unblocks": 0
       }
     ]
@@ -99,9 +97,7 @@
         "bd-1av4o.14.8",
         "bd-1av4o.14.9"
       ],
-      "blocked_by": [
-        "bd-1av4o.13.2"
-      ]
+      "blocked_by": ["bd-1av4o.13.2"]
     },
     {
       "id": "bd-315zw",
@@ -188,9 +184,7 @@
         "⏳ Blocked by bd-37xrr - complete that first",
         "🚨 High priority (P1) - prioritize this work"
       ],
-      "blocked_by": [
-        "bd-37xrr"
-      ]
+      "blocked_by": ["bd-37xrr"]
     },
     {
       "id": "bd-37xrr",
@@ -235,13 +229,8 @@
         "⏳ Blocked by 2 items - need to clear dependencies",
         "🚨 High priority (P1) - prioritize this work"
       ],
-      "unblocks_ids": [
-        "bd-1ri6i"
-      ],
-      "blocked_by": [
-        "bd-315zw",
-        "bd-3monr"
-      ]
+      "unblocks_ids": ["bd-1ri6i"],
+      "blocked_by": ["bd-315zw", "bd-3monr"]
     },
     {
       "id": "bd-2oovu",
@@ -285,10 +274,7 @@
         "⏳ Blocked by 2 items - need to clear dependencies",
         "🚨 High priority (P1) - prioritize this work"
       ],
-      "blocked_by": [
-        "bd-1ri6i",
-        "bd-315zw"
-      ]
+      "blocked_by": ["bd-1ri6i", "bd-315zw"]
     },
     {
       "id": "bd-1av4o.13.2",
@@ -332,10 +318,7 @@
         "✅ Currently unclaimed - available for work",
         "🚨 High priority (P1) - prioritize this work"
       ],
-      "unblocks_ids": [
-        "bd-1av4o.14",
-        "bd-1av4o.14.7"
-      ]
+      "unblocks_ids": ["bd-1av4o.14", "bd-1av4o.14.7"]
     },
     {
       "id": "bd-2fp5r",
@@ -379,10 +362,7 @@
         "⏳ Blocked by 2 items - need to clear dependencies",
         "🚨 High priority (P1) - prioritize this work"
       ],
-      "blocked_by": [
-        "bd-1ri6i",
-        "bd-2oovu"
-      ]
+      "blocked_by": ["bd-1ri6i", "bd-2oovu"]
     },
     {
       "id": "bd-12o4t",
@@ -474,9 +454,7 @@
         }
       },
       "action": "Start work on this issue",
-      "reasons": [
-        "✅ Currently unclaimed - available for work"
-      ]
+      "reasons": ["✅ Currently unclaimed - available for work"]
     },
     {
       "id": "bd-2hxl1",
@@ -520,10 +498,7 @@
         "⏳ Blocked by 2 items - need to clear dependencies",
         "🚨 High priority (P1) - prioritize this work"
       ],
-      "blocked_by": [
-        "bd-2fp5r",
-        "bd-2oovu"
-      ]
+      "blocked_by": ["bd-2fp5r", "bd-2oovu"]
     }
   ],
   "quick_wins": [
@@ -548,38 +523,28 @@
       "title": "E2E scripts use deterministic fixture helpers",
       "score": 1.1339850002884626,
       "reason": "Unblocks 2 items, high priority",
-      "unblocks_ids": [
-        "bd-1av4o.14",
-        "bd-1av4o.14.7"
-      ]
+      "unblocks_ids": ["bd-1av4o.14", "bd-1av4o.14.7"]
     },
     {
       "id": "bd-3e1t.5.2",
       "title": "Render-thread profiling + in-app timing for VFX",
       "score": 1.0339850002884625,
       "reason": "Unblocks 2 items",
-      "unblocks_ids": [
-        "bd-3e1t.5.3",
-        "bd-3e1t.5.7"
-      ]
+      "unblocks_ids": ["bd-3e1t.5.3", "bd-3e1t.5.7"]
     },
     {
       "id": "bd-37xrr",
       "title": "Mermaid Init Directives + Theme/Config Bridging",
       "score": 0.9,
       "reason": "Unblocks 1 items, high priority",
-      "unblocks_ids": [
-        "bd-1ri6i"
-      ]
+      "unblocks_ids": ["bd-1ri6i"]
     },
     {
       "id": "bd-1mzp6",
       "title": "CI: Coverage + E2E gate tightening",
       "score": 0.8,
       "reason": "Unblocks 1 items",
-      "unblocks_ids": [
-        "bd-112f"
-      ]
+      "unblocks_ids": ["bd-112f"]
     }
   ],
   "blockers_to_clear": [
@@ -598,37 +563,27 @@
         "bd-1av4o.14.9"
       ],
       "actionable": false,
-      "blocked_by": [
-        "bd-1av4o.13.2"
-      ]
+      "blocked_by": ["bd-1av4o.13.2"]
     },
     {
       "id": "bd-1av4o.13.2",
       "title": "E2E scripts use deterministic fixture helpers",
       "unblocks_count": 2,
-      "unblocks_ids": [
-        "bd-1av4o.14",
-        "bd-1av4o.14.7"
-      ],
+      "unblocks_ids": ["bd-1av4o.14", "bd-1av4o.14.7"],
       "actionable": true
     },
     {
       "id": "bd-3e1t.5.2",
       "title": "Render-thread profiling + in-app timing for VFX",
       "unblocks_count": 2,
-      "unblocks_ids": [
-        "bd-3e1t.5.3",
-        "bd-3e1t.5.7"
-      ],
+      "unblocks_ids": ["bd-3e1t.5.3", "bd-3e1t.5.7"],
       "actionable": true
     },
     {
       "id": "bd-1mzp6",
       "title": "CI: Coverage + E2E gate tightening",
       "unblocks_count": 1,
-      "unblocks_ids": [
-        "bd-112f"
-      ],
+      "unblocks_ids": ["bd-112f"],
       "actionable": false,
       "blocked_by": [
         "bd-11hb",
@@ -652,9 +607,7 @@
       "id": "bd-1rz0.27",
       "title": "Evidence Ledger + Galaxy-Brain Debug View",
       "unblocks_count": 1,
-      "unblocks_ids": [
-        "bd-iuvb.4"
-      ],
+      "unblocks_ids": ["bd-iuvb.4"],
       "actionable": true
     }
   ],

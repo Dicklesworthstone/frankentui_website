@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import {
+  Activity,
   BarChart3,
   Blocks,
   Bug,
@@ -23,7 +24,6 @@ import {
   Terminal,
   Twitter,
   Zap,
-  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FrankenStitch } from "./franken-elements";
@@ -91,13 +91,9 @@ export default function SectionShell({
       data-section
       id={id}
       aria-labelledby={headingId}
-      className={cn(
-        "relative mx-auto max-w-7xl px-6 py-16 md:py-32 lg:py-48",
-        className
-      )}
+      className={cn("relative mx-auto max-w-7xl px-6 py-16 md:py-32 lg:py-48", className)}
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 items-start">
-
         {/* SIDEBAR HEADER (Stripe Style) */}
         <div className="lg:col-span-4 lg:sticky lg:top-32 space-y-10">
           <motion.div
@@ -117,7 +113,7 @@ export default function SectionShell({
 
             <div className="space-y-6">
               <div className="flex items-center gap-4">
-                <div 
+                <div
                   data-magnetic="true"
                   className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-500/5 border border-green-500/20 text-green-400"
                 >
@@ -143,7 +139,7 @@ export default function SectionShell({
 
           {/* Decorative monster-tech elements - Now visible on mobile with adjusted scale */}
           <div className="opacity-20 pointer-events-none">
-             <FrankenStitch orientation="vertical" className="h-24 md:h-32" />
+            <FrankenStitch orientation="vertical" className="h-24 md:h-32" />
           </div>
         </div>
 
@@ -154,9 +150,7 @@ export default function SectionShell({
             whileInView={skipAnim ? undefined : { opacity: 1, y: 0 }}
             viewport={skipAnim ? undefined : { once: true, amount: 0.05 }}
             transition={
-              skipAnim
-                ? { duration: 0 }
-                : { duration: 1, ease: [0.19, 1, 0.22, 1], delay: 0.2 }
+              skipAnim ? { duration: 0 } : { duration: 1, ease: [0.19, 1, 0.22, 1], delay: 0.2 }
             }
           >
             {children}

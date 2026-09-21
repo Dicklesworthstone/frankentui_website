@@ -1,3 +1,3 @@
-declare module 'marked';
-declare module 'dompurify';
-declare module 'highlight.js';
+declare module "marked";
+declare module "dompurify";
+declare module "highlight.js";

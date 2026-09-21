@@ -33,7 +33,10 @@ function boundaryCaughtMessages(events: ConsoleErrorLike[]): string[] {
     if (at === -1) continue;
     // "…caught error: TypeError: whatever {componentStack: …}" - keep the
     // message, drop the React component-stack object that follows it.
-    const message = event.text.slice(at + BOUNDARY_PREFIX.length).split("{")[0].trim();
+    const message = event.text
+      .slice(at + BOUNDARY_PREFIX.length)
+      .split("{")[0]
+      .trim();
     if (message) caught.push(message);
   }
   return caught;
