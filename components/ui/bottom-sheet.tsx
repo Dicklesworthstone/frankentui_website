@@ -1,10 +1,10 @@
 "use client";
 
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Binary, X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { X, Binary } from "lucide-react";
-import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 import { createPortal } from "react-dom";
+import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 
 interface BottomSheetProps {
   isOpen: boolean;
@@ -23,12 +23,7 @@ function Portal({ children }: { children: React.ReactNode }) {
   return createPortal(children, document.body);
 }
 
-export default function BottomSheet({
-  isOpen,
-  onClose,
-  title,
-  children,
-}: BottomSheetProps) {
+export default function BottomSheet({ isOpen, onClose, title, children }: BottomSheetProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const headingId = useId();
   const prefersReducedMotion = useReducedMotion();
@@ -81,7 +76,10 @@ export default function BottomSheet({
                     <Binary size={20} />
                   </div>
                   {title && (
-                    <h3 id={headingId} className="text-xl font-black uppercase tracking-widest text-white">
+                    <h3
+                      id={headingId}
+                      className="text-xl font-black uppercase tracking-widest text-white"
+                    >
                       {title}
                     </h3>
                   )}
@@ -97,9 +95,7 @@ export default function BottomSheet({
 
               {/* Content Area */}
               <div className="flex-1 overflow-y-auto p-8 md:p-12 custom-scrollbar">
-                <div className="mx-auto max-w-4xl w-full">
-                  {children}
-                </div>
+                <div className="mx-auto max-w-4xl w-full">{children}</div>
               </div>
 
               {/* Decorative Footer Detail */}

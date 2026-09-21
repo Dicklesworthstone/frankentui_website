@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence, useReducedMotion, type Variants } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
 
 export const springs = {
   smooth: { type: "spring", stiffness: 200, damping: 25 } as const,
@@ -41,5 +41,5 @@ export const sheetEntrance: Variants = {
   exit: { y: "100%", opacity: 0.8, transition: { duration: 0.2 } },
 };
 
-export { motion, AnimatePresence, useReducedMotion };
 export type { Variants };
+export { AnimatePresence, motion, useReducedMotion };

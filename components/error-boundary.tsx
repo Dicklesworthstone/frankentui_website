@@ -1,8 +1,8 @@
 "use client";
 
+import { Activity, AlertTriangle, RefreshCw, Terminal } from "lucide-react";
 import { Component, type ReactNode } from "react";
-import { AlertTriangle, RefreshCw, Terminal, Activity } from "lucide-react";
-import { FrankenContainer, FrankenBolt } from "./franken-elements";
+import { FrankenBolt, FrankenContainer } from "./franken-elements";
 import FrankenGlitch from "./franken-glitch";
 
 type ErrorBoundaryProps = {
@@ -15,10 +15,7 @@ type ErrorBoundaryState = {
   error: Error | null;
 };
 
-export default class ErrorBoundary extends Component<
-  ErrorBoundaryProps,
-  ErrorBoundaryState
-> {
+export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -48,10 +45,13 @@ export default class ErrorBoundary extends Component<
           aria-live="assertive"
           className="mx-auto flex min-h-[500px] max-w-3xl flex-col items-center justify-center px-6 py-16 text-center"
         >
-          <FrankenContainer withPulse={true} className="w-full bg-black/60 border-red-500/20 p-10 md:p-16 relative overflow-hidden shadow-[0_0_50px_rgba(239,68,68,0.1)]">
+          <FrankenContainer
+            withPulse={true}
+            className="w-full bg-black/60 border-red-500/20 p-10 md:p-16 relative overflow-hidden shadow-[0_0_50px_rgba(239,68,68,0.1)]"
+          >
             <FrankenBolt className="absolute -left-1.5 -top-1.5 z-20" />
             <FrankenBolt className="absolute -right-1.5 -top-1.5 z-20" />
-            
+
             <div className="absolute top-4 right-6 flex items-center gap-2 text-[8px] font-black uppercase tracking-[0.3em] text-red-500/40">
               <Activity className="h-2.5 w-2.5 animate-pulse" />
               <span>Kernel_Panic_Detected</span>
@@ -72,7 +72,8 @@ export default class ErrorBoundary extends Component<
               <div className="absolute -inset-2 bg-red-500/5 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
               <p className="relative z-10 text-base font-mono text-slate-400 max-w-lg mx-auto leading-relaxed border border-white/5 bg-white/5 p-4 rounded-xl">
                 <span className="text-red-500/60 mr-2">{">> "}</span>
-                {this.state.error?.message || "An unexpected neural desync occurred during render cycle."}
+                {this.state.error?.message ||
+                  "An unexpected neural desync occurred during render cycle."}
               </p>
             </div>
 
@@ -94,12 +95,14 @@ export default class ErrorBoundary extends Component<
             </div>
 
             <div className="mt-12 pt-8 border-t border-white/5 flex items-center justify-between opacity-30">
-               <span className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-600 font-mono">Dump_ID: {Math.random().toString(16).substring(2, 10).toUpperCase()}</span>
-               <div className="flex gap-1">
-                  <div className="h-1 w-1 rounded-full bg-red-500" />
-                  <div className="h-1 w-1 rounded-full bg-red-500/50" />
-                  <div className="h-1 w-1 rounded-full bg-red-500/20" />
-               </div>
+              <span className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-600 font-mono">
+                Dump_ID: {Math.random().toString(16).substring(2, 10).toUpperCase()}
+              </span>
+              <div className="flex gap-1">
+                <div className="h-1 w-1 rounded-full bg-red-500" />
+                <div className="h-1 w-1 rounded-full bg-red-500/50" />
+                <div className="h-1 w-1 rounded-full bg-red-500/20" />
+              </div>
             </div>
           </FrankenContainer>
         </div>

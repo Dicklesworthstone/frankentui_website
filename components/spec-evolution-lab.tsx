@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import clsx from "clsx";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
@@ -17,37 +17,36 @@ import {
   Terminal,
   X,
 } from "lucide-react";
-
-import styles from "./spec-evolution-lab.module.css";
-import { FrankenBolt, FrankenStitch, NeuralPulse, FrankenContainer } from "./franken-elements";
-import FrankenGlitch from "./franken-glitch";
-import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { LRUCache } from "@/lib/lru-cache";
 import {
   buildCorpusText,
   computeEditDistanceLines,
   computeFileChangeSummary,
   computePerFileContribution,
   computeTextStats,
-  myersDiffTextLines,
   type DiffOp,
+  myersDiffTextLines,
 } from "@/lib/spec-evolution-compare";
-import { LRUCache } from "@/lib/lru-cache";
 import {
   CorpusIndex,
-  searchSingleCommit,
+  type IndexProgress,
   type SearchHit,
   type SearchScope,
-  type IndexProgress,
+  searchSingleCommit,
 } from "@/lib/spec-evolution-search";
 import {
   buildTimelineData,
-  playbackIntervalMs,
-  positionToCommitIndex,
   commitIndexToPosition,
   PLAYBACK_SPEEDS,
   type PlaybackSpeed,
+  playbackIntervalMs,
+  positionToCommitIndex,
 } from "@/lib/spec-evolution-timeline";
+import { FrankenBolt, FrankenContainer, FrankenStitch, NeuralPulse } from "./franken-elements";
+import FrankenGlitch from "./franken-glitch";
+import styles from "./spec-evolution-lab.module.css";
 
 type BucketKey = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 type BucketMode = "day" | "hour" | "15m" | "5m";
@@ -293,7 +292,11 @@ function perCommitBucketWeights(commit: CommitView, softMode: boolean): Record<n
   return out;
 }
 
-function perCommitBucketMagnitude(commit: CommitView, metric: MetricKey, softMode: boolean): Record<number, number> {
+function perCommitBucketMagnitude(
+  commit: CommitView,
+  metric: MetricKey,
+  softMode: boolean,
+): Record<number, number> {
   // Metric: lines or patchBytes. Distribute per-commit magnitude across groups, then across bucket labels.
   const magnitude = commit.magnitude[metric] ?? 0;
   if (!commit.review) return { 0: magnitude };
@@ -488,7 +491,9 @@ function enhanceMarkdownTables(root: HTMLElement | null) {
     } else {
       const firstRow = table.querySelector("tr");
       if (firstRow) {
-        firstRow.querySelectorAll("th, td").forEach((cell) => headers.push((cell.textContent || "").trim()));
+        firstRow
+          .querySelectorAll("th, td")
+          .forEach((cell) => headers.push((cell.textContent || "").trim()));
       }
     }
     if (!headers.length) return;
@@ -536,9 +541,14 @@ function BucketChip({
       title={name}
       onClick={onClick}
     >
-      <span className="h-2 w-2 rounded-full shadow-[0_0_8px_currentColor]" style={{ background: bucketColors[bucket], color: bucketColors[bucket] }} />
+      <span
+        className="h-2 w-2 rounded-full shadow-[0_0_8px_currentColor]"
+        style={{ background: bucketColors[bucket], color: bucketColors[bucket] }}
+      />
       <span className="font-mono">{bucket}</span>
-      {showLabel ? <span className="hidden sm:inline text-slate-400 font-medium">{name}</span> : null}
+      {showLabel ? (
+        <span className="hidden sm:inline text-slate-400 font-medium">{name}</span>
+      ) : null}
     </button>
   );
 }
@@ -566,7 +576,11 @@ function DialogShell({
         <div className="flex items-start justify-between gap-3 border-b border-white/5 bg-white/5 p-6">
           <div className="min-w-0">
             <h3 className="text-xl font-black tracking-tight text-white">{title}</h3>
-            {subtitle ? <p className="mt-1.5 text-xs font-medium text-slate-500 uppercase tracking-widest">{subtitle}</p> : null}
+            {subtitle ? (
+              <p className="mt-1.5 text-xs font-medium text-slate-500 uppercase tracking-widest">
+                {subtitle}
+              </p>
+            ) : null}
           </div>
           <button
             type="button"
@@ -686,13 +700,18 @@ function StackedBars({
                 y -= h;
                 if (h <= 0.5) return null;
                 const isFocused = focusBucket === null || b === focusBucket;
-                
+
                 return (
                   <motion.rect
                     key={b}
                     initial={{ height: 0, y: margin.top + innerH }}
                     animate={{ height: h, y: y }}
-                    transition={{ type: "spring", stiffness: 100, damping: 20, delay: idx * 0.01 + b * 0.02 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 100,
+                      damping: 20,
+                      delay: idx * 0.01 + b * 0.02,
+                    }}
                     x={x}
                     width={barW}
                     rx={2}
@@ -714,11 +733,13 @@ function StackedBars({
                 fontFamily="var(--font-mono)"
                 fill="rgba(148,163,184,0.5)"
                 className="group-hover/bar:fill-green-400 transition-colors tracking-tighter"
-                transform={xKeys.length > 12 ? `rotate(35, ${x + barW / 2}, ${height - 20})` : undefined}
+                transform={
+                  xKeys.length > 12 ? `rotate(35, ${x + barW / 2}, ${height - 20})` : undefined
+                }
               >
                 {k}
               </text>
-              
+
               {/* Hover highlight overlay */}
               <rect
                 x={x - 2}
@@ -828,7 +849,7 @@ function MarkdownView({ markdown }: { markdown: string }) {
       ref={rootRef}
       className={clsx(
         "rounded-2xl border border-white/5 bg-black/40 p-6 md:p-8 overflow-auto max-h-[72vh] custom-scrollbar selection:bg-green-500/30",
-        styles.mdProse
+        styles.mdProse,
       )}
       dangerouslySetInnerHTML={{ __html: html }}
     />
@@ -860,7 +881,11 @@ export default function SpecEvolutionLab() {
   // Full-text search state
   const [searchScope, setSearchScope] = useState<SearchScope>("thisCommit");
   const [searchResults, setSearchResults] = useState<SearchHit[]>([]);
-  const [indexProgress, setIndexProgress] = useState<IndexProgress>({ indexed: 0, total: 0, done: false });
+  const [indexProgress, setIndexProgress] = useState<IndexProgress>({
+    indexed: 0,
+    total: 0,
+    done: false,
+  });
   const [showSearchResults, setShowSearchResults] = useState(false);
   const searchResultsRef = useRef<HTMLDivElement | null>(null);
 
@@ -954,7 +979,15 @@ export default function SpecEvolutionLab() {
     });
     const newUrl = `${window.location.pathname}${window.location.search}${hash}`;
     window.history.replaceState(null, "", newUrl);
-  }, [selectedCommitShort, activeTab, fileChoice, diffFormat, searchQuery, showReviewedOnly, bucketFilter]);
+  }, [
+    selectedCommitShort,
+    activeTab,
+    fileChoice,
+    diffFormat,
+    searchQuery,
+    showReviewedOnly,
+    bucketFilter,
+  ]);
 
   const reviewedCount = useMemo(() => commits.filter((c) => c.reviewed).length, [commits]);
 
@@ -971,13 +1004,15 @@ export default function SpecEvolutionLab() {
   // Incremental corpus indexing for all-commits search
   useEffect(() => {
     if (commits.length === 0) return;
-    corpusIndex.init(commits.map((c) => ({
-      idx: c.idx,
-      short: c.short,
-      date: c.date,
-      subject: c.subject || "",
-      files: c.files,
-    })));
+    corpusIndex.init(
+      commits.map((c) => ({
+        idx: c.idx,
+        short: c.short,
+        date: c.date,
+        subject: c.subject || "",
+        files: c.files,
+      })),
+    );
     setIndexProgress(corpusIndex.progress);
 
     const BATCH_SIZE = 3;
@@ -989,7 +1024,9 @@ export default function SpecEvolutionLab() {
       setIndexProgress({ ...corpusIndex.progress });
       if (hasMore) {
         if ("requestIdleCallback" in window) {
-          (window as unknown as { requestIdleCallback: (cb: () => void) => void }).requestIdleCallback(indexNextBatch);
+          (
+            window as unknown as { requestIdleCallback: (cb: () => void) => void }
+          ).requestIdleCallback(indexNextBatch);
         } else {
           setTimeout(indexNextBatch, 16);
         }
@@ -997,12 +1034,16 @@ export default function SpecEvolutionLab() {
     }
 
     if ("requestIdleCallback" in window) {
-      (window as unknown as { requestIdleCallback: (cb: () => void) => void }).requestIdleCallback(indexNextBatch);
+      (window as unknown as { requestIdleCallback: (cb: () => void) => void }).requestIdleCallback(
+        indexNextBatch,
+      );
     } else {
       setTimeout(indexNextBatch, 16);
     }
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [commits]);
 
   const selectedCommit = commits[selectedIndex];
@@ -1022,13 +1063,17 @@ export default function SpecEvolutionLab() {
         return;
       }
       const hits = perfTime("searchSingleCommit", () =>
-        searchSingleCommit({
-          idx: selectedCommit.idx,
-          short: selectedCommit.short,
-          date: selectedCommit.date,
-          subject: selectedCommit.subject || "",
-          files: selectedCommit.files,
-        }, q, 50)
+        searchSingleCommit(
+          {
+            idx: selectedCommit.idx,
+            short: selectedCommit.short,
+            date: selectedCommit.date,
+            subject: selectedCommit.subject || "",
+            files: selectedCommit.files,
+          },
+          q,
+          50,
+        ),
       );
       setSearchResults(hits);
       setShowSearchResults(hits.length > 0);
@@ -1066,13 +1111,16 @@ export default function SpecEvolutionLab() {
         acc[b] = new Array(xKeys.length).fill(0);
         return acc;
       },
-      {} as Record<BucketKey, number[]>
+      {} as Record<BucketKey, number[]>,
     );
 
     xKeys.forEach((k, idx) => {
       const commitsIn = buckets.get(k) || [];
       for (const c of commitsIn) {
-        const dist = metric === "groups" ? perCommitBucketWeights(c, softMode) : perCommitBucketMagnitude(c, metric, softMode);
+        const dist =
+          metric === "groups"
+            ? perCommitBucketWeights(c, softMode)
+            : perCommitBucketMagnitude(c, metric, softMode);
         for (const [bk, val] of Object.entries(dist)) {
           const b = parseInt(bk, 10);
           if (b < 0 || b > 10) continue;
@@ -1109,7 +1157,9 @@ export default function SpecEvolutionLab() {
     const cacheKey = `${selectedCommit.sha}:${fileChoice}`;
     const cached = snapshotMdCache.get(cacheKey);
     if (cached !== undefined) return cached;
-    const md = perfTime("buildSnapshotMarkdown", () => buildSnapshotMarkdown(selectedCommit, fileChoice));
+    const md = perfTime("buildSnapshotMarkdown", () =>
+      buildSnapshotMarkdown(selectedCommit, fileChoice),
+    );
     snapshotMdCache.set(cacheKey, md);
     return md;
   }, [activeTab, fileChoice, selectedCommit]);
@@ -1181,17 +1231,26 @@ export default function SpecEvolutionLab() {
 
       const baseStats =
         fileChoice === "__ALL__" && compareBaseCommit.snapshot
-          ? { lines: compareBaseCommit.snapshot.lines, bytes: compareBaseCommit.snapshot.bytes, words: computeTextStats(buildCorpusText(compareBaseCommit.files, fileChoice)).words }
+          ? {
+              lines: compareBaseCommit.snapshot.lines,
+              bytes: compareBaseCommit.snapshot.bytes,
+              words: computeTextStats(buildCorpusText(compareBaseCommit.files, fileChoice)).words,
+            }
           : computeTextStats(buildCorpusText(compareBaseCommit.files, fileChoice));
 
       const targetStats =
         fileChoice === "__ALL__" && selectedCommit.snapshot
-          ? { lines: selectedCommit.snapshot.lines, bytes: selectedCommit.snapshot.bytes, words: computeTextStats(buildCorpusText(selectedCommit.files, fileChoice)).words }
+          ? {
+              lines: selectedCommit.snapshot.lines,
+              bytes: selectedCommit.snapshot.bytes,
+              words: computeTextStats(buildCorpusText(selectedCommit.files, fileChoice)).words,
+            }
           : computeTextStats(buildCorpusText(selectedCommit.files, fileChoice));
 
-      const perFile = fileChoice === "__ALL__"
-        ? computePerFileContribution(compareBaseCommit.files, selectedCommit.files)
-        : [];
+      const perFile =
+        fileChoice === "__ALL__"
+          ? computePerFileContribution(compareBaseCommit.files, selectedCommit.files)
+          : [];
 
       return {
         base: compareBaseCommit,
@@ -1221,7 +1280,9 @@ export default function SpecEvolutionLab() {
     const bLines = bText ? bText.split(/\n/).length : 0;
     const MAX_LINES = 8000;
     if (aLines + bLines > MAX_LINES) {
-      return { error: `Corpus diff too large (${aLines + bLines} lines). Pick a smaller file.` } as const;
+      return {
+        error: `Corpus diff too large (${aLines + bLines} lines). Pick a smaller file.`,
+      } as const;
     }
 
     const ops = perfTime("myersDiff", () => myersDiffTextLines(aText, bText));
@@ -1280,40 +1341,47 @@ export default function SpecEvolutionLab() {
     setBucketFilter((prev) => (prev === b ? null : b));
   }
 
-  const selectCommit = useCallback((idx: number) => {
-    setSelectedIndex(clampInt(idx, 0, Math.max(0, commits.length - 1)));
-    setDistanceOut("");
-  }, [commits.length]);
+  const selectCommit = useCallback(
+    (idx: number) => {
+      setSelectedIndex(clampInt(idx, 0, Math.max(0, commits.length - 1)));
+      setDistanceOut("");
+    },
+    [commits.length],
+  );
 
-  const handleSearchResultClick = useCallback((hit: SearchHit) => {
-    selectCommit(hit.commitIdx);
-    if (hit.filePath) setFileChoice(hit.filePath);
-    setActiveTab("snapshot");
-    setShowSearchResults(false);
-  }, [selectCommit]);
+  const handleSearchResultClick = useCallback(
+    (hit: SearchHit) => {
+      selectCommit(hit.commitIdx);
+      if (hit.filePath) setFileChoice(hit.filePath);
+      setActiveTab("snapshot");
+      setShowSearchResults(false);
+    },
+    [selectCommit],
+  );
 
-  const navigateFiltered = useCallback((direction: 1 | -1) => {
-    if (filteredCommits.length === 0) return;
-    
-    setSelectedIndex(prev => {
-      const currentPos = filteredCommits.findIndex(c => c.idx === prev);
-      let nextPos: number;
-      if (currentPos === -1) {
-        nextPos = direction === 1 ? 0 : filteredCommits.length - 1;
-      } else {
-        nextPos = (currentPos + direction + filteredCommits.length) % filteredCommits.length;
-      }
-      return filteredCommits[nextPos].idx;
-    });
-    setDistanceOut("");
-  }, [filteredCommits]);
+  const navigateFiltered = useCallback(
+    (direction: 1 | -1) => {
+      if (filteredCommits.length === 0) return;
+
+      setSelectedIndex((prev) => {
+        const currentPos = filteredCommits.findIndex((c) => c.idx === prev);
+        let nextPos: number;
+        if (currentPos === -1) {
+          nextPos = direction === 1 ? 0 : filteredCommits.length - 1;
+        } else {
+          nextPos = (currentPos + direction + filteredCommits.length) % filteredCommits.length;
+        }
+        return filteredCommits[nextPos].idx;
+      });
+      setDistanceOut("");
+    },
+    [filteredCommits],
+  );
 
   function computeDistancePrevToCurrent() {
     if (!selectedCommit) return;
 
-    const base =
-      compareBaseCommit ??
-      (selectedIndex > 0 ? commits[selectedIndex - 1] : null);
+    const base = compareBaseCommit ?? (selectedIndex > 0 ? commits[selectedIndex - 1] : null);
     if (!base) {
       setDistanceOut("Edit distance: (no previous commit / no baseline A)");
       return;
@@ -1322,8 +1390,14 @@ export default function SpecEvolutionLab() {
     const aText = buildCorpusText(base.files, fileChoice);
     const bText = buildCorpusText(selectedCommit.files, fileChoice);
 
-    const aLines = fileChoice === "__ALL__" && base.snapshot ? base.snapshot.lines : computeTextStats(aText).lines;
-    const bLines = fileChoice === "__ALL__" && selectedCommit.snapshot ? selectedCommit.snapshot.lines : computeTextStats(bText).lines;
+    const aLines =
+      fileChoice === "__ALL__" && base.snapshot
+        ? base.snapshot.lines
+        : computeTextStats(aText).lines;
+    const bLines =
+      fileChoice === "__ALL__" && selectedCommit.snapshot
+        ? selectedCommit.snapshot.lines
+        : computeTextStats(bText).lines;
     const ub = Math.abs(bLines - aLines) * 4 + 200; // loose upper bound
 
     const t0 = performance.now();
@@ -1333,7 +1407,7 @@ export default function SpecEvolutionLab() {
 
     const modeLabel = compareBaseCommit ? "A→B" : "prev→current";
     setDistanceOut(
-      `Edit distance (lines, ${modeLabel}): ${label} · computed in ${(t1 - t0).toFixed(1)}ms · upper bound ${ub}`
+      `Edit distance (lines, ${modeLabel}): ${label} · computed in ${(t1 - t0).toFixed(1)}ms · upper bound ${ub}`,
     );
   }
 
@@ -1365,7 +1439,13 @@ export default function SpecEvolutionLab() {
           setShowSearchResults(false);
           return;
         }
-        [legendDialogRef, bucketInfoDialogRef, controlsDialogRef, commitsDialogRef, helpDialogRef].forEach((r) => {
+        [
+          legendDialogRef,
+          bucketInfoDialogRef,
+          controlsDialogRef,
+          commitsDialogRef,
+          helpDialogRef,
+        ].forEach((r) => {
           if (r.current?.open) r.current.close();
         });
       }
@@ -1381,15 +1461,22 @@ export default function SpecEvolutionLab() {
 
   if (loadError) {
     return (
-      <main id="main-content" className="mx-auto max-w-5xl px-6 py-14 min-h-screen bg-black text-white">
+      <main
+        id="main-content"
+        className="mx-auto max-w-5xl px-6 py-14 min-h-screen bg-black text-white"
+      >
         <FrankenContainer className="p-8">
-          <h1 className="text-2xl font-black tracking-tight uppercase tracking-[0.2em] text-red-500">System Error</h1>
-          <p className="mt-4 text-slate-400 font-medium">Failed to load forensic dataset archive.</p>
+          <h1 className="text-2xl font-black tracking-tight uppercase tracking-[0.2em] text-red-500">
+            System Error
+          </h1>
+          <p className="mt-4 text-slate-400 font-medium">
+            Failed to load forensic dataset archive.
+          </p>
           <div className="mt-6 rounded-2xl border border-rose-500/20 bg-rose-500/5 p-6 text-sm text-rose-200 font-mono shadow-2xl">
             {loadError}
           </div>
           <div className="mt-8">
-            <button 
+            <button
               onClick={() => window.location.reload()}
               className="px-6 py-3 rounded-full bg-white/5 border border-white/10 text-white font-black text-xs tracking-widest hover:bg-white/10 transition-all"
             >
@@ -1403,7 +1490,10 @@ export default function SpecEvolutionLab() {
 
   if (!dataset || !commits.length || !selectedCommit) {
     return (
-      <main id="main-content" className="flex items-center justify-center min-h-screen bg-black text-white">
+      <main
+        id="main-content"
+        className="flex items-center justify-center min-h-screen bg-black text-white"
+      >
         <div className="text-center">
           <div className="relative h-20 w-20 mx-auto mb-8">
             <div className="absolute inset-0 rounded-full border-2 border-green-500/20 animate-ping" />
@@ -1412,8 +1502,12 @@ export default function SpecEvolutionLab() {
               <Terminal className="h-8 w-8 text-green-500" />
             </div>
           </div>
-          <h1 className="text-xl font-black tracking-[0.3em] text-white uppercase mb-2">Spec Lab</h1>
-          <p className="text-xs text-slate-500 font-bold tracking-widest uppercase">Loading Forensic Archive...</p>
+          <h1 className="text-xl font-black tracking-[0.3em] text-white uppercase mb-2">
+            Spec Lab
+          </h1>
+          <p className="text-xs text-slate-500 font-bold tracking-widest uppercase">
+            Loading Forensic Archive...
+          </p>
         </div>
       </main>
     );
@@ -1429,10 +1523,10 @@ export default function SpecEvolutionLab() {
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-green-500/5 rounded-full blur-[120px] animate-pulse" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-500/5 rounded-full blur-[150px]" />
-        
+
         {/* Global Scanline Overlay */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.05)_50%)] bg-[length:100%_4px] opacity-20" />
-        
+
         {/* Occasional VHS glitch static */}
         {!prefersReducedMotion.current && (
           <motion.div
@@ -1447,11 +1541,11 @@ export default function SpecEvolutionLab() {
         <NeuralPulse className="opacity-40" />
         {/* Header Telemetry Strip */}
         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-green-500/40 to-transparent" />
-        
+
         <div className="mx-auto max-w-[1600px] px-4 py-5 md:px-8">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-4">
-              <Link 
+              <Link
                 href="/how-it-was-built"
                 className="h-11 w-11 shrink-0 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all active:scale-90 group relative overflow-hidden"
                 title="Return to Build Log"
@@ -1469,18 +1563,28 @@ export default function SpecEvolutionLab() {
                   <FrankenBolt className="absolute -right-1 -bottom-1 z-20 scale-50" />
                   <motion.div
                     animate={prefersReducedMotion.current ? undefined : { rotate: 360 }}
-                    transition={prefersReducedMotion.current ? undefined : { duration: 20, repeat: Infinity, ease: "linear" }}
+                    transition={
+                      prefersReducedMotion.current
+                        ? undefined
+                        : { duration: 20, repeat: Infinity, ease: "linear" }
+                    }
                     className="absolute inset-0 border border-green-500/10 rounded-full scale-150 border-dashed"
                   />
-                  <span className="font-black text-sm text-green-400 group-hover:scale-110 transition-transform z-10">EVO</span>
+                  <span className="font-black text-sm text-green-400 group-hover:scale-110 transition-transform z-10">
+                    EVO
+                  </span>
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <div className="h-1.5 w-1.5 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]" />
-                    <span className="text-[9px] font-black text-green-500/60 uppercase tracking-[0.3em]">System_Integrity_Green</span>
+                    <span className="text-[9px] font-black text-green-500/60 uppercase tracking-[0.3em]">
+                      System_Integrity_Green
+                    </span>
                   </div>
                   <FrankenGlitch trigger="hover" intensity="low">
-                    <h1 className="text-xl md:text-2xl font-black tracking-tight truncate text-white uppercase tracking-[0.05em]">Spec Evolution Lab</h1>
+                    <h1 className="text-xl md:text-2xl font-black tracking-tight truncate text-white uppercase tracking-[0.05em]">
+                      Spec Evolution Lab
+                    </h1>
                   </FrankenGlitch>
                 </div>
               </div>
@@ -1495,20 +1599,26 @@ export default function SpecEvolutionLab() {
                   type="search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => { if (searchResults.length > 0) setShowSearchResults(true); }}
-                  placeholder={searchScope === "allCommits" ? "SEARCH_ALL_NODES..." : "SEARCH_THIS_NODE..."}
+                  onFocus={() => {
+                    if (searchResults.length > 0) setShowSearchResults(true);
+                  }}
+                  placeholder={
+                    searchScope === "allCommits" ? "SEARCH_ALL_NODES..." : "SEARCH_THIS_NODE..."
+                  }
                   className="relative w-full max-w-[320px] rounded-full border border-white/10 bg-black/40 pl-10 pr-24 py-2.5 text-[11px] font-bold tracking-widest text-white placeholder:text-slate-600 focus:outline-none focus:border-green-500/40 transition-all z-10"
                 />
                 {/* Scope toggle inside search bar */}
                 <button
                   type="button"
                   data-testid="search-scope-toggle"
-                  onClick={() => setSearchScope((s) => s === "thisCommit" ? "allCommits" : "thisCommit")}
+                  onClick={() =>
+                    setSearchScope((s) => (s === "thisCommit" ? "allCommits" : "thisCommit"))
+                  }
                   className={clsx(
                     "absolute right-2 top-1/2 -translate-y-1/2 z-20 px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-wider transition-all border",
                     searchScope === "allCommits"
                       ? "bg-green-500/15 text-green-400 border-green-500/30"
-                      : "bg-white/5 text-slate-500 border-white/10 hover:text-slate-300"
+                      : "bg-white/5 text-slate-500 border-white/10 hover:text-slate-300",
                   )}
                 >
                   {searchScope === "allCommits" ? "ALL" : "THIS"}
@@ -1548,10 +1658,16 @@ export default function SpecEvolutionLab() {
                         className="w-full text-left px-4 py-3 border-b border-white/5 hover:bg-white/5 transition-colors group"
                       >
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-mono text-[9px] font-black text-green-500">{hit.commitShort}</span>
-                          <span className="font-mono text-[9px] text-slate-600">{hit.commitDate.split("T")[0]}</span>
+                          <span className="font-mono text-[9px] font-black text-green-500">
+                            {hit.commitShort}
+                          </span>
+                          <span className="font-mono text-[9px] text-slate-600">
+                            {hit.commitDate.split("T")[0]}
+                          </span>
                           <span className="text-[9px] text-slate-700">·</span>
-                          <span className="font-mono text-[9px] text-slate-500 truncate">{hit.filePath}</span>
+                          <span className="font-mono text-[9px] text-slate-500 truncate">
+                            {hit.filePath}
+                          </span>
                           <span className="text-[9px] text-slate-700">:{hit.lineNo}</span>
                         </div>
                         <div className="text-[11px] text-slate-400 font-mono truncate group-hover:text-slate-200">
@@ -1592,7 +1708,9 @@ export default function SpecEvolutionLab() {
 
               <button
                 type="button"
-                onClick={() => downloadObjectAsJson(dataset, "frankentui_spec_evolution_dataset.json")}
+                onClick={() =>
+                  downloadObjectAsJson(dataset, "frankentui_spec_evolution_dataset.json")
+                }
                 className="group relative h-11 w-11 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-slate-300 hover:text-white transition-all overflow-hidden"
                 title="Export JSON"
               >
@@ -1619,13 +1737,17 @@ export default function SpecEvolutionLab() {
                 <span className="text-slate-300">{commits.length} NODES</span>
               </div>
               <div className="w-px h-2 bg-white/10" />
-              <span className="tracking-normal opacity-60">SCOPE: {dataset.scope_paths.join(" + ")}</span>
+              <span className="tracking-normal opacity-60">
+                SCOPE: {dataset.scope_paths.join(" + ")}
+              </span>
             </div>
-            
+
             <div className="inline-flex items-center gap-3 rounded-md bg-white/[0.02] border border-white/5 px-3 py-1.5 text-slate-500 shadow-inner">
               <div className="flex items-center gap-1.5">
                 <div className="h-1 w-1 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]" />
-                <span className="text-slate-300">VALIDATED: {reviewedCount}/{commits.length}</span>
+                <span className="text-slate-300">
+                  VALIDATED: {reviewedCount}/{commits.length}
+                </span>
               </div>
             </div>
 
@@ -1638,7 +1760,13 @@ export default function SpecEvolutionLab() {
                 onClick={() => setBucketFilter(null)}
                 className="inline-flex items-center gap-2 rounded-md border border-green-500/30 bg-green-500/10 px-3 py-1.5 text-green-400 hover:bg-green-500/20 transition-all group"
               >
-                <div className="h-1 w-1 rounded-full shadow-[0_0_5px_currentColor]" style={{ background: bucketColors[bucketFilter], color: bucketColors[bucketFilter] }} />
+                <div
+                  className="h-1 w-1 rounded-full shadow-[0_0_5px_currentColor]"
+                  style={{
+                    background: bucketColors[bucketFilter],
+                    color: bucketColors[bucketFilter],
+                  }}
+                />
                 <span>FILTER: {bucketNames[bucketFilter]}</span>
                 <X className="h-3 w-3 ml-1 opacity-60 group-hover:opacity-100" />
               </motion.button>
@@ -1647,13 +1775,22 @@ export default function SpecEvolutionLab() {
             <span className="ml-auto hidden md:inline-flex items-center gap-4 text-slate-600">
               <div className="flex items-center gap-4 px-4 py-1.5 rounded-full bg-white/[0.02] border border-white/5">
                 <span className="flex items-center gap-1.5">
-                  <kbd className="rounded bg-black/40 px-1.5 py-0.5 text-[8px] border border-white/10">←→</kbd> SCRUB
+                  <kbd className="rounded bg-black/40 px-1.5 py-0.5 text-[8px] border border-white/10">
+                    ←→
+                  </kbd>{" "}
+                  SCRUB
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <kbd className="rounded bg-black/40 px-1.5 py-0.5 text-[8px] border border-white/10">/</kbd> SEARCH
+                  <kbd className="rounded bg-black/40 px-1.5 py-0.5 text-[8px] border border-white/10">
+                    /
+                  </kbd>{" "}
+                  SEARCH
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <kbd className="rounded bg-black/40 px-1.5 py-0.5 text-[8px] border border-white/10">?</kbd> HELP
+                  <kbd className="rounded bg-black/40 px-1.5 py-0.5 text-[8px] border border-white/10">
+                    ?
+                  </kbd>{" "}
+                  HELP
                 </span>
               </div>
             </span>
@@ -1666,30 +1803,44 @@ export default function SpecEvolutionLab() {
           {/* Sidebar */}
           <aside className="hidden lg:block">
             <div className="sticky top-[180px]">
-              <FrankenContainer withBolts={true} withStitches={false} accentColor="#ef4444" className="bg-black/60 backdrop-blur-2xl border-white/10 shadow-3xl overflow-hidden flex flex-col h-[calc(100vh-240px)]">
+              <FrankenContainer
+                withBolts={true}
+                withStitches={false}
+                accentColor="#ef4444"
+                className="bg-black/60 backdrop-blur-2xl border-white/10 shadow-3xl overflow-hidden flex flex-col h-[calc(100vh-240px)]"
+              >
                 <div className="flex flex-col border-b border-white/5 bg-white/[0.02] px-6 py-5 gap-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h2 className="text-xs font-black tracking-[0.3em] text-white uppercase italic">Archive_Nodes</h2>
-                      <p className="text-[9px] font-bold text-slate-500 uppercase mt-1 tracking-wider">Forensic Stream</p>
+                      <h2 className="text-xs font-black tracking-[0.3em] text-white uppercase italic">
+                        Archive_Nodes
+                      </h2>
+                      <p className="text-[9px] font-bold text-slate-500 uppercase mt-1 tracking-wider">
+                        Forensic Stream
+                      </p>
                     </div>
                     <div className="h-8 w-8 rounded-full border border-white/10 flex items-center justify-center text-slate-600">
                       <Terminal className="h-3.5 w-3.5" />
                     </div>
                   </div>
-                  
+
                   <button
                     type="button"
                     onClick={() => setShowReviewedOnly((v) => !v)}
                     className={clsx(
                       "w-full rounded-md border py-2.5 text-[9px] font-black uppercase tracking-[0.2em] transition-all relative overflow-hidden",
-                      showReviewedOnly 
-                        ? "border-green-500/30 bg-green-500/10 text-green-400" 
-                        : "border-white/10 bg-black/40 text-slate-500 hover:border-white/20 hover:text-slate-300"
+                      showReviewedOnly
+                        ? "border-green-500/30 bg-green-500/10 text-green-400"
+                        : "border-white/10 bg-black/40 text-slate-500 hover:border-white/20 hover:text-slate-300",
                     )}
                   >
                     {showReviewedOnly ? "Validated_Only_Mode" : "View_All_Revisions"}
-                    {showReviewedOnly && <motion.div layoutId="active-mode" className="absolute inset-0 bg-green-500/5" />}
+                    {showReviewedOnly && (
+                      <motion.div
+                        layoutId="active-mode"
+                        className="absolute inset-0 bg-green-500/5"
+                      />
+                    )}
                   </button>
                 </div>
 
@@ -1700,7 +1851,9 @@ export default function SpecEvolutionLab() {
                     const bucketKeys = Object.keys(weights)
                       .map((x) => parseInt(x, 10))
                       .filter((b) => Number.isFinite(b) && b >= 0 && b <= 10) as BucketKey[];
-                    const showBuckets = (c.reviewed ? bucketKeys.filter((b) => b !== 0) : bucketKeys).slice(0, 3);
+                    const showBuckets = (
+                      c.reviewed ? bucketKeys.filter((b) => b !== 0) : bucketKeys
+                    ).slice(0, 3);
 
                     return (
                       <button
@@ -1710,7 +1863,7 @@ export default function SpecEvolutionLab() {
                         className={clsx(
                           styles.commitRow,
                           "w-full text-left px-6 py-5 transition-all relative group hover:translate-x-1",
-                          isActive ? "bg-green-500/[0.04]" : "hover:bg-white/[0.01]"
+                          isActive ? "bg-green-500/[0.04]" : "hover:bg-white/[0.01]",
                         )}
                       >
                         {isActive && (
@@ -1721,19 +1874,27 @@ export default function SpecEvolutionLab() {
                         )}
 
                         <div className="flex items-center justify-between mb-2">
-                          <span className={clsx(
-                            "font-mono text-[9px] font-black px-1.5 py-0.5 rounded border transition-colors",
-                            isActive ? "text-green-400 border-green-500/30 bg-green-500/10" : "text-slate-600 border-white/5 bg-white/5"
-                          )}>
+                          <span
+                            className={clsx(
+                              "font-mono text-[9px] font-black px-1.5 py-0.5 rounded border transition-colors",
+                              isActive
+                                ? "text-green-400 border-green-500/30 bg-green-500/10"
+                                : "text-slate-600 border-white/5 bg-white/5",
+                            )}
+                          >
                             {c.short}
                           </span>
-                          <span className="font-mono text-[9px] text-slate-700 font-bold">{c.dateShort.split(' ')[0]}</span>
+                          <span className="font-mono text-[9px] text-slate-700 font-bold">
+                            {c.dateShort.split(" ")[0]}
+                          </span>
                         </div>
 
-                        <div className={clsx(
-                          "text-[13px] font-bold leading-snug transition-colors line-clamp-2",
-                          isActive ? "text-white" : "text-slate-500 group-hover:text-slate-300"
-                        )}>
+                        <div
+                          className={clsx(
+                            "text-[13px] font-bold leading-snug transition-colors line-clamp-2",
+                            isActive ? "text-white" : "text-slate-500 group-hover:text-slate-300",
+                          )}
+                        >
                           {c.subject || "Untitled Archive Node"}
                         </div>
 
@@ -1760,10 +1921,12 @@ export default function SpecEvolutionLab() {
                     );
                   })}
                 </div>
-                
+
                 <div className="p-4 bg-black/40 border-t border-white/5">
                   <div className="flex items-center justify-between px-2">
-                    <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Stream_Buffer_Capacity</span>
+                    <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">
+                      Stream_Buffer_Capacity
+                    </span>
                     <span className="text-[8px] font-mono text-green-500/60">100%</span>
                   </div>
                   <div className="mt-2 h-1 w-full bg-white/5 rounded-full overflow-hidden">
@@ -1777,10 +1940,15 @@ export default function SpecEvolutionLab() {
           {/* Main content */}
           <section className="space-y-10">
             {/* Chart card */}
-            <FrankenContainer withBolts={false} withPulse={true} accentColor="#22c55e" className="bg-black/60 backdrop-blur-2xl border-white/10 shadow-3xl p-0 overflow-hidden relative group/chart">
+            <FrankenContainer
+              withBolts={false}
+              withPulse={true}
+              accentColor="#22c55e"
+              className="bg-black/60 backdrop-blur-2xl border-white/10 shadow-3xl p-0 overflow-hidden relative group/chart"
+            >
               {/* Internal decorative elements */}
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,rgba(34,197,94,0.05),transparent)] pointer-events-none" />
-              
+
               <div className="flex flex-col gap-4 border-b border-white/5 bg-white/[0.03] px-8 py-6 md:flex-row md:items-center md:justify-between relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-green-500/20 to-transparent" />
                 <div>
@@ -1794,7 +1962,7 @@ export default function SpecEvolutionLab() {
                     Forensic distribution analysis across temporal buckets
                   </p>
                 </div>
-                
+
                 <div className="flex items-center gap-3">
                   <div className="flex items-center bg-black/40 p-1 rounded-md border border-white/10">
                     <button
@@ -1802,7 +1970,9 @@ export default function SpecEvolutionLab() {
                       onClick={() => setSoftMode((v) => !v)}
                       className={clsx(
                         "rounded px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all",
-                        softMode ? "bg-green-500/20 text-green-400" : "text-slate-500 hover:text-slate-300"
+                        softMode
+                          ? "bg-green-500/20 text-green-400"
+                          : "text-slate-500 hover:text-slate-300",
                       )}
                     >
                       {softMode ? "Soft_Weights" : "Hard_Labels"}
@@ -1825,7 +1995,7 @@ export default function SpecEvolutionLab() {
                 <div className="relative">
                   {/* Chart Grid Decoration */}
                   <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
-                  
+
                   <StackedBars
                     xKeys={chartModel.xKeys}
                     seriesByBucket={chartModel.seriesByBucket}
@@ -1840,19 +2010,31 @@ export default function SpecEvolutionLab() {
                 <div className="mt-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between border-t border-white/5 pt-8">
                   <div className="grid grid-cols-2 md:flex md:items-center gap-x-8 gap-y-4">
                     <div className="flex flex-col gap-1">
-                      <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Analysis_Mode</span>
-                      <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">{softMode ? "Probabilistic" : "Deterministic"}</span>
+                      <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">
+                        Analysis_Mode
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
+                        {softMode ? "Probabilistic" : "Deterministic"}
+                      </span>
                     </div>
                     <div className="flex flex-col gap-1">
-                      <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Telemetry_Metric</span>
-                      <span className="text-[10px] font-bold text-green-500 uppercase tracking-wider">{metricLabel}</span>
+                      <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">
+                        Telemetry_Metric
+                      </span>
+                      <span className="text-[10px] font-bold text-green-500 uppercase tracking-wider">
+                        {metricLabel}
+                      </span>
                     </div>
                     <div className="flex flex-col gap-1">
-                      <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Bucket_Resolution</span>
-                      <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">{bucketMode}</span>
+                      <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">
+                        Bucket_Resolution
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
+                        {bucketMode}
+                      </span>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-3">
                     <button
                       type="button"
@@ -1881,14 +2063,16 @@ export default function SpecEvolutionLab() {
                       </span>
                     </FrankenGlitch>
                   </div>
-                  
+
                   {BUCKET_KEYS.map((b) => {
                     const active = bucketFilter === b;
                     return (
                       <motion.button
                         key={b}
                         type="button"
-                        whileHover={prefersReducedMotion.current ? undefined : { scale: 1.05, y: -1 }}
+                        whileHover={
+                          prefersReducedMotion.current ? undefined : { scale: 1.05, y: -1 }
+                        }
                         whileTap={prefersReducedMotion.current ? undefined : { scale: 0.95 }}
                         onClick={() => toggleBucketFilter(b)}
                         title={dataset.bucket_defs?.[String(b)] || bucketNames[b]}
@@ -1896,19 +2080,21 @@ export default function SpecEvolutionLab() {
                           "group relative inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-widest transition-all duration-300",
                           active
                             ? "bg-green-500/10 text-green-400 border border-green-500/40 shadow-[0_0_15px_rgba(34,197,94,0.15)]"
-                            : "text-slate-500 hover:text-slate-300 border border-white/5 hover:border-white/10 bg-white/[0.02] hover:bg-white/5"
+                            : "text-slate-500 hover:text-slate-300 border border-white/5 hover:border-white/10 bg-white/[0.02] hover:bg-white/5",
                         )}
                       >
                         {/* Power-on indicator */}
                         <div
                           className={clsx(
                             "h-1.5 w-1.5 rounded-full shrink-0 transition-all duration-500",
-                            active ? "shadow-[0_0_8px_currentColor]" : "opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-100"
+                            active
+                              ? "shadow-[0_0_8px_currentColor]"
+                              : "opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-100",
                           )}
                           style={{ background: bucketColors[b], color: bucketColors[b] }}
                         />
                         {bucketNames[b]}
-                        
+
                         {/* Subtle scanline on active chip */}
                         {active && (
                           <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%)] bg-[length:100%_2px] opacity-20 rounded-[inherit]" />
@@ -1921,11 +2107,19 @@ export default function SpecEvolutionLab() {
             </FrankenContainer>
 
             {/* Timeline scrubber */}
-            <FrankenContainer withBolts={true} accentColor="#22c55e" className="bg-black/40 backdrop-blur-xl border-white/10 shadow-2xl p-0 overflow-hidden">
+            <FrankenContainer
+              withBolts={true}
+              accentColor="#22c55e"
+              className="bg-black/40 backdrop-blur-xl border-white/10 shadow-2xl p-0 overflow-hidden"
+            >
               <div className="flex flex-col gap-3 border-b border-white/5 bg-white/5 px-6 py-5 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <h2 className="text-lg font-black tracking-tight text-white uppercase tracking-widest">Scrub_Node_Selector</h2>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Temporal Archive Traversal Interface</p>
+                  <h2 className="text-lg font-black tracking-tight text-white uppercase tracking-widest">
+                    Scrub_Node_Selector
+                  </h2>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+                    Temporal Archive Traversal Interface
+                  </p>
                 </div>
                 <div className="flex items-center gap-3">
                   <button
@@ -1937,8 +2131,12 @@ export default function SpecEvolutionLab() {
                   >
                     <ArrowLeft className="h-5 w-5" />
                   </button>
-                  <div className="px-4 py-2 rounded-xl bg-black/40 border border-white/5 font-mono text-xs font-bold text-green-400 shadow-inner" aria-live="polite">
-                    {selectedIndex + 1} <span className="text-slate-700 mx-1">/</span> {commits.length}
+                  <div
+                    className="px-4 py-2 rounded-xl bg-black/40 border border-white/5 font-mono text-xs font-bold text-green-400 shadow-inner"
+                    aria-live="polite"
+                  >
+                    {selectedIndex + 1} <span className="text-slate-700 mx-1">/</span>{" "}
+                    {commits.length}
                   </div>
                   <button
                     type="button"
@@ -1954,28 +2152,33 @@ export default function SpecEvolutionLab() {
 
               <div className="p-8">
                 <div className="flex items-center justify-between gap-3 text-[10px] font-black font-mono text-slate-600 uppercase tracking-widest mb-2">
-                  <span>EPOCH_START: {commits[0]?.dateShort.split(' ')[0] || ""}</span>
-                  <span>EPOCH_END: {commits[commits.length - 1]?.dateShort.split(' ')[0] || ""}</span>
+                  <span>EPOCH_START: {commits[0]?.dateShort.split(" ")[0] || ""}</span>
+                  <span>
+                    EPOCH_END: {commits[commits.length - 1]?.dateShort.split(" ")[0] || ""}
+                  </span>
                 </div>
                 <div className="relative h-12 flex items-center group">
                   <div className="absolute inset-x-0 h-1 bg-white/5 rounded-full" />
                   {(() => {
                     const totalSteps = commits.length - 1;
                     const percent = totalSteps > 0 ? (selectedIndex / totalSteps) * 100 : 0;
-                    const comparePercent = totalSteps > 0 && compareBaseIndex !== null ? (compareBaseIndex / totalSteps) * 100 : 0;
-                    
+                    const comparePercent =
+                      totalSteps > 0 && compareBaseIndex !== null
+                        ? (compareBaseIndex / totalSteps) * 100
+                        : 0;
+
                     return (
                       <>
-                        <div 
-                          className="absolute h-1 bg-green-500 rounded-full shadow-[0_0_15px_#22c55e]" 
+                        <div
+                          className="absolute h-1 bg-green-500 rounded-full shadow-[0_0_15px_#22c55e]"
                           style={{ width: `${percent}%` }}
                         />
                         {compareBaseIndex !== null && commits.length > 1 ? (
                           <div
                             className="absolute top-0 bottom-0 pointer-events-none"
-                            style={{ 
+                            style={{
                               left: `calc(${comparePercent}% - 1px)`,
-                              opacity: compareBaseIndex === selectedIndex ? 0 : 1
+                              opacity: compareBaseIndex === selectedIndex ? 0 : 1,
                             }}
                             aria-hidden="true"
                           >
@@ -1993,11 +2196,17 @@ export default function SpecEvolutionLab() {
                           onChange={(e) => selectCommit(parseInt(e.target.value, 10))}
                           className="absolute inset-x-0 w-full h-1 opacity-0 cursor-pointer z-10"
                         />
-                        <motion.div 
+                        <motion.div
                           className="absolute h-4 w-4 bg-white rounded-full border-2 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.8)] pointer-events-none"
                           style={{ left: `calc(${percent}% - 8px)` }}
-                          animate={prefersReducedMotion.current ? undefined : { scale: [1, 1.2, 1] }}
-                          transition={prefersReducedMotion.current ? undefined : { repeat: Infinity, duration: 2 }}
+                          animate={
+                            prefersReducedMotion.current ? undefined : { scale: [1, 1.2, 1] }
+                          }
+                          transition={
+                            prefersReducedMotion.current
+                              ? undefined
+                              : { repeat: Infinity, duration: 2 }
+                          }
                         >
                           {compareBaseIndex === selectedIndex && (
                             <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] font-black font-mono text-rose-300 bg-rose-500/20 border border-rose-500/40 px-1 py-0.5 rounded">
@@ -2009,7 +2218,7 @@ export default function SpecEvolutionLab() {
                     );
                   })()}
                 </div>
-                
+
                 <div className="mt-8 grid md:grid-cols-[1fr_auto] gap-6 items-start">
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
@@ -2027,17 +2236,23 @@ export default function SpecEvolutionLab() {
                       >
                         {selectedCommit.short}
                       </span>
-                      <span className="font-mono text-[11px] font-bold text-slate-500 uppercase tracking-widest">{selectedCommit.date}</span>
+                      <span className="font-mono text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                        {selectedCommit.date}
+                      </span>
                     </div>
-                    <h3 className="text-2xl font-black tracking-tight text-white leading-tight">{selectedCommit.subject || "NO_SUBJECT_PROTOCOL"}</h3>
+                    <h3 className="text-2xl font-black tracking-tight text-white leading-tight">
+                      {selectedCommit.subject || "NO_SUBJECT_PROTOCOL"}
+                    </h3>
                     <div className="flex items-center gap-4 pt-2">
                       <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
                         <div className="h-1.5 w-1.5 rounded-full bg-green-500/40" />
-                        Added: <span className="text-green-400">+{selectedCommit.totals.added}</span>
+                        Added:{" "}
+                        <span className="text-green-400">+{selectedCommit.totals.added}</span>
                       </span>
                       <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
                         <div className="h-1.5 w-1.5 rounded-full bg-red-500/40" />
-                        Deleted: <span className="text-red-400">-{selectedCommit.totals.deleted}</span>
+                        Deleted:{" "}
+                        <span className="text-red-400">-{selectedCommit.totals.deleted}</span>
                       </span>
                     </div>
                   </div>
@@ -2048,7 +2263,9 @@ export default function SpecEvolutionLab() {
                       onClick={() => {
                         try {
                           navigator.clipboard.writeText(location.href);
-                        } catch { /* ignore */ }
+                        } catch {
+                          /* ignore */
+                        }
                       }}
                       className="rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-300 hover:bg-white/10 hover:text-white transition-all shadow-lg flex items-center gap-2"
                     >
@@ -2114,7 +2331,7 @@ export default function SpecEvolutionLab() {
                     </button>
                   </div>
                 </div>
-                
+
                 {compareModel ? (
                   <div
                     data-testid="compare-metrics"
@@ -2137,16 +2354,28 @@ export default function SpecEvolutionLab() {
                       </div>
                     </div>
 
-                    <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" data-testid="compare-metrics-grid">
+                    <div
+                      className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+                      data-testid="compare-metrics-grid"
+                    >
                       <div className="rounded-xl border border-white/5 bg-black/30 p-4 group/metric">
                         <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1.5">
                           Δ_LINES
-                          <span className="opacity-0 group-hover/metric:opacity-100 transition-opacity text-slate-700" title="Net change in line count between snapshots A and B">
+                          <span
+                            className="opacity-0 group-hover/metric:opacity-100 transition-opacity text-slate-700"
+                            title="Net change in line count between snapshots A and B"
+                          >
                             <HelpCircle className="h-2.5 w-2.5" />
                           </span>
                         </div>
-                        <div className={clsx("mt-2 font-mono text-xl font-black", compareModel.deltaLines >= 0 ? "text-green-300" : "text-rose-300")}>
-                          {compareModel.deltaLines >= 0 ? "+" : ""}{compareModel.deltaLines}
+                        <div
+                          className={clsx(
+                            "mt-2 font-mono text-xl font-black",
+                            compareModel.deltaLines >= 0 ? "text-green-300" : "text-rose-300",
+                          )}
+                        >
+                          {compareModel.deltaLines >= 0 ? "+" : ""}
+                          {compareModel.deltaLines}
                         </div>
                         <div className="mt-1 text-[10px] text-slate-600 font-bold uppercase tracking-widest">
                           {compareModel.baseStats.lines} → {compareModel.targetStats.lines}
@@ -2156,12 +2385,21 @@ export default function SpecEvolutionLab() {
                       <div className="rounded-xl border border-white/5 bg-black/30 p-4 group/metric">
                         <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1.5">
                           Δ_BYTES
-                          <span className="opacity-0 group-hover/metric:opacity-100 transition-opacity text-slate-700" title="Net change in UTF-8 encoded byte size between A and B">
+                          <span
+                            className="opacity-0 group-hover/metric:opacity-100 transition-opacity text-slate-700"
+                            title="Net change in UTF-8 encoded byte size between A and B"
+                          >
                             <HelpCircle className="h-2.5 w-2.5" />
                           </span>
                         </div>
-                        <div className={clsx("mt-2 font-mono text-xl font-black", compareModel.deltaBytes >= 0 ? "text-green-300" : "text-rose-300")}>
-                          {compareModel.deltaBytes >= 0 ? "+" : ""}{compareModel.deltaBytes}
+                        <div
+                          className={clsx(
+                            "mt-2 font-mono text-xl font-black",
+                            compareModel.deltaBytes >= 0 ? "text-green-300" : "text-rose-300",
+                          )}
+                        >
+                          {compareModel.deltaBytes >= 0 ? "+" : ""}
+                          {compareModel.deltaBytes}
                         </div>
                         <div className="mt-1 text-[10px] text-slate-600 font-bold uppercase tracking-widest">
                           {compareModel.baseStats.bytes} → {compareModel.targetStats.bytes}
@@ -2171,12 +2409,21 @@ export default function SpecEvolutionLab() {
                       <div className="rounded-xl border border-white/5 bg-black/30 p-4 group/metric">
                         <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1.5">
                           Δ_WORDS
-                          <span className="opacity-0 group-hover/metric:opacity-100 transition-opacity text-slate-700" title="Net change in whitespace-tokenized word count between A and B">
+                          <span
+                            className="opacity-0 group-hover/metric:opacity-100 transition-opacity text-slate-700"
+                            title="Net change in whitespace-tokenized word count between A and B"
+                          >
                             <HelpCircle className="h-2.5 w-2.5" />
                           </span>
                         </div>
-                        <div className={clsx("mt-2 font-mono text-xl font-black", compareModel.deltaWords >= 0 ? "text-green-300" : "text-rose-300")}>
-                          {compareModel.deltaWords >= 0 ? "+" : ""}{compareModel.deltaWords}
+                        <div
+                          className={clsx(
+                            "mt-2 font-mono text-xl font-black",
+                            compareModel.deltaWords >= 0 ? "text-green-300" : "text-rose-300",
+                          )}
+                        >
+                          {compareModel.deltaWords >= 0 ? "+" : ""}
+                          {compareModel.deltaWords}
                         </div>
                         <div className="mt-1 text-[10px] text-slate-600 font-bold uppercase tracking-widest">
                           {compareModel.baseStats.words} → {compareModel.targetStats.words}
@@ -2186,14 +2433,23 @@ export default function SpecEvolutionLab() {
                       <div className="rounded-xl border border-white/5 bg-black/30 p-4 group/metric">
                         <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1.5">
                           FILES
-                          <span className="opacity-0 group-hover/metric:opacity-100 transition-opacity text-slate-700" title="File-level changes: added, removed, modified, unchanged">
+                          <span
+                            className="opacity-0 group-hover/metric:opacity-100 transition-opacity text-slate-700"
+                            title="File-level changes: added, removed, modified, unchanged"
+                          >
                             <HelpCircle className="h-2.5 w-2.5" />
                           </span>
                         </div>
                         <div className="mt-2 font-mono text-[12px] font-black text-slate-300">
-                          <span className="text-green-300">+{compareModel.fileSummary.added.length}</span>{" "}
-                          <span className="text-rose-300">-{compareModel.fileSummary.removed.length}</span>{" "}
-                          <span className="text-amber-200">~{compareModel.fileSummary.modified.length}</span>
+                          <span className="text-green-300">
+                            +{compareModel.fileSummary.added.length}
+                          </span>{" "}
+                          <span className="text-rose-300">
+                            -{compareModel.fileSummary.removed.length}
+                          </span>{" "}
+                          <span className="text-amber-200">
+                            ~{compareModel.fileSummary.modified.length}
+                          </span>
                         </div>
                         <div className="mt-1 text-[10px] text-slate-600 font-bold uppercase tracking-widest">
                           {compareModel.fileSummary.unchanged.length} unchanged
@@ -2204,12 +2460,17 @@ export default function SpecEvolutionLab() {
                         <div className="rounded-xl border border-white/5 bg-black/30 p-4 group/metric">
                           <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1.5">
                             EDIT_DIST
-                            <span className="opacity-0 group-hover/metric:opacity-100 transition-opacity text-slate-700" title="Line-level Levenshtein edit distance: minimum line insertions, deletions, or substitutions to transform A into B">
+                            <span
+                              className="opacity-0 group-hover/metric:opacity-100 transition-opacity text-slate-700"
+                              title="Line-level Levenshtein edit distance: minimum line insertions, deletions, or substitutions to transform A into B"
+                            >
                               <HelpCircle className="h-2.5 w-2.5" />
                             </span>
                           </div>
                           <div className="mt-2 font-mono text-xl font-black text-cyan-300">
-                            {compareEditDistance.earlyExit ? `>${compareEditDistance.upperBound}` : compareEditDistance.distance}
+                            {compareEditDistance.earlyExit
+                              ? `>${compareEditDistance.upperBound}`
+                              : compareEditDistance.distance}
                           </div>
                           <div className="mt-1 text-[10px] text-slate-600 font-bold uppercase tracking-widest">
                             {compareEditDistance.timeMs.toFixed(1)}ms
@@ -2220,7 +2481,10 @@ export default function SpecEvolutionLab() {
                       <div className="rounded-xl border border-white/5 bg-black/30 p-4 group/metric">
                         <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1.5">
                           SCOPE
-                          <span className="opacity-0 group-hover/metric:opacity-100 transition-opacity text-slate-700" title="Which spec file(s) are being compared. Select a single file from the dropdown to narrow the scope.">
+                          <span
+                            className="opacity-0 group-hover/metric:opacity-100 transition-opacity text-slate-700"
+                            title="Which spec file(s) are being compared. Select a single file from the dropdown to narrow the scope."
+                          >
                             <HelpCircle className="h-2.5 w-2.5" />
                           </span>
                         </div>
@@ -2238,19 +2502,39 @@ export default function SpecEvolutionLab() {
                       <div className="mt-4 rounded-xl border border-white/5 bg-black/20 p-4">
                         <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3 flex items-center gap-1.5">
                           PER_FILE_DELTA
-                          <span className="text-slate-700" title="Shows which files contributed most to the overall byte delta between A and B">
+                          <span
+                            className="text-slate-700"
+                            title="Shows which files contributed most to the overall byte delta between A and B"
+                          >
                             <HelpCircle className="h-2.5 w-2.5" />
                           </span>
                         </div>
                         <div className="space-y-1.5 max-h-40 overflow-y-auto custom-scrollbar">
                           {compareModel.perFile.map((pf) => (
-                            <div key={pf.path} className="flex items-center gap-3 text-[10px] font-mono">
-                              <span className="text-slate-500 truncate min-w-0 flex-1">{pf.path}</span>
-                              <span className={clsx("font-black tabular-nums shrink-0", pf.deltaLines >= 0 ? "text-green-400/70" : "text-rose-400/70")}>
-                                {pf.deltaLines >= 0 ? "+" : ""}{pf.deltaLines}L
+                            <div
+                              key={pf.path}
+                              className="flex items-center gap-3 text-[10px] font-mono"
+                            >
+                              <span className="text-slate-500 truncate min-w-0 flex-1">
+                                {pf.path}
                               </span>
-                              <span className={clsx("font-black tabular-nums shrink-0", pf.deltaBytes >= 0 ? "text-green-400/70" : "text-rose-400/70")}>
-                                {pf.deltaBytes >= 0 ? "+" : ""}{pf.deltaBytes}B
+                              <span
+                                className={clsx(
+                                  "font-black tabular-nums shrink-0",
+                                  pf.deltaLines >= 0 ? "text-green-400/70" : "text-rose-400/70",
+                                )}
+                              >
+                                {pf.deltaLines >= 0 ? "+" : ""}
+                                {pf.deltaLines}L
+                              </span>
+                              <span
+                                className={clsx(
+                                  "font-black tabular-nums shrink-0",
+                                  pf.deltaBytes >= 0 ? "text-green-400/70" : "text-rose-400/70",
+                                )}
+                              >
+                                {pf.deltaBytes >= 0 ? "+" : ""}
+                                {pf.deltaBytes}B
                               </span>
                             </div>
                           ))}
@@ -2271,9 +2555,15 @@ export default function SpecEvolutionLab() {
               >
                 <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-white/[0.03]">
                   <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">TIMELINE_MAP</span>
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                      TIMELINE_MAP
+                    </span>
                     <span className="text-[9px] font-bold text-slate-700 uppercase tracking-widest">
-                      {metric === "groups" ? "Review Groups" : metric === "lines" ? "Lines Changed" : "Patch Bytes"}
+                      {metric === "groups"
+                        ? "Review Groups"
+                        : metric === "lines"
+                          ? "Lines Changed"
+                          : "Patch Bytes"}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -2326,9 +2616,21 @@ export default function SpecEvolutionLab() {
                   aria-valuenow={selectedIndex}
                   tabIndex={0}
                   onKeyDown={(e) => {
-                    if (e.key === "ArrowRight") { selectCommit(selectedIndex + 1); e.preventDefault(); e.stopPropagation(); }
-                    if (e.key === "ArrowLeft") { selectCommit(selectedIndex - 1); e.preventDefault(); e.stopPropagation(); }
-                    if (e.key === " ") { togglePlayback(); e.preventDefault(); e.stopPropagation(); }
+                    if (e.key === "ArrowRight") {
+                      selectCommit(selectedIndex + 1);
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }
+                    if (e.key === "ArrowLeft") {
+                      selectCommit(selectedIndex - 1);
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }
+                    if (e.key === " ") {
+                      togglePlayback();
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }
                   }}
                 >
                   {/* Background bars */}
@@ -2369,14 +2671,18 @@ export default function SpecEvolutionLab() {
                   {/* Playhead indicator */}
                   <div
                     className="absolute top-0 bottom-0 w-px bg-green-400 shadow-[0_0_8px_rgba(34,197,94,0.6)] pointer-events-none z-10 transition-[left] duration-75"
-                    style={{ left: `${commitIndexToPosition(selectedIndex, commits.length) * 100}%` }}
+                    style={{
+                      left: `${commitIndexToPosition(selectedIndex, commits.length) * 100}%`,
+                    }}
                   />
 
                   {/* Compare base marker */}
                   {compareBaseIndex !== null && (
                     <div
                       className="absolute top-0 bottom-0 w-px bg-rose-400/70 shadow-[0_0_6px_rgba(251,113,133,0.4)] pointer-events-none z-10"
-                      style={{ left: `${commitIndexToPosition(compareBaseIndex, commits.length) * 100}%` }}
+                      style={{
+                        left: `${commitIndexToPosition(compareBaseIndex, commits.length) * 100}%`,
+                      }}
                     />
                   )}
 
@@ -2404,11 +2710,11 @@ export default function SpecEvolutionLab() {
             )}
 
             {/* Inspector */}
-            <FrankenContainer 
+            <FrankenContainer
               key={`inspector-${selectedCommit.sha}`}
-              withBolts={true} 
-              withPulse={true} 
-              accentColor="#3b82f6" 
+              withBolts={true}
+              withPulse={true}
+              accentColor="#3b82f6"
               className="bg-black/60 backdrop-blur-2xl border-white/10 shadow-3xl p-0 overflow-hidden flex flex-col min-h-[600px] group/inspector"
             >
               <div className="flex flex-col gap-4 border-b border-white/5 bg-white/[0.03] px-8 py-6 md:flex-row md:items-center md:justify-between relative">
@@ -2416,11 +2722,15 @@ export default function SpecEvolutionLab() {
                 <div>
                   <div className="flex items-center gap-3 mb-1">
                     <Terminal className="h-4 w-4 text-green-500/60" />
-                    <h2 className="text-base font-black tracking-[0.2em] text-white uppercase italic">Forensics_Inspector</h2>
+                    <h2 className="text-base font-black tracking-[0.2em] text-white uppercase italic">
+                      Forensics_Inspector
+                    </h2>
                   </div>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-7">Deep Archive Data Extraction & Analysis</p>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-7">
+                    Deep Archive Data Extraction & Analysis
+                  </p>
                 </div>
-                
+
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="relative">
                     <select
@@ -2430,7 +2740,9 @@ export default function SpecEvolutionLab() {
                     >
                       <option value="__ALL__">All_Corpus_Files</option>
                       {selectedCommit.files.map((f) => (
-                        <option key={f.path} value={f.path}>{f.path.toUpperCase()}</option>
+                        <option key={f.path} value={f.path}>
+                          {f.path.toUpperCase()}
+                        </option>
                       ))}
                     </select>
                     <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-600">
@@ -2444,7 +2756,9 @@ export default function SpecEvolutionLab() {
                       onClick={() => setDiffFormat("unified")}
                       className={clsx(
                         "rounded px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all",
-                        diffFormat === "unified" ? "bg-green-500/20 text-green-400" : "text-slate-500 hover:text-slate-300"
+                        diffFormat === "unified"
+                          ? "bg-green-500/20 text-green-400"
+                          : "text-slate-500 hover:text-slate-300",
                       )}
                     >
                       Unified
@@ -2454,7 +2768,9 @@ export default function SpecEvolutionLab() {
                       onClick={() => setDiffFormat("sideBySide")}
                       className={clsx(
                         "rounded px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all",
-                        diffFormat === "sideBySide" ? "bg-green-500/20 text-green-400" : "text-slate-500 hover:text-slate-300"
+                        diffFormat === "sideBySide"
+                          ? "bg-green-500/20 text-green-400"
+                          : "text-slate-500 hover:text-slate-300",
                       )}
                     >
                       Split
@@ -2464,7 +2780,11 @@ export default function SpecEvolutionLab() {
               </div>
 
               {/* Forensic Tab Bar */}
-              <div className="px-8 py-4 flex flex-wrap gap-3 border-b border-white/5 bg-white/[0.01]" role="tablist" aria-label="Inspector view tabs">
+              <div
+                className="px-8 py-4 flex flex-wrap gap-3 border-b border-white/5 bg-white/[0.01]"
+                role="tablist"
+                aria-label="Inspector view tabs"
+              >
                 {(
                   [
                     ["diff", "Diff_Stream", "terminal"],
@@ -2487,260 +2807,313 @@ export default function SpecEvolutionLab() {
                         "group relative flex items-center gap-2.5 px-5 py-2.5 rounded-md text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-500 overflow-hidden",
                         isActive
                           ? "text-green-400 shadow-[0_0_20px_rgba(34,197,94,0.1)]"
-                          : "text-slate-500 hover:text-slate-300"
+                          : "text-slate-500 hover:text-slate-300",
                       )}
                     >
                       {/* Chip Background */}
-                      <div className={clsx(
-                        "absolute inset-0 transition-all duration-500",
-                        isActive ? "bg-green-500/[0.08] opacity-100" : "bg-white/[0.02] opacity-0 group-hover:opacity-100"
-                      )} />
-                      <div className={clsx(
-                        "absolute inset-x-0 top-0 h-[1px] transition-all duration-500",
-                        isActive ? "bg-green-500/40" : "bg-transparent group-hover:bg-white/10"
-                      )} />
-                      
+                      <div
+                        className={clsx(
+                          "absolute inset-0 transition-all duration-500",
+                          isActive
+                            ? "bg-green-500/[0.08] opacity-100"
+                            : "bg-white/[0.02] opacity-0 group-hover:opacity-100",
+                        )}
+                      />
+                      <div
+                        className={clsx(
+                          "absolute inset-x-0 top-0 h-[1px] transition-all duration-500",
+                          isActive ? "bg-green-500/40" : "bg-transparent group-hover:bg-white/10",
+                        )}
+                      />
+
                       <span className="relative z-10">{label}</span>
-                      {isActive && <motion.div layoutId={prefersReducedMotion.current ? undefined : "tab-underline"} className="absolute bottom-0 left-0 right-0 h-[2px] bg-green-500 shadow-[0_0_10px_#22c55e]" />}
+                      {isActive && (
+                        <motion.div
+                          layoutId={prefersReducedMotion.current ? undefined : "tab-underline"}
+                          className="absolute bottom-0 left-0 right-0 h-[2px] bg-green-500 shadow-[0_0_10px_#22c55e]"
+                        />
+                      )}
                     </button>
                   );
                 })}
               </div>
 
-              <div className="p-8 md:p-10 relative flex-1" role="tabpanel" id={`tabpanel-${activeTab}`} aria-label={`${activeTab} view`}>
+              <div
+                className="p-8 md:p-10 relative flex-1"
+                role="tabpanel"
+                id={`tabpanel-${activeTab}`}
+                aria-label={`${activeTab} view`}
+              >
                 {/* Content Scanline Effect */}
                 <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.02)_50%)] bg-[length:100%_8px] opacity-20 z-10" />
 
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeTab + selectedCommit.sha}
-                    initial={prefersReducedMotion.current ? { opacity: 1 } : { opacity: 0, scale: 0.99, filter: "blur(4px)" }}
+                    initial={
+                      prefersReducedMotion.current
+                        ? { opacity: 1 }
+                        : { opacity: 0, scale: 0.99, filter: "blur(4px)" }
+                    }
                     animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-                    exit={prefersReducedMotion.current ? { opacity: 1 } : { opacity: 0, scale: 1.01, filter: "blur(4px)" }}
-                    transition={prefersReducedMotion.current ? { duration: 0 } : { duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                    exit={
+                      prefersReducedMotion.current
+                        ? { opacity: 1 }
+                        : { opacity: 0, scale: 1.01, filter: "blur(4px)" }
+                    }
+                    transition={
+                      prefersReducedMotion.current
+                        ? { duration: 0 }
+                        : { duration: 0.4, ease: [0.16, 1, 0.3, 1] }
+                    }
                     className="relative z-0"
                   >
-	                    {activeTab === "diff" ? (
-	                      <div className="space-y-8">
-	                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-white/[0.02] border border-white/5 p-4 rounded-lg">
-	                          <div className="flex items-center gap-4">
-                              <div className="flex items-center gap-2">
-                                <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                  {compareBaseCommit && diffSource === "corpusAB"
-                                    ? "Source_Corpus_Diff_A→B"
-                                    : "Patch_Sequence_Stream"}
-                                </span>
-                              </div>
-                              <div className="w-px h-3 bg-white/10" />
-                              <span className="text-[10px] font-mono text-slate-600 font-bold">
+                    {activeTab === "diff" ? (
+                      <div className="space-y-8">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-white/[0.02] border border-white/5 p-4 rounded-lg">
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                              <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                                 {compareBaseCommit && diffSource === "corpusAB"
-                                  ? `[BASE: ${compareBaseCommit.short}]`
-                                  : `[NODES: ${patchFiles.length}]`}
+                                  ? "Source_Corpus_Diff_A→B"
+                                  : "Patch_Sequence_Stream"}
                               </span>
-	                          </div>
-	                          <div className="flex flex-wrap items-center gap-3">
-	                            {compareBaseCommit ? (
-	                              <div className="flex items-center bg-black/60 p-1 rounded border border-white/10 shadow-inner">
-	                                <button
-	                                  type="button"
-	                                  onClick={() => setDiffSource("commitPatch")}
-	                                  className={clsx(
-	                                    "px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all rounded",
-	                                    diffSource === "commitPatch"
-	                                      ? "bg-green-500/20 text-green-400"
-	                                      : "text-slate-500 hover:text-slate-300"
-	                                  )}
-	                                >
-	                                  Patch_B
-	                                </button>
-	                                <button
-	                                  type="button"
-	                                  onClick={() => setDiffSource("corpusAB")}
-	                                  className={clsx(
-	                                    "px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all rounded",
-	                                    diffSource === "corpusAB"
-	                                      ? "bg-rose-500/20 text-rose-200"
-	                                      : "text-slate-500 hover:text-slate-300"
-	                                  )}
-	                                >
-	                                  Corpus_A_B
-	                                </button>
-	                              </div>
-	                            ) : null}
+                            </div>
+                            <div className="w-px h-3 bg-white/10" />
+                            <span className="text-[10px] font-mono text-slate-600 font-bold">
+                              {compareBaseCommit && diffSource === "corpusAB"
+                                ? `[BASE: ${compareBaseCommit.short}]`
+                                : `[NODES: ${patchFiles.length}]`}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-3">
+                            {compareBaseCommit ? (
+                              <div className="flex items-center bg-black/60 p-1 rounded border border-white/10 shadow-inner">
+                                <button
+                                  type="button"
+                                  onClick={() => setDiffSource("commitPatch")}
+                                  className={clsx(
+                                    "px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all rounded",
+                                    diffSource === "commitPatch"
+                                      ? "bg-green-500/20 text-green-400"
+                                      : "text-slate-500 hover:text-slate-300",
+                                  )}
+                                >
+                                  Patch_B
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setDiffSource("corpusAB")}
+                                  className={clsx(
+                                    "px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all rounded",
+                                    diffSource === "corpusAB"
+                                      ? "bg-rose-500/20 text-rose-200"
+                                      : "text-slate-500 hover:text-slate-300",
+                                  )}
+                                >
+                                  Corpus_A_B
+                                </button>
+                              </div>
+                            ) : null}
 
-	                            <button
-	                              type="button"
-	                              onClick={() => downloadObjectAsJson(selectedCommit, `${selectedCommit.short}.json`)}
-	                              className="rounded border border-white/10 bg-white/5 px-4 py-1.5 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:bg-white/10 hover:text-white transition-all flex items-center gap-2"
-	                            >
-	                              <Download className="h-3 w-3" />
-	                              Extract
-	                            </button>
-	                          </div>
-	                        </div>
-	
-	                        {!compareBaseCommit || diffSource === "commitPatch" ? (
-	                          patchFiles.map((pf, idx) => (
-	                            <div key={`${pf.pathA}-${pf.pathB}-${idx}`} className="rounded-2xl border border-white/5 bg-black/40 overflow-hidden shadow-xl">
-	                              <div className="flex items-center justify-between gap-3 border-b border-white/5 bg-white/5 px-5 py-3">
-	                                <div className="min-w-0">
-	                                  <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">DIFF_STREAM</div>
-	                                  <div className="mt-1 font-mono text-[13px] text-green-400 font-bold truncate">
-	                                    {pf.pathA} <span className="text-slate-700 mx-2">→</span> {pf.pathB}
-	                                  </div>
-	                                </div>
-	                              </div>
-	
-	                              <div className="p-0">
-	                                {pf.hunks.map((h, hi) => (
-	                                  <div key={hi} className="border-b border-white/5 last:border-0">
-	                                    <div className="px-5 py-2 text-[11px] font-mono font-bold text-slate-500 bg-white/[0.02] border-b border-white/5">
-	                                      {h.header}
-	                                    </div>
-	
-	                                    {diffFormat === "unified" ? (
-	                                      <pre className="p-5 overflow-auto text-[12px] font-mono leading-relaxed custom-scrollbar max-h-[500px]">
-	                                        {h.lines.map((l, li) => (
-	                                          <div
-	                                            key={li}
-	                                            className={clsx(
-	                                              "whitespace-pre rounded px-1",
-	                                              l.kind === "add"
-	                                                ? "bg-green-500/10 text-green-200"
-	                                                : l.kind === "del"
-	                                                  ? "bg-rose-500/10 text-rose-300"
-	                                                  : l.kind === "meta"
-	                                                    ? "text-slate-600 italic"
-	                                                    : "text-slate-400"
-	                                            )}
-	                                          >
-	                                            {l.text}
-	                                          </div>
-	                                        ))}
-	                                      </pre>
-	                                    ) : (
-	                                      <div className="grid grid-cols-2 gap-px bg-white/5">
-	                                        {hunkToSideBySideRows(h).map((row, ri) => {
-	                                          const cellCls = (c: SideCell) =>
-	                                            clsx(
-	                                              "min-w-0 px-4 py-1.5 font-mono text-[11px] leading-relaxed whitespace-pre-wrap break-words transition-colors",
-	                                              c.kind === "add"
-	                                                ? "bg-green-500/10 text-green-200"
-	                                                : c.kind === "del"
-	                                                  ? "bg-rose-500/10 text-rose-300"
-	                                                  : c.kind === "context"
-	                                                    ? "bg-black/20 text-slate-400"
-	                                                    : "bg-black/40 text-slate-700"
-	                                            );
-	
-	                                          const lnCls = "select-none text-slate-700 text-[9px] pr-3 font-black inline-block w-8 text-right";
-	
-	                                          return (
-	                                            <React.Fragment key={ri}>
-	                                              <div className={cellCls(row.left)}>
-	                                                <span className={lnCls}>{row.left.lineNo ?? ""}</span>
-	                                                {row.left.text ?? ""}
-	                                              </div>
-	                                              <div className={cellCls(row.right)}>
-	                                                <span className={lnCls}>{row.right.lineNo ?? ""}</span>
-	                                                {row.right.text ?? ""}
-	                                              </div>
-	                                            </React.Fragment>
-	                                          );
-	                                        })}
-	                                      </div>
-	                                    )}
-	                                  </div>
-	                                ))}
-	                              </div>
-	                            </div>
-	                          ))
-	                        ) : (
-	                          <div className="rounded-2xl border border-white/5 bg-black/40 overflow-hidden shadow-xl">
-	                            <div className="flex items-center justify-between gap-3 border-b border-white/5 bg-white/5 px-5 py-3">
-	                              <div className="min-w-0">
-	                                <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">CORPUS_DIFF</div>
-	                                <div className="mt-1 font-mono text-[13px] text-rose-200 font-bold truncate">
-	                                  A {compareBaseCommit.short} <span className="text-slate-700 mx-2">→</span> B {selectedCommit.short}{" "}
-	                                  <span className="text-slate-700 mx-2">·</span> {fileChoice}
-	                                </div>
-	                              </div>
-	                            </div>
-	
-	                            {"error" in (corpusDiff || {}) ? (
-	                              <div className="p-6 text-sm text-slate-300">
-	                                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 text-amber-200">
-	                                  {(corpusDiff as { error: string }).error}
-	                                </div>
-	                              </div>
-	                            ) : corpusDiff && "ops" in corpusDiff ? (
-	                              diffFormat === "unified" ? (
-	                                <pre className="p-5 overflow-auto text-[12px] font-mono leading-relaxed custom-scrollbar max-h-[500px]">
-	                                  {(corpusDiff.ops as DiffOp[]).slice(0, 2000).map((op, i) => {
-	                                    const prefix = op.kind === "add" ? "+" : op.kind === "del" ? "-" : " ";
-	                                    const cls =
-	                                      op.kind === "add"
-	                                        ? "bg-green-500/10 text-green-200"
-	                                        : op.kind === "del"
-	                                          ? "bg-rose-500/10 text-rose-300"
-	                                          : "text-slate-400";
-	                                    return (
-	                                      <div key={i} className={clsx("whitespace-pre rounded px-1", cls)}>
-	                                        {prefix}{op.text}
-	                                      </div>
-	                                    );
-	                                  })}
-	                                  {(corpusDiff.ops as DiffOp[]).length > 2000 ? (
-	                                    <div className="mt-3 text-[10px] text-amber-300 uppercase tracking-widest font-black">
-	                                      TRUNCATED: showing first 2000 lines
-	                                    </div>
-	                                  ) : null}
-	                                </pre>
-	                              ) : (
-	                                <div className="grid grid-cols-2 gap-px bg-white/5">
-	                                  {corpusOpsToSideBySideRows(corpusDiff.ops as DiffOp[]).slice(0, 2000).map((row, ri) => {
-	                                    const cellCls = (c: SideCell) =>
-	                                      clsx(
-	                                        "min-w-0 px-4 py-1.5 font-mono text-[11px] leading-relaxed whitespace-pre-wrap break-words transition-colors",
-	                                        c.kind === "add"
-	                                          ? "bg-green-500/10 text-green-200"
-	                                          : c.kind === "del"
-	                                            ? "bg-rose-500/10 text-rose-300"
-	                                            : c.kind === "context"
-	                                              ? "bg-black/20 text-slate-400"
-	                                              : "bg-black/40 text-slate-700"
-	                                      );
-	
-	                                    const lnCls = "select-none text-slate-700 text-[9px] pr-3 font-black inline-block w-8 text-right";
-	
-	                                    return (
-	                                      <React.Fragment key={ri}>
-	                                        <div className={cellCls(row.left)}>
-	                                          <span className={lnCls}>{row.left.lineNo ?? ""}</span>
-	                                          {row.left.text ?? ""}
-	                                        </div>
-	                                        <div className={cellCls(row.right)}>
-	                                          <span className={lnCls}>{row.right.lineNo ?? ""}</span>
-	                                          {row.right.text ?? ""}
-	                                        </div>
-	                                      </React.Fragment>
-	                                    );
-	                                  })}
-	                                  {(corpusDiff.ops as DiffOp[]).length > 2000 ? (
-	                                    <div className="col-span-2 px-5 py-3 text-[10px] text-amber-300 uppercase tracking-widest font-black bg-black/30">
-	                                      TRUNCATED: showing first 2000 rows
-	                                    </div>
-	                                  ) : null}
-	                                </div>
-	                              )
-	                            ) : (
-	                              <div className="p-6 text-sm text-slate-400">Computing diff…</div>
-	                            )}
-	                          </div>
-	                        )}
-	                      </div>
-	                    ) : null}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                downloadObjectAsJson(selectedCommit, `${selectedCommit.short}.json`)
+                              }
+                              className="rounded border border-white/10 bg-white/5 px-4 py-1.5 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:bg-white/10 hover:text-white transition-all flex items-center gap-2"
+                            >
+                              <Download className="h-3 w-3" />
+                              Extract
+                            </button>
+                          </div>
+                        </div>
+
+                        {!compareBaseCommit || diffSource === "commitPatch" ? (
+                          patchFiles.map((pf, idx) => (
+                            <div
+                              key={`${pf.pathA}-${pf.pathB}-${idx}`}
+                              className="rounded-2xl border border-white/5 bg-black/40 overflow-hidden shadow-xl"
+                            >
+                              <div className="flex items-center justify-between gap-3 border-b border-white/5 bg-white/5 px-5 py-3">
+                                <div className="min-w-0">
+                                  <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">
+                                    DIFF_STREAM
+                                  </div>
+                                  <div className="mt-1 font-mono text-[13px] text-green-400 font-bold truncate">
+                                    {pf.pathA} <span className="text-slate-700 mx-2">→</span>{" "}
+                                    {pf.pathB}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="p-0">
+                                {pf.hunks.map((h, hi) => (
+                                  <div key={hi} className="border-b border-white/5 last:border-0">
+                                    <div className="px-5 py-2 text-[11px] font-mono font-bold text-slate-500 bg-white/[0.02] border-b border-white/5">
+                                      {h.header}
+                                    </div>
+
+                                    {diffFormat === "unified" ? (
+                                      <pre className="p-5 overflow-auto text-[12px] font-mono leading-relaxed custom-scrollbar max-h-[500px]">
+                                        {h.lines.map((l, li) => (
+                                          <div
+                                            key={li}
+                                            className={clsx(
+                                              "whitespace-pre rounded px-1",
+                                              l.kind === "add"
+                                                ? "bg-green-500/10 text-green-200"
+                                                : l.kind === "del"
+                                                  ? "bg-rose-500/10 text-rose-300"
+                                                  : l.kind === "meta"
+                                                    ? "text-slate-600 italic"
+                                                    : "text-slate-400",
+                                            )}
+                                          >
+                                            {l.text}
+                                          </div>
+                                        ))}
+                                      </pre>
+                                    ) : (
+                                      <div className="grid grid-cols-2 gap-px bg-white/5">
+                                        {hunkToSideBySideRows(h).map((row, ri) => {
+                                          const cellCls = (c: SideCell) =>
+                                            clsx(
+                                              "min-w-0 px-4 py-1.5 font-mono text-[11px] leading-relaxed whitespace-pre-wrap break-words transition-colors",
+                                              c.kind === "add"
+                                                ? "bg-green-500/10 text-green-200"
+                                                : c.kind === "del"
+                                                  ? "bg-rose-500/10 text-rose-300"
+                                                  : c.kind === "context"
+                                                    ? "bg-black/20 text-slate-400"
+                                                    : "bg-black/40 text-slate-700",
+                                            );
+
+                                          const lnCls =
+                                            "select-none text-slate-700 text-[9px] pr-3 font-black inline-block w-8 text-right";
+
+                                          return (
+                                            <React.Fragment key={ri}>
+                                              <div className={cellCls(row.left)}>
+                                                <span className={lnCls}>
+                                                  {row.left.lineNo ?? ""}
+                                                </span>
+                                                {row.left.text ?? ""}
+                                              </div>
+                                              <div className={cellCls(row.right)}>
+                                                <span className={lnCls}>
+                                                  {row.right.lineNo ?? ""}
+                                                </span>
+                                                {row.right.text ?? ""}
+                                              </div>
+                                            </React.Fragment>
+                                          );
+                                        })}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="rounded-2xl border border-white/5 bg-black/40 overflow-hidden shadow-xl">
+                            <div className="flex items-center justify-between gap-3 border-b border-white/5 bg-white/5 px-5 py-3">
+                              <div className="min-w-0">
+                                <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">
+                                  CORPUS_DIFF
+                                </div>
+                                <div className="mt-1 font-mono text-[13px] text-rose-200 font-bold truncate">
+                                  A {compareBaseCommit.short}{" "}
+                                  <span className="text-slate-700 mx-2">→</span> B{" "}
+                                  {selectedCommit.short}{" "}
+                                  <span className="text-slate-700 mx-2">·</span> {fileChoice}
+                                </div>
+                              </div>
+                            </div>
+
+                            {"error" in (corpusDiff || {}) ? (
+                              <div className="p-6 text-sm text-slate-300">
+                                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 text-amber-200">
+                                  {(corpusDiff as { error: string }).error}
+                                </div>
+                              </div>
+                            ) : corpusDiff && "ops" in corpusDiff ? (
+                              diffFormat === "unified" ? (
+                                <pre className="p-5 overflow-auto text-[12px] font-mono leading-relaxed custom-scrollbar max-h-[500px]">
+                                  {(corpusDiff.ops as DiffOp[]).slice(0, 2000).map((op, i) => {
+                                    const prefix =
+                                      op.kind === "add" ? "+" : op.kind === "del" ? "-" : " ";
+                                    const cls =
+                                      op.kind === "add"
+                                        ? "bg-green-500/10 text-green-200"
+                                        : op.kind === "del"
+                                          ? "bg-rose-500/10 text-rose-300"
+                                          : "text-slate-400";
+                                    return (
+                                      <div
+                                        key={i}
+                                        className={clsx("whitespace-pre rounded px-1", cls)}
+                                      >
+                                        {prefix}
+                                        {op.text}
+                                      </div>
+                                    );
+                                  })}
+                                  {(corpusDiff.ops as DiffOp[]).length > 2000 ? (
+                                    <div className="mt-3 text-[10px] text-amber-300 uppercase tracking-widest font-black">
+                                      TRUNCATED: showing first 2000 lines
+                                    </div>
+                                  ) : null}
+                                </pre>
+                              ) : (
+                                <div className="grid grid-cols-2 gap-px bg-white/5">
+                                  {corpusOpsToSideBySideRows(corpusDiff.ops as DiffOp[])
+                                    .slice(0, 2000)
+                                    .map((row, ri) => {
+                                      const cellCls = (c: SideCell) =>
+                                        clsx(
+                                          "min-w-0 px-4 py-1.5 font-mono text-[11px] leading-relaxed whitespace-pre-wrap break-words transition-colors",
+                                          c.kind === "add"
+                                            ? "bg-green-500/10 text-green-200"
+                                            : c.kind === "del"
+                                              ? "bg-rose-500/10 text-rose-300"
+                                              : c.kind === "context"
+                                                ? "bg-black/20 text-slate-400"
+                                                : "bg-black/40 text-slate-700",
+                                        );
+
+                                      const lnCls =
+                                        "select-none text-slate-700 text-[9px] pr-3 font-black inline-block w-8 text-right";
+
+                                      return (
+                                        <React.Fragment key={ri}>
+                                          <div className={cellCls(row.left)}>
+                                            <span className={lnCls}>{row.left.lineNo ?? ""}</span>
+                                            {row.left.text ?? ""}
+                                          </div>
+                                          <div className={cellCls(row.right)}>
+                                            <span className={lnCls}>{row.right.lineNo ?? ""}</span>
+                                            {row.right.text ?? ""}
+                                          </div>
+                                        </React.Fragment>
+                                      );
+                                    })}
+                                  {(corpusDiff.ops as DiffOp[]).length > 2000 ? (
+                                    <div className="col-span-2 px-5 py-3 text-[10px] text-amber-300 uppercase tracking-widest font-black bg-black/30">
+                                      TRUNCATED: showing first 2000 rows
+                                    </div>
+                                  ) : null}
+                                </div>
+                              )
+                            ) : (
+                              <div className="p-6 text-sm text-slate-400">Computing diff…</div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
 
                     {activeTab === "snapshot" ? <MarkdownView markdown={snapshotMarkdown} /> : null}
                     {activeTab === "raw" ? (
@@ -2754,7 +3127,9 @@ export default function SpecEvolutionLab() {
                         {!selectedCommit.review ? (
                           <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-8 text-center border-dashed">
                             <HelpCircle className="h-12 w-12 text-slate-700 mx-auto mb-4" />
-                            <div className="text-base font-black tracking-widest text-slate-400 uppercase">UNREVIEWED_PROTOCOL_NODE</div>
+                            <div className="text-base font-black tracking-widest text-slate-400 uppercase">
+                              UNREVIEWED_PROTOCOL_NODE
+                            </div>
                             <p className="mt-2 text-xs font-bold text-slate-600 uppercase tracking-widest">
                               No manual change-groups have been logged for this archive node yet.
                             </p>
@@ -2762,37 +3137,74 @@ export default function SpecEvolutionLab() {
                         ) : (
                           <>
                             {(selectedCommit.review.groups || []).map((g, gi) => {
-                              const conf = typeof g.confidence === "number" ? Math.max(0, Math.min(1, g.confidence)) : 0;
+                              const conf =
+                                typeof g.confidence === "number"
+                                  ? Math.max(0, Math.min(1, g.confidence))
+                                  : 0;
                               const confPct = Math.round(conf * 100);
-                              const buckets = (g.buckets || []).filter((b) => b >= 0 && b <= 10) as BucketKey[];
+                              const buckets = (g.buckets || []).filter(
+                                (b) => b >= 0 && b <= 10,
+                              ) as BucketKey[];
                               return (
-                                <div key={gi} className="rounded-2xl border border-white/10 bg-black/40 p-6 md:p-8 shadow-xl relative group">
+                                <div
+                                  key={gi}
+                                  className="rounded-2xl border border-white/10 bg-black/40 p-6 md:p-8 shadow-xl relative group"
+                                >
                                   <div className="absolute top-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-green-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                                   <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between mb-8 pb-8 border-b border-white/5">
                                     <div className="min-w-0">
-                                      <div className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em]">GROUP_SEQUENCE_{String(gi + 1).padStart(2, '0')}</div>
+                                      <div className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em]">
+                                        GROUP_SEQUENCE_{String(gi + 1).padStart(2, "0")}
+                                      </div>
                                       <div className="mt-2 text-xl md:text-2xl font-black tracking-tight text-white uppercase italic">
                                         {g.title || "Untitled_Sequence"}
                                       </div>
                                       <div className="mt-4 flex flex-wrap gap-2">
-                                        {(buckets.length ? buckets : ([10] as BucketKey[])).map((b) => (
-                                          <BucketChip key={b} bucket={b} onClick={() => openBucketInfo(b)} />
-                                        ))}
+                                        {(buckets.length ? buckets : ([10] as BucketKey[])).map(
+                                          (b) => (
+                                            <BucketChip
+                                              key={b}
+                                              bucket={b}
+                                              onClick={() => openBucketInfo(b)}
+                                            />
+                                          ),
+                                        )}
                                       </div>
                                     </div>
 
                                     <div className="shrink-0 rounded-2xl border border-white/5 bg-white/[0.03] px-5 py-4 min-w-[160px] shadow-inner">
                                       <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center justify-between">
                                         CONFIDENCE
-                                        <span className={clsx("font-mono text-xs", conf > 0.8 ? "text-green-400" : "text-amber-400")}>{confPct}%</span>
+                                        <span
+                                          className={clsx(
+                                            "font-mono text-xs",
+                                            conf > 0.8 ? "text-green-400" : "text-amber-400",
+                                          )}
+                                        >
+                                          {confPct}%
+                                        </span>
                                       </div>
                                       <div className="h-1.5 w-full rounded-full bg-black/40 overflow-hidden border border-white/5">
                                         <motion.div
-                                          initial={prefersReducedMotion.current ? { width: `${confPct}%` } : { width: 0 }}
+                                          initial={
+                                            prefersReducedMotion.current
+                                              ? { width: `${confPct}%` }
+                                              : { width: 0 }
+                                          }
                                           animate={{ width: `${confPct}%` }}
-                                          transition={prefersReducedMotion.current ? { duration: 0 } : { duration: 1, ease: "easeOut" }}
+                                          transition={
+                                            prefersReducedMotion.current
+                                              ? { duration: 0 }
+                                              : { duration: 1, ease: "easeOut" }
+                                          }
                                           className="h-full rounded-full"
-                                          style={{ background: conf > 0.8 ? "rgba(34,197,94,0.8)" : "rgba(251,191,36,0.8)", boxShadow: "0 0 10px currentColor" }}
+                                          style={{
+                                            background:
+                                              conf > 0.8
+                                                ? "rgba(34,197,94,0.8)"
+                                                : "rgba(251,191,36,0.8)",
+                                            boxShadow: "0 0 10px currentColor",
+                                          }}
                                         />
                                       </div>
                                     </div>
@@ -2804,7 +3216,9 @@ export default function SpecEvolutionLab() {
                                         <Info className="h-3 w-3" />
                                         RATIONALE_LOG
                                       </div>
-                                      <p className="text-[13px] leading-relaxed text-slate-300 font-medium">{g.rationale || "No rationale provided."}</p>
+                                      <p className="text-[13px] leading-relaxed text-slate-300 font-medium">
+                                        {g.rationale || "No rationale provided."}
+                                      </p>
                                     </div>
 
                                     <div>
@@ -2815,13 +3229,18 @@ export default function SpecEvolutionLab() {
                                       <ul className="space-y-3">
                                         {(g.evidence || []).length ? (
                                           (g.evidence || []).map((e, ei) => (
-                                            <li key={ei} className="text-[12px] text-slate-400 flex gap-3 leading-relaxed">
+                                            <li
+                                              key={ei}
+                                              className="text-[12px] text-slate-400 flex gap-3 leading-relaxed"
+                                            >
                                               <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-green-500/40" />
                                               {e}
                                             </li>
                                           ))
                                         ) : (
-                                          <li className="text-xs text-slate-700 italic font-bold uppercase tracking-tighter">_LEDGER_EMPTY</li>
+                                          <li className="text-xs text-slate-700 italic font-bold uppercase tracking-tighter">
+                                            _LEDGER_EMPTY
+                                          </li>
                                         )}
                                       </ul>
                                     </div>
@@ -2831,15 +3250,23 @@ export default function SpecEvolutionLab() {
                             })}
 
                             {(selectedCommit.review.notes || []).length ? (
-                              <FrankenContainer withBolts={false} className="bg-white/[0.02] border-white/10 p-8 shadow-2xl">
+                              <FrankenContainer
+                                withBolts={false}
+                                className="bg-white/[0.02] border-white/10 p-8 shadow-2xl"
+                              >
                                 <div className="text-sm font-black tracking-[0.2em] text-white uppercase mb-4 flex items-center gap-3">
                                   <div className="h-2 w-2 bg-amber-500 rounded-full animate-pulse" />
                                   OPEN_QUERIES_&_OBSERVATIONS
                                 </div>
                                 <ul className="grid gap-4">
                                   {(selectedCommit.review.notes || []).map((n, ni) => (
-                                    <li key={ni} className="text-[13px] font-medium text-slate-400 bg-white/5 p-4 rounded-xl border border-white/5 flex gap-4 leading-relaxed">
-                                      <span className="text-amber-500/60 font-mono text-[10px] font-black mt-0.5">[{String(ni + 1).padStart(2, '0')}]</span>
+                                    <li
+                                      key={ni}
+                                      className="text-[13px] font-medium text-slate-400 bg-white/5 p-4 rounded-xl border border-white/5 flex gap-4 leading-relaxed"
+                                    >
+                                      <span className="text-amber-500/60 font-mono text-[10px] font-black mt-0.5">
+                                        [{String(ni + 1).padStart(2, "0")}]
+                                      </span>
                                       {n}
                                     </li>
                                   ))}
@@ -2876,9 +3303,21 @@ export default function SpecEvolutionLab() {
                             <div className="mt-5 grid gap-4 md:grid-cols-3">
                               {(
                                 [
-                                  ["ADDED", compareModel.fileSummary.added, "text-green-300 border-green-500/20 bg-green-500/5"],
-                                  ["REMOVED", compareModel.fileSummary.removed, "text-rose-300 border-rose-500/20 bg-rose-500/5"],
-                                  ["MODIFIED", compareModel.fileSummary.modified, "text-amber-200 border-amber-500/20 bg-amber-500/5"],
+                                  [
+                                    "ADDED",
+                                    compareModel.fileSummary.added,
+                                    "text-green-300 border-green-500/20 bg-green-500/5",
+                                  ],
+                                  [
+                                    "REMOVED",
+                                    compareModel.fileSummary.removed,
+                                    "text-rose-300 border-rose-500/20 bg-rose-500/5",
+                                  ],
+                                  [
+                                    "MODIFIED",
+                                    compareModel.fileSummary.modified,
+                                    "text-amber-200 border-amber-500/20 bg-amber-500/5",
+                                  ],
                                 ] as const
                               ).map(([label, list, cls]) => (
                                 <div key={label} className={clsx("rounded-xl border p-4", cls)}>
@@ -2888,7 +3327,10 @@ export default function SpecEvolutionLab() {
                                   {list.length ? (
                                     <ul className="mt-3 space-y-1">
                                       {list.slice(0, 12).map((p) => (
-                                        <li key={p} className="font-mono text-[11px] text-slate-300 truncate">
+                                        <li
+                                          key={p}
+                                          className="font-mono text-[11px] text-slate-300 truncate"
+                                        >
                                           {p}
                                         </li>
                                       ))}
@@ -2914,18 +3356,29 @@ export default function SpecEvolutionLab() {
 
                           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                             {selectedCommit.numstat.map((ns) => (
-                              <div key={ns.path} className="rounded-2xl border border-white/5 bg-black/40 p-6 shadow-xl hover:border-white/10 transition-colors group">
+                              <div
+                                key={ns.path}
+                                className="rounded-2xl border border-white/5 bg-black/40 p-6 shadow-xl hover:border-white/10 transition-colors group"
+                              >
                                 <div className="flex items-start justify-between gap-4">
                                   <div className="min-w-0">
-                                    <div className="font-mono text-xs font-bold text-slate-500 uppercase tracking-tighter group-hover:text-slate-300 transition-colors">{ns.path}</div>
+                                    <div className="font-mono text-xs font-bold text-slate-500 uppercase tracking-tighter group-hover:text-slate-300 transition-colors">
+                                      {ns.path}
+                                    </div>
                                     <div className="mt-3 flex items-center gap-3 text-[10px] font-black uppercase tracking-widest">
-                                      <span className="text-green-400 bg-green-500/10 px-2 py-1 rounded">+{ns.added || 0}</span>
-                                      <span className="text-rose-400 bg-rose-500/10 px-2 py-1 rounded">-{ns.deleted || 0}</span>
+                                      <span className="text-green-400 bg-green-500/10 px-2 py-1 rounded">
+                                        +{ns.added || 0}
+                                      </span>
+                                      <span className="text-rose-400 bg-rose-500/10 px-2 py-1 rounded">
+                                        -{ns.deleted || 0}
+                                      </span>
                                     </div>
                                   </div>
                                   <div className="text-[10px] font-black text-slate-700 uppercase tracking-[0.2em] border-l border-white/5 pl-4 py-1">
                                     DELTA_Σ
-                                    <div className="mt-1 text-base font-mono text-slate-500">{(ns.added || 0) + (ns.deleted || 0)}</div>
+                                    <div className="mt-1 text-base font-mono text-slate-500">
+                                      {(ns.added || 0) + (ns.deleted || 0)}
+                                    </div>
                                   </div>
                                 </div>
                               </div>
@@ -2935,18 +3388,29 @@ export default function SpecEvolutionLab() {
                       ) : (
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                           {selectedCommit.numstat.map((ns) => (
-                            <div key={ns.path} className="rounded-2xl border border-white/5 bg-black/40 p-6 shadow-xl hover:border-white/10 transition-colors group">
+                            <div
+                              key={ns.path}
+                              className="rounded-2xl border border-white/5 bg-black/40 p-6 shadow-xl hover:border-white/10 transition-colors group"
+                            >
                               <div className="flex items-start justify-between gap-4">
                                 <div className="min-w-0">
-                                  <div className="font-mono text-xs font-bold text-slate-500 uppercase tracking-tighter group-hover:text-slate-300 transition-colors">{ns.path}</div>
+                                  <div className="font-mono text-xs font-bold text-slate-500 uppercase tracking-tighter group-hover:text-slate-300 transition-colors">
+                                    {ns.path}
+                                  </div>
                                   <div className="mt-3 flex items-center gap-3 text-[10px] font-black uppercase tracking-widest">
-                                    <span className="text-green-400 bg-green-500/10 px-2 py-1 rounded">+{ns.added || 0}</span>
-                                    <span className="text-rose-400 bg-rose-500/10 px-2 py-1 rounded">-{ns.deleted || 0}</span>
+                                    <span className="text-green-400 bg-green-500/10 px-2 py-1 rounded">
+                                      +{ns.added || 0}
+                                    </span>
+                                    <span className="text-rose-400 bg-rose-500/10 px-2 py-1 rounded">
+                                      -{ns.deleted || 0}
+                                    </span>
                                   </div>
                                 </div>
                                 <div className="text-[10px] font-black text-slate-700 uppercase tracking-[0.2em] border-l border-white/5 pl-4 py-1">
                                   DELTA_Σ
-                                  <div className="mt-1 text-base font-mono text-slate-500">{(ns.added || 0) + (ns.deleted || 0)}</div>
+                                  <div className="mt-1 text-base font-mono text-slate-500">
+                                    {(ns.added || 0) + (ns.deleted || 0)}
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -2956,7 +3420,7 @@ export default function SpecEvolutionLab() {
                     ) : null}
 
                     {distanceOut ? (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className="mt-8 bg-green-500/[0.03] border border-green-500/10 rounded-xl p-4 text-[10px] font-black uppercase tracking-[0.2em] text-green-500/60 font-mono"
@@ -2992,19 +3456,24 @@ export default function SpecEvolutionLab() {
                 }}
                 className={clsx(
                   "w-full text-left rounded-2xl border px-5 py-4 transition-all group relative overflow-hidden",
-                  active 
-                    ? "bg-green-500/10 border-green-500/40 shadow-[0_0_20px_rgba(34,197,94,0.1)]" 
-                    : "bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10"
+                  active
+                    ? "bg-green-500/10 border-green-500/40 shadow-[0_0_20px_rgba(34,197,94,0.1)]"
+                    : "bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10",
                 )}
               >
                 {active && <NeuralPulse className="opacity-40" />}
                 <div className="flex items-start gap-4 relative z-10">
-                  <div className="mt-1 h-3 w-3 rounded-full shadow-[0_0_10px_currentColor]" style={{ background: bucketColors[b], color: bucketColors[b] }} />
+                  <div
+                    className="mt-1 h-3 w-3 rounded-full shadow-[0_0_10px_currentColor]"
+                    style={{ background: bucketColors[b], color: bucketColors[b] }}
+                  />
                   <div className="min-w-0">
                     <div className="text-sm font-black tracking-tight text-white uppercase tracking-wider">
                       {b}. {bucketNames[b]}
                     </div>
-                    <div className="mt-1.5 text-[11px] font-medium text-slate-500 leading-relaxed uppercase tracking-widest">{dataset.bucket_defs?.[String(b)] || "System default protocol."}</div>
+                    <div className="mt-1.5 text-[11px] font-medium text-slate-500 leading-relaxed uppercase tracking-widest">
+                      {dataset.bucket_defs?.[String(b)] || "System default protocol."}
+                    </div>
                   </div>
                 </div>
               </button>
@@ -3016,15 +3485,28 @@ export default function SpecEvolutionLab() {
       {/* Bucket info */}
       <DialogShell
         dialogRef={bucketInfoDialogRef}
-        title={bucketInfo !== null ? `${bucketInfo}. ${bucketNames[bucketInfo].toUpperCase()}` : "BUCKET_NODE"}
+        title={
+          bucketInfo !== null
+            ? `${bucketInfo}. ${bucketNames[bucketInfo].toUpperCase()}`
+            : "BUCKET_NODE"
+        }
         subtitle="Forensic category details"
       >
         <div className="space-y-6">
           <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-6 shadow-inner">
-            <div className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-3">SYSTEM_DEFINITION</div>
-            <p className="text-sm font-medium text-slate-300 leading-relaxed italic">&ldquo;{bucketInfoDesc || "No manual definition provided for this node."}&rdquo;</p>
+            <div className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-3">
+              SYSTEM_DEFINITION
+            </div>
+            <p className="text-sm font-medium text-slate-300 leading-relaxed italic">
+              &ldquo;{bucketInfoDesc || "No manual definition provided for this node."}&rdquo;
+            </p>
             <div className="mt-6 flex items-center gap-3 text-[9px] font-black text-slate-600 uppercase tracking-widest">
-              CURRENT_FILTER_STATUS: <span className={clsx(bucketFilter === bucketInfo ? "text-green-400" : "text-slate-400")}>{bucketFilter === bucketInfo ? "ACTIVE" : "INACTIVE"}</span>
+              CURRENT_FILTER_STATUS:{" "}
+              <span
+                className={clsx(bucketFilter === bucketInfo ? "text-green-400" : "text-slate-400")}
+              >
+                {bucketFilter === bucketInfo ? "ACTIVE" : "INACTIVE"}
+              </span>
             </div>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -3038,7 +3520,9 @@ export default function SpecEvolutionLab() {
             >
               <span className="flex items-center justify-center gap-3">
                 <Filter className="h-4 w-4" />
-                {bucketInfo !== null && bucketFilter === bucketInfo ? "CLEAR_FILTER" : "FILTER_BY_NODE"}
+                {bucketInfo !== null && bucketFilter === bucketInfo
+                  ? "CLEAR_FILTER"
+                  : "FILTER_BY_NODE"}
               </span>
             </button>
             <button
@@ -3067,15 +3551,19 @@ export default function SpecEvolutionLab() {
         <div className="space-y-6">
           <div className="space-y-2">
             <div className="flex items-center justify-between px-1">
-              <div className="text-[10px] font-black text-slate-600 uppercase tracking-widest">SEARCH_ARCHIVE</div>
+              <div className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
+                SEARCH_ARCHIVE
+              </div>
               <button
                 type="button"
-                onClick={() => setSearchScope((s) => s === "thisCommit" ? "allCommits" : "thisCommit")}
+                onClick={() =>
+                  setSearchScope((s) => (s === "thisCommit" ? "allCommits" : "thisCommit"))
+                }
                 className={clsx(
                   "px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-wider transition-all border",
                   searchScope === "allCommits"
                     ? "bg-green-500/15 text-green-400 border-green-500/30"
-                    : "bg-white/5 text-slate-500 border-white/10"
+                    : "bg-white/5 text-slate-500 border-white/10",
                 )}
               >
                 {searchScope === "allCommits" ? "ALL_NODES" : "THIS_NODE"}
@@ -3087,7 +3575,9 @@ export default function SpecEvolutionLab() {
                 type="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={searchScope === "allCommits" ? "SEARCH_ALL_NODES..." : "SEARCH_THIS_NODE..."}
+                placeholder={
+                  searchScope === "allCommits" ? "SEARCH_ALL_NODES..." : "SEARCH_THIS_NODE..."
+                }
                 className="w-full rounded-2xl border border-white/10 bg-white/5 pl-12 pr-4 py-4 text-xs font-bold tracking-widest text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-green-500/40"
               />
             </div>
@@ -3095,7 +3585,9 @@ export default function SpecEvolutionLab() {
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <div className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-1">TEMPORAL_SCALE</div>
+              <div className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-1">
+                TEMPORAL_SCALE
+              </div>
               <select
                 value={bucketMode}
                 onChange={(e) => setBucketMode(e.target.value as BucketMode)}
@@ -3109,7 +3601,9 @@ export default function SpecEvolutionLab() {
             </div>
 
             <div className="space-y-2">
-              <div className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-1">METRIC_DIMENSION</div>
+              <div className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-1">
+                METRIC_DIMENSION
+              </div>
               <select
                 value={metric}
                 onChange={(e) => setMetric(e.target.value as MetricKey)}
@@ -3136,7 +3630,9 @@ export default function SpecEvolutionLab() {
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => downloadObjectAsJson(dataset, "frankentui_spec_evolution_dataset.json")}
+                onClick={() =>
+                  downloadObjectAsJson(dataset, "frankentui_spec_evolution_dataset.json")
+                }
                 className="rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-300"
               >
                 EXPORT_JSON
@@ -3157,14 +3653,21 @@ export default function SpecEvolutionLab() {
       </DialogShell>
 
       {/* Commits (mobile) */}
-      <DialogShell dialogRef={commitsDialogRef} title="Archive Nodes" subtitle="Historical snapshots traversal">
+      <DialogShell
+        dialogRef={commitsDialogRef}
+        title="Archive Nodes"
+        subtitle="Historical snapshots traversal"
+      >
         <div className="max-h-[72vh] overflow-auto -mx-6">
           {filteredCommits.map((c) => {
             const weights = perCommitBucketWeights(c, softMode);
             const bucketKeys = Object.keys(weights)
               .map((x) => parseInt(x, 10))
               .filter((b) => Number.isFinite(b) && b >= 0 && b <= 10) as BucketKey[];
-            const showBuckets = (c.reviewed ? bucketKeys.filter((b) => b !== 0) : bucketKeys).slice(0, 4);
+            const showBuckets = (c.reviewed ? bucketKeys.filter((b) => b !== 0) : bucketKeys).slice(
+              0,
+              4,
+            );
 
             return (
               <button
@@ -3174,15 +3677,24 @@ export default function SpecEvolutionLab() {
                   selectCommit(c.idx);
                   commitsDialogRef.current?.close();
                 }}
-                className={clsx(styles.commitRow, "w-full text-left px-6 py-5 border-b border-white/5 hover:bg-white/5 transition-colors active:bg-green-500/5 group")}
+                className={clsx(
+                  styles.commitRow,
+                  "w-full text-left px-6 py-5 border-b border-white/5 hover:bg-white/5 transition-colors active:bg-green-500/5 group",
+                )}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex items-center gap-3 mb-1.5">
-                      <span className="font-mono text-[10px] font-black text-green-500">{c.short}</span>
-                      <span className="font-mono text-[10px] text-slate-600 font-bold">{c.dateShort}</span>
+                      <span className="font-mono text-[10px] font-black text-green-500">
+                        {c.short}
+                      </span>
+                      <span className="font-mono text-[10px] text-slate-600 font-bold">
+                        {c.dateShort}
+                      </span>
                     </div>
-                    <div className="text-sm font-black text-white leading-tight mb-3 group-active:text-green-400">{c.subject || "Untitled Archive Node"}</div>
+                    <div className="text-sm font-black text-white leading-tight mb-3 group-active:text-green-400">
+                      {c.subject || "Untitled Archive Node"}
+                    </div>
                     <div className="flex flex-wrap gap-1.5 items-center">
                       {showBuckets.length ? (
                         showBuckets.map((b) => (
@@ -3190,12 +3702,17 @@ export default function SpecEvolutionLab() {
                             key={b}
                             className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.03] border border-white/5 px-2 py-0.5 text-[9px] font-mono font-bold text-slate-500"
                           >
-                            <span className="h-1.5 w-1.5 rounded-full shadow-[0_0_3px_currentColor]" style={{ background: bucketColors[b], color: bucketColors[b] }} />
+                            <span
+                              className="h-1.5 w-1.5 rounded-full shadow-[0_0_3px_currentColor]"
+                              style={{ background: bucketColors[b], color: bucketColors[b] }}
+                            />
                             {b}
                           </span>
                         ))
                       ) : (
-                        <span className="text-[9px] text-slate-700 font-black uppercase tracking-tighter italic">NULL_BUCKET</span>
+                        <span className="text-[9px] text-slate-700 font-black uppercase tracking-tighter italic">
+                          NULL_BUCKET
+                        </span>
                       )}
                     </div>
                   </div>
@@ -3218,7 +3735,11 @@ export default function SpecEvolutionLab() {
       </DialogShell>
 
       {/* Help */}
-      <DialogShell dialogRef={helpDialogRef} title="Traversal Protocols" subtitle="Archive node interface keybindings">
+      <DialogShell
+        dialogRef={helpDialogRef}
+        title="Traversal Protocols"
+        subtitle="Archive node interface keybindings"
+      >
         <div className="grid gap-4">
           {[
             { key: "← / →", action: "Archive Node Traversal (Previous / Next)" },
@@ -3226,9 +3747,16 @@ export default function SpecEvolutionLab() {
             { key: "/", action: "Focus Forensic Search Interface (Desktop)" },
             { key: "Esc", action: "Terminate Dialog Session" },
           ].map((item) => (
-            <div key={item.key} className="flex items-center justify-between gap-6 p-4 rounded-2xl bg-white/[0.03] border border-white/5 group hover:border-green-500/30 transition-all">
-              <span className="font-mono text-xs font-black text-green-400 bg-green-500/10 px-3 py-1.5 rounded-lg border border-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.1)] group-hover:scale-110 transition-transform">{item.key}</span>
-              <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">{item.action}</span>
+            <div
+              key={item.key}
+              className="flex items-center justify-between gap-6 p-4 rounded-2xl bg-white/[0.03] border border-white/5 group hover:border-green-500/30 transition-all"
+            >
+              <span className="font-mono text-xs font-black text-green-400 bg-green-500/10 px-3 py-1.5 rounded-lg border border-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.1)] group-hover:scale-110 transition-transform">
+                {item.key}
+              </span>
+              <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">
+                {item.action}
+              </span>
             </div>
           ))}
         </div>
@@ -3238,11 +3766,16 @@ export default function SpecEvolutionLab() {
       {showPerfPanel && (
         <div className={styles.perfPanel}>
           <div className="sticky top-0 flex items-center justify-between px-3 py-2 bg-black/95 border-b border-green-500/20">
-            <span className="text-[9px] font-black text-green-400 uppercase tracking-widest">PERF_DIAGNOSTICS</span>
+            <span className="text-[9px] font-black text-green-400 uppercase tracking-widest">
+              PERF_DIAGNOSTICS
+            </span>
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => { perfLog.length = 0; perfTickRef.current++; }}
+                onClick={() => {
+                  perfLog.length = 0;
+                  perfTickRef.current++;
+                }}
                 className="text-[8px] font-black text-slate-500 uppercase tracking-wider hover:text-white"
               >
                 Clear
@@ -3262,19 +3795,35 @@ export default function SpecEvolutionLab() {
               <span className="w-[140px]">Operation</span>
               <span className="w-[60px] text-right">Time</span>
             </div>
-            {perfLog.slice(-50).reverse().map((entry, i) => (
-              <div key={`${entry.ts}-${i}`} className="flex items-center gap-2 px-1 py-0.5 rounded hover:bg-white/5">
-                <span className="w-[140px] truncate text-slate-400">{entry.label}</span>
-                <span className={clsx(
-                  "w-[60px] text-right font-mono",
-                  entry.ms > 100 ? "text-rose-400" : entry.ms > 16 ? "text-amber-400" : "text-green-400"
-                )}>
-                  {entry.ms < 1 ? `${(entry.ms * 1000).toFixed(0)}µs` : `${entry.ms.toFixed(1)}ms`}
-                </span>
-              </div>
-            ))}
+            {perfLog
+              .slice(-50)
+              .reverse()
+              .map((entry, i) => (
+                <div
+                  key={`${entry.ts}-${i}`}
+                  className="flex items-center gap-2 px-1 py-0.5 rounded hover:bg-white/5"
+                >
+                  <span className="w-[140px] truncate text-slate-400">{entry.label}</span>
+                  <span
+                    className={clsx(
+                      "w-[60px] text-right font-mono",
+                      entry.ms > 100
+                        ? "text-rose-400"
+                        : entry.ms > 16
+                          ? "text-amber-400"
+                          : "text-green-400",
+                    )}
+                  >
+                    {entry.ms < 1
+                      ? `${(entry.ms * 1000).toFixed(0)}µs`
+                      : `${entry.ms.toFixed(1)}ms`}
+                  </span>
+                </div>
+              ))}
             {perfLog.length === 0 && (
-              <div className="text-[9px] text-slate-700 px-1 py-2 italic">No perf entries yet. Interact with the lab to generate timings.</div>
+              <div className="text-[9px] text-slate-700 px-1 py-2 italic">
+                No perf entries yet. Interact with the lab to generate timings.
+              </div>
             )}
           </div>
         </div>

@@ -1,11 +1,11 @@
 "use client";
 
-import { useRef, useMemo, useState, useCallback, useId } from "react";
-import { motion, useReducedMotion, useInView } from "framer-motion";
+import { motion, useInView, useReducedMotion } from "framer-motion";
 import { Zap } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useCallback, useId, useMemo, useRef, useState } from "react";
 import { getColorDefinition } from "@/lib/colors";
 import type { TldrFlywheelTool } from "@/lib/flywheel-data";
+import { cn } from "@/lib/utils";
 
 // =============================================================================
 // TYPES
@@ -40,10 +40,7 @@ function getCurvedPath(from: NodePosition, to: NodePosition) {
 // MAIN COMPONENT
 // =============================================================================
 
-export function TldrSynergyDiagram({
-  tools,
-  className,
-}: TldrSynergyDiagramProps) {
+export function TldrSynergyDiagram({ tools, className }: TldrSynergyDiagramProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: true, margin: "-50px" });
   const prefersReducedMotion = useReducedMotion();
@@ -54,10 +51,7 @@ export function TldrSynergyDiagram({
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
 
   // Filter to core tools only for the diagram
-  const coreTools = useMemo(
-    () => tools.filter((t) => t.category === "core"),
-    [tools]
-  );
+  const coreTools = useMemo(() => tools.filter((t) => t.category === "core"), [tools]);
 
   // Calculate node positions in a circle
   const nodePositions = useMemo(() => {
@@ -91,7 +85,7 @@ export function TldrSynergyDiagram({
           const existingLine = lines.find(
             (l) =>
               (l.from === synergy.toolId && l.to === tool.id) ||
-              (l.from === tool.id && l.to === synergy.toolId)
+              (l.from === tool.id && l.to === synergy.toolId),
           );
           if (!existingLine) {
             lines.push({
@@ -142,7 +136,7 @@ export function TldrSynergyDiagram({
       if (!hoveredNode) return false;
       return from === hoveredNode || to === hoveredNode;
     },
-    [hoveredNode]
+    [hoveredNode],
   );
 
   // Get node opacity based on hover state
@@ -153,23 +147,26 @@ export function TldrSynergyDiagram({
       if (connectedToHovered.has(toolId)) return 1;
       return 0.25;
     },
-    [hoveredNode, connectedToHovered]
+    [hoveredNode, connectedToHovered],
   );
 
   // Click handler: scroll to the tool card
-  const handleNodeClick = useCallback((toolId: string) => {
-    const element = document.getElementById(`tool-card-${toolId}`);
-    if (element) {
-      element.scrollIntoView({
-        behavior: prefersReducedMotion ? "instant" : "smooth",
-        block: "center",
-      });
-      element.classList.add("ring-2", "ring-violet-400/60", "rounded-2xl");
-      setTimeout(() => {
-        element.classList.remove("ring-2", "ring-violet-400/60", "rounded-2xl");
-      }, 1500);
-    }
-  }, [prefersReducedMotion]);
+  const handleNodeClick = useCallback(
+    (toolId: string) => {
+      const element = document.getElementById(`tool-card-${toolId}`);
+      if (element) {
+        element.scrollIntoView({
+          behavior: prefersReducedMotion ? "instant" : "smooth",
+          block: "center",
+        });
+        element.classList.add("ring-2", "ring-violet-400/60", "rounded-2xl");
+        setTimeout(() => {
+          element.classList.remove("ring-2", "ring-violet-400/60", "rounded-2xl");
+        }, 1500);
+      }
+    },
+    [prefersReducedMotion],
+  );
 
   // Keyboard handler for nodes
   const handleNodeKeyDown = useCallback(
@@ -179,13 +176,13 @@ export function TldrSynergyDiagram({
         handleNodeClick(toolId);
       }
     },
-    [handleNodeClick]
+    [handleNodeClick],
   );
 
   // Total stars for vitality badge
   const totalStars = useMemo(
     () => coreTools.reduce((sum, t) => sum + (t.stars ?? 0), 0),
-    [coreTools]
+    [coreTools],
   );
 
   // Defensive: handle no core tools (guard placed after all hooks)
@@ -282,7 +279,12 @@ export function TldrSynergyDiagram({
           </defs>
 
           {/* Center glow */}
-          <circle cx={VB_CENTER} cy={VB_CENTER} r={VB_RADIUS + 40} fill={`url(#${scopeId}-centerGlow)`} />
+          <circle
+            cx={VB_CENTER}
+            cy={VB_CENTER}
+            r={VB_RADIUS + 40}
+            fill={`url(#${scopeId}-centerGlow)`}
+          />
 
           {/* Decorative outer ring */}
           <circle
@@ -343,13 +345,24 @@ export function TldrSynergyDiagram({
                     strokeWidth={highlighted ? 2.5 : 1.5}
                     strokeLinecap="round"
                     initial={reducedMotion ? {} : { pathLength: 0, opacity: 0 }}
-                    animate={isInView ? {
-                      pathLength: 1,
-                      opacity: dimmed ? 0.15 : highlighted ? 1 : 0.4,
-                    } : {}}
+                    animate={
+                      isInView
+                        ? {
+                            pathLength: 1,
+                            opacity: dimmed ? 0.15 : highlighted ? 1 : 0.4,
+                          }
+                        : {}
+                    }
                     transition={{
-                      pathLength: { duration: reducedMotion ? 0 : 0.8, ease: "easeOut", delay: reducedMotion ? 0 : 0.3 + index * 0.03 },
-                      opacity: { duration: reducedMotion ? 0 : 0.3, delay: reducedMotion ? 0 : 0.3 + index * 0.03 },
+                      pathLength: {
+                        duration: reducedMotion ? 0 : 0.8,
+                        ease: "easeOut",
+                        delay: reducedMotion ? 0 : 0.3 + index * 0.03,
+                      },
+                      opacity: {
+                        duration: reducedMotion ? 0 : 0.3,
+                        delay: reducedMotion ? 0 : 0.3 + index * 0.03,
+                      },
                     }}
                   />
 
@@ -377,26 +390,58 @@ export function TldrSynergyDiagram({
             })}
 
             {/* Animated flow particles (SMIL-based) */}
-            {!reducedMotion && isInView && connections.map((conn, index) => {
-              const path = getCurvedPath(conn.fromPos, conn.toPos);
-              const delay1 = ((index * 0.7) % 3).toFixed(1);
-              const delay2 = (((index * 0.7) + 1.8) % 3.5).toFixed(1);
+            {!reducedMotion &&
+              isInView &&
+              connections.map((conn, index) => {
+                const path = getCurvedPath(conn.fromPos, conn.toPos);
+                const delay1 = ((index * 0.7) % 3).toFixed(1);
+                const delay2 = ((index * 0.7 + 1.8) % 3.5).toFixed(1);
 
-              return (
-                <g key={`particles-${conn.from}-${conn.to}`} className="pointer-events-none">
-                  {/* Primary particle - follows curved path via SMIL animateMotion */}
-                  <circle r="3" fill={`rgb(${conn.sourceRgb})`} filter={`url(#${scopeId}-particleGlow)`} opacity="0">
-                    <animateMotion dur="3s" repeatCount="indefinite" begin={`${delay1}s`} path={path} />
-                    <animate attributeName="opacity" values="0;0.8;0.8;0" dur="3s" repeatCount="indefinite" begin={`${delay1}s`} />
-                  </circle>
-                  {/* Secondary particle - reverse */}
-                  <circle r="2" fill={`rgb(${conn.sourceRgb})`} opacity="0">
-                    <animateMotion dur="3.5s" repeatCount="indefinite" begin={`${delay2}s`} path={path} keyPoints="1;0" keyTimes="0;1" calcMode="linear" />
-                    <animate attributeName="opacity" values="0;0.5;0.5;0" dur="3.5s" repeatCount="indefinite" begin={`${delay2}s`} />
-                  </circle>
-                </g>
-              );
-            })}
+                return (
+                  <g key={`particles-${conn.from}-${conn.to}`} className="pointer-events-none">
+                    {/* Primary particle - follows curved path via SMIL animateMotion */}
+                    <circle
+                      r="3"
+                      fill={`rgb(${conn.sourceRgb})`}
+                      filter={`url(#${scopeId}-particleGlow)`}
+                      opacity="0"
+                    >
+                      <animateMotion
+                        dur="3s"
+                        repeatCount="indefinite"
+                        begin={`${delay1}s`}
+                        path={path}
+                      />
+                      <animate
+                        attributeName="opacity"
+                        values="0;0.8;0.8;0"
+                        dur="3s"
+                        repeatCount="indefinite"
+                        begin={`${delay1}s`}
+                      />
+                    </circle>
+                    {/* Secondary particle - reverse */}
+                    <circle r="2" fill={`rgb(${conn.sourceRgb})`} opacity="0">
+                      <animateMotion
+                        dur="3.5s"
+                        repeatCount="indefinite"
+                        begin={`${delay2}s`}
+                        path={path}
+                        keyPoints="1;0"
+                        keyTimes="0;1"
+                        calcMode="linear"
+                      />
+                      <animate
+                        attributeName="opacity"
+                        values="0;0.5;0.5;0"
+                        dur="3.5s"
+                        repeatCount="indefinite"
+                        begin={`${delay2}s`}
+                      />
+                    </circle>
+                  </g>
+                );
+              })}
           </g>
 
           {/* Center hub with pulsing glow */}
@@ -578,7 +623,9 @@ export function TldrSynergyDiagram({
             {/* Stars */}
             <div className="flex items-center gap-1.5">
               <span className="text-sm font-semibold text-white">
-                {totalStars >= 1000 ? `${(totalStars / 1000).toFixed(1).replace(/\.0$/, "")}K+` : `${totalStars}+`}
+                {totalStars >= 1000
+                  ? `${(totalStars / 1000).toFixed(1).replace(/\.0$/, "")}K+`
+                  : `${totalStars}+`}
               </span>
               <span className="text-xs text-slate-400">GitHub stars</span>
             </div>
@@ -589,10 +636,14 @@ export function TldrSynergyDiagram({
             <div className="flex items-center gap-1">
               <motion.div
                 className="h-2 w-2 rounded-full bg-emerald-400"
-                animate={reducedMotion ? {} : {
-                  scale: [1, 1.3, 1],
-                  opacity: [0.7, 1, 0.7],
-                }}
+                animate={
+                  reducedMotion
+                    ? {}
+                    : {
+                        scale: [1, 1.3, 1],
+                        opacity: [0.7, 1, 0.7],
+                      }
+                }
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
               />
               <span className="text-xs text-emerald-400">Active</span>

@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
 import { Play, Terminal } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
 import type { Video } from "@/lib/content";
 import { FrankenContainer } from "./franken-elements";
 import FrankenGlitch from "./franken-glitch";
@@ -61,8 +61,10 @@ export default function VideoPlayer({ video }: { video: Video }) {
 
       <div className="px-8 py-8 text-left relative z-20">
         <div className="flex items-center gap-3 mb-4">
-           <Terminal className="h-4 w-4 text-green-500/60" />
-           <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-600">Visual_Capture_Archive</span>
+          <Terminal className="h-4 w-4 text-green-500/60" />
+          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-600">
+            Visual_Capture_Archive
+          </span>
         </div>
         <FrankenGlitch trigger="hover" intensity="low">
           <h3 className="text-2xl font-black text-white group-hover:text-green-400 transition-colors tracking-tight">

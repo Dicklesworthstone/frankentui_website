@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { useReducedMotion } from "framer-motion";
+import { useEffect, useRef } from "react";
 
 export default function MemoryDump() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -9,15 +9,15 @@ export default function MemoryDump() {
 
   useEffect(() => {
     if (prefersReducedMotion) return;
-    
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let width = canvas.width = window.innerWidth;
-    let height = canvas.height = window.innerHeight;
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
 
     const hexChars = "0123456789ABCDEF";
     const fontSize = 14;
@@ -32,7 +32,7 @@ export default function MemoryDump() {
 
     const setColumnColor = (i: number, color: string) => {
       columnColors[i] = color;
-      columnDim[i] = `${color}33`;    // ~20% opacity
+      columnDim[i] = `${color}33`; // ~20% opacity
       columnBright[i] = `${color}aa`; // ~66% opacity
     };
 
@@ -42,7 +42,7 @@ export default function MemoryDump() {
       const newDim = [...columnDim];
       const newBright = [...columnBright];
       const newSpeeds = [...columnSpeeds];
-      
+
       for (let i = 0; i < cols; i++) {
         if (newDrops[i] === undefined) {
           newDrops[i] = Math.random() * -100;
@@ -52,7 +52,7 @@ export default function MemoryDump() {
           newSpeeds[i] = 0.5 + Math.random() * 1.5;
         }
       }
-      
+
       columnColors = newColors.slice(0, cols);
       columnDim = newDim.slice(0, cols);
       columnBright = newBright.slice(0, cols);
@@ -75,12 +75,12 @@ export default function MemoryDump() {
 
       for (let i = 0; i < drops.length; i++) {
         const text = hexChars[(Math.random() * hexChars.length) | 0];
-        
+
         // Stutter/Glitch effect: occasionally change color or speed
         if (Math.random() > 0.99) {
           setColumnColor(i, colors[(Math.random() * colors.length) | 0]);
         }
-        
+
         // Draw the character
         ctx.fillStyle = columnDim[i]; // 20% opacity
         ctx.fillText(text, i * fontSize, drops[i] * fontSize);
@@ -93,12 +93,12 @@ export default function MemoryDump() {
           drops[i] = 0;
           columnSpeeds[i] = 0.5 + Math.random() * 1.5;
         }
-        
+
         // Apply speed with occasional small jumps (glitches)
         const glitch = Math.random() > 0.999 ? 5 : 0;
         drops[i] += columnSpeeds[i] + glitch;
       }
-      
+
       // `paused` can flip during this function (visibility change), so re-check
       // before scheduling the next frame.
       if (!paused) animationFrameId = requestAnimationFrame(draw);
@@ -147,10 +147,5 @@ export default function MemoryDump() {
 
   if (prefersReducedMotion) return null;
 
-  return (
-    <canvas
-      ref={canvasRef}
-      className="fixed inset-0 -z-20 pointer-events-none opacity-30"
-    />
-  );
+  return <canvas ref={canvasRef} className="fixed inset-0 -z-20 pointer-events-none opacity-30" />;
 }

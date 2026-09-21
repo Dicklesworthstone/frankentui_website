@@ -1,8 +1,8 @@
 "use client";
 
-import { cn } from "@/lib/utils";
-import { useEffect, useState, useRef, useMemo } from "react";
 import { useReducedMotion } from "framer-motion";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 
 const GLYPHS = "0123456789ABCDEF$#@&*<>[]{}";
 
@@ -81,12 +81,7 @@ export default function DecodingText({
   }, [text, chars, delay, duration, prefersReducedMotion]);
 
   return (
-    <span 
-      className={cn(
-        "inline-block font-mono", 
-        isAnimating ? "text-green-400/80" : className
-      )}
-    >
+    <span className={cn("inline-block font-mono", isAnimating ? "text-green-400/80" : className)}>
       {displayText}
     </span>
   );

@@ -1,8 +1,8 @@
 "use client";
 
 import { Fragment, useMemo } from "react";
-import { cn } from "@/lib/utils";
 import RustCodeBlock from "@/components/rust-code-block";
+import { cn } from "@/lib/utils";
 
 interface StreamdownProps {
   content: string;
@@ -22,7 +22,7 @@ export default function Streamdown({ content, className }: StreamdownProps) {
     if (!content) return [];
 
     // Split by code blocks first
-    const regex = new RegExp("```(\\w+)?\\n([\\s\\S]*?)```", "g");
+    const regex = /```(\w+)?\n([\s\S]*?)```/g;
     const result: StreamPart[] = [];
     let lastIndex = 0;
     let match: RegExpExecArray | null;
@@ -58,17 +58,22 @@ export default function Streamdown({ content, className }: StreamdownProps) {
   }, [content]);
 
   return (
-    <div className={cn(
-      "prose-franken space-y-6 text-slate-300 leading-relaxed font-medium text-lg",
-      className
-    )}>
+    <div
+      className={cn(
+        "prose-franken space-y-6 text-slate-300 leading-relaxed font-medium text-lg",
+        className,
+      )}
+    >
       {parts.map((part, i) => {
         if (part.type === "code") {
           // We can reuse RustCodeBlock if the language is rust
           // For now, we'll use it for everything as it's the most polished
           return (
             <div key={i} className="my-6">
-              <RustCodeBlock code={part.content} title={part.lang ? `source.${part.lang}` : "source"} />
+              <RustCodeBlock
+                code={part.content}
+                title={part.lang ? `source.${part.lang}` : "source"}
+              />
             </div>
           );
         }
@@ -116,7 +121,7 @@ function renderMarkdownLite(text: string, keyPrefix: string): React.ReactNode[] 
           className="text-white font-black uppercase tracking-widest text-sm"
         >
           {renderInline(trimmed.slice(4), `${keyPrefix}-h4-${blockIndex}`)}
-        </h4>
+        </h4>,
       );
       i += 1;
       blockIndex += 1;
@@ -129,7 +134,7 @@ function renderMarkdownLite(text: string, keyPrefix: string): React.ReactNode[] 
           className="text-white font-black tracking-tight text-2xl"
         >
           {renderInline(trimmed.slice(3), `${keyPrefix}-h3-${blockIndex}`)}
-        </h3>
+        </h3>,
       );
       i += 1;
       blockIndex += 1;
@@ -142,7 +147,7 @@ function renderMarkdownLite(text: string, keyPrefix: string): React.ReactNode[] 
           className="text-white font-black tracking-tighter text-4xl"
         >
           {renderInline(trimmed.slice(2), `${keyPrefix}-h2-${blockIndex}`)}
-        </h2>
+        </h2>,
       );
       i += 1;
       blockIndex += 1;
@@ -168,7 +173,7 @@ function renderMarkdownLite(text: string, keyPrefix: string): React.ReactNode[] 
               <span>{renderInline(item, `${keyPrefix}-ul-${blockIndex}-li-${idx}`)}</span>
             </li>
           ))}
-        </ul>
+        </ul>,
       );
 
       blockIndex += 1;
@@ -181,7 +186,12 @@ function renderMarkdownLite(text: string, keyPrefix: string): React.ReactNode[] 
       const line = lines[i] ?? "";
       if (line.trim() === "") break;
       // Stop paragraph if next line begins a new block type
-      if (line.trim().startsWith("# ") || line.trim().startsWith("## ") || line.trim().startsWith("### ")) break;
+      if (
+        line.trim().startsWith("# ") ||
+        line.trim().startsWith("## ") ||
+        line.trim().startsWith("### ")
+      )
+        break;
       if (/^\s*-\s+/.test(line)) break;
 
       paragraphLines.push(line);
@@ -196,7 +206,7 @@ function renderMarkdownLite(text: string, keyPrefix: string): React.ReactNode[] 
             {lineIdx < paragraphLines.length - 1 ? <br /> : null}
           </Fragment>
         ))}
-      </p>
+      </p>,
     );
 
     blockIndex += 1;
@@ -232,7 +242,8 @@ function sanitizeHref(rawHref: string): { href: string; isExternal: boolean } | 
     const resolved = new URL(href, "https://frankentui.com");
     const protocol = resolved.protocol.toLowerCase();
     if (protocol === "http:" || protocol === "https:" || protocol === "mailto:") {
-      const isExternal = href.startsWith("http://") || href.startsWith("https://") || href.startsWith("mailto:");
+      const isExternal =
+        href.startsWith("http://") || href.startsWith("https://") || href.startsWith("mailto:");
       return { href, isExternal };
     }
     return null;
@@ -242,7 +253,7 @@ function sanitizeHref(rawHref: string): { href: string; isExternal: boolean } | 
 }
 
 function tokenizeInline(text: string): React.ReactNode[] {
-  // Regex for inline tokens: 
+  // Regex for inline tokens:
   // 1. Triple asterisks (bold-italic) - must have content
   // 2. Double asterisks (bold) - must have content
   // 3. Single asterisk (italic) - must have content
@@ -263,15 +274,18 @@ function tokenizeInline(text: string): React.ReactNode[] {
 
     if (token.startsWith("`") && token.length > 2) {
       nodes.push(
-        <code key={match.index} className="bg-white/5 border border-white/10 rounded px-1.5 py-0.5 font-mono text-[0.95em] text-green-300">
+        <code
+          key={match.index}
+          className="bg-white/5 border border-white/10 rounded px-1.5 py-0.5 font-mono text-[0.95em] text-green-300"
+        >
           {token.slice(1, -1)}
-        </code>
+        </code>,
       );
     } else if (token.startsWith("[") && token.includes("](")) {
       const sep = token.indexOf("](");
       const label = token.slice(1, sep);
       const hrefRaw = token.slice(sep + 2, -1);
-      
+
       if (!label || !hrefRaw) {
         nodes.push(token);
       } else {
@@ -288,7 +302,7 @@ function tokenizeInline(text: string): React.ReactNode[] {
               className="text-green-400 hover:text-green-300 transition-colors underline decoration-green-500/30 underline-offset-4 font-bold"
             >
               {label}
-            </a>
+            </a>,
           );
         }
       }
@@ -296,12 +310,20 @@ function tokenizeInline(text: string): React.ReactNode[] {
       nodes.push(
         <strong key={match.index} className="text-white font-black">
           <em className="italic">{token.slice(3, -3)}</em>
-        </strong>
+        </strong>,
       );
     } else if (token.startsWith("**") && token.length > 4) {
-      nodes.push(<strong key={match.index} className="text-white font-black">{token.slice(2, -2)}</strong>);
+      nodes.push(
+        <strong key={match.index} className="text-white font-black">
+          {token.slice(2, -2)}
+        </strong>,
+      );
     } else if (token.startsWith("*") && token.length > 2) {
-      nodes.push(<em key={match.index} className="italic text-slate-200">{token.slice(1, -1)}</em>);
+      nodes.push(
+        <em key={match.index} className="italic text-slate-200">
+          {token.slice(1, -1)}
+        </em>,
+      );
     } else {
       nodes.push(token);
     }

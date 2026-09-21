@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Activity, Check, Copy, Terminal } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
-import { Copy, Check, Terminal, Activity } from "lucide-react";
 import { FrankenBolt, NeuralPulse } from "./franken-elements";
 import FrankenGlitch from "./franken-glitch";
 
@@ -160,7 +160,7 @@ function tokenizeLine(line: string): Token[] {
         return tokens;
       }
 
-      if (ch === "\"") {
+      if (ch === '"') {
         if (i > start) {
           tokens.push(...tokenizeCodeSegment(line.slice(start, i)));
         }
@@ -180,7 +180,7 @@ function tokenizeLine(line: string): Token[] {
       continue;
     }
 
-    if (ch === "\"") {
+    if (ch === '"') {
       tokens.push({ kind: "string", text: line.slice(stringStart, i + 1) });
       inString = false;
       start = i + 1;
@@ -266,7 +266,7 @@ export default function RustCodeBlock({ code, title }: { code: string; title?: s
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#020a02]/90 group shadow-2xl">
       <NeuralPulse className="opacity-0 group-hover:opacity-20 transition-opacity" />
-      
+
       {/* Corner bolts */}
       <FrankenBolt className="absolute -left-1.5 -top-1.5 z-20 scale-75 opacity-20 transition-opacity group-hover:opacity-100" />
       <FrankenBolt className="absolute -right-1.5 -top-1.5 z-20 scale-75 opacity-20 transition-opacity group-hover:opacity-100" />
@@ -313,7 +313,7 @@ export default function RustCodeBlock({ code, title }: { code: string; title?: s
       <div className="overflow-x-auto relative z-10">
         <AnimatePresence>
           {copied && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: [0, 0.2, 0.1, 0.3, 0] }}
               exit={{ opacity: 0 }}
@@ -321,13 +321,13 @@ export default function RustCodeBlock({ code, title }: { code: string; title?: s
             />
           )}
         </AnimatePresence>
-        
+
         <pre className="p-8 font-mono text-[13px] leading-relaxed text-slate-300 overflow-visible selection:bg-green-500/30">
           <code>
             {tokenLines.map((lineTokens, i) => (
               <span key={i} className="flex group/line">
                 <span className="mr-8 inline-block w-6 select-none text-right text-[10px] font-black text-slate-800 group-hover/line:text-green-500/40 transition-colors">
-                  {(i + 1).toString().padStart(2, '0')}
+                  {(i + 1).toString().padStart(2, "0")}
                 </span>
                 <span className="flex flex-wrap">
                   {lineTokens.length === 0 ? (
@@ -354,13 +354,14 @@ export default function RustCodeBlock({ code, title }: { code: string; title?: s
 
       {/* Footer Meta */}
       <div className="px-6 py-3 border-t border-white/5 flex items-center justify-between opacity-30 group-hover:opacity-100 transition-opacity">
-         <div className="flex items-center gap-2 text-[8px] font-black text-slate-600 uppercase tracking-widest">
-            <Activity className="h-2.5 w-2.5" />
-            <span>Syntax_Validation_Active</span>
-         </div>
-         <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">UTF-8_ENCODED</span>
+        <div className="flex items-center gap-2 text-[8px] font-black text-slate-600 uppercase tracking-widest">
+          <Activity className="h-2.5 w-2.5" />
+          <span>Syntax_Validation_Active</span>
+        </div>
+        <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">
+          UTF-8_ENCODED
+        </span>
       </div>
     </div>
   );
 }
-

@@ -1,7 +1,13 @@
 "use client";
 
-import { useEffect, useState, useMemo, useRef } from "react";
-import { motion, useMotionValue, AnimatePresence, useReducedMotion, type MotionValue } from "framer-motion";
+import {
+  AnimatePresence,
+  type MotionValue,
+  motion,
+  useMotionValue,
+  useReducedMotion,
+} from "framer-motion";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 function prng(seed: number): number {
   // Deterministic pseudo-random in [0, 1). Avoids Math.random during render (React purity).
@@ -63,7 +69,7 @@ export default function CustomCursor() {
   const [isOverFlashlightSection, setIsOverFlashlightSection] = useState(false);
   const [isTechnicalArea, setIsTechnicalArea] = useState(false);
   const visibleRef = useRef(false);
-  
+
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
@@ -117,7 +123,11 @@ export default function CustomCursor() {
         if (!closestTechnical && el.dataset.technical === "true") closestTechnical = el;
         if (!closestFlashlight && el.dataset.flashlight === "true") closestFlashlight = el;
         if (!magneticElement && el.dataset.magnetic === "true") magneticElement = el;
-        if (!hasPointerRole && (el.getAttribute("role") === "button" || el.dataset.cursor === "pointer")) hasPointerRole = true;
+        if (
+          !hasPointerRole &&
+          (el.getAttribute("role") === "button" || el.dataset.cursor === "pointer")
+        )
+          hasPointerRole = true;
         el = el.parentElement;
       }
 
@@ -130,10 +140,7 @@ export default function CustomCursor() {
 
       setIsPointer((prev) => (prev === isClickable ? prev : isClickable));
 
-      const isTech =
-        Boolean(closestPre) ||
-        Boolean(closestCode) ||
-        Boolean(closestTechnical);
+      const isTech = Boolean(closestPre) || Boolean(closestCode) || Boolean(closestTechnical);
       setIsTechnicalArea((prev) => (prev === isTech ? prev : isTech));
 
       const isFlashlight = Boolean(closestFlashlight) && !closestHeader;
@@ -146,7 +153,9 @@ export default function CustomCursor() {
 
         if (distance < 60) {
           setIsMagnetic((prev) => (prev ? prev : true));
-          setMagneticPos((prev) => (prev.x === centerX && prev.y === centerY ? prev : { x: centerX, y: centerY }));
+          setMagneticPos((prev) =>
+            prev.x === centerX && prev.y === centerY ? prev : { x: centerX, y: centerY },
+          );
           return;
         }
       }
@@ -222,7 +231,10 @@ export default function CustomCursor() {
 
   return (
     <>
-      <div className="pointer-events-none fixed inset-0 z-[10000] hidden md:block" style={{ willChange: "transform" }}>
+      <div
+        className="pointer-events-none fixed inset-0 z-[10000] hidden md:block"
+        style={{ willChange: "transform" }}
+      >
         {/* Flashlight Effect — rendered independently, no AnimatePresence needed */}
         {isVisible && isOverFlashlightSection && (
           <motion.div
@@ -268,21 +280,21 @@ export default function CustomCursor() {
                 type: "spring",
                 stiffness: 400,
                 damping: 30,
-                mass: 0.5
+                mass: 0.5,
               }}
             >
-               {/* Click Glitch Lines */}
-               <AnimatePresence>
-                 {isClicking && (
-                   <motion.div
-                     key="click-glitch"
-                     initial={{ opacity: 0, scale: 0.5 }}
-                     animate={{ opacity: 1, scale: 1.5 }}
-                     exit={{ opacity: 0 }}
-                     className="absolute inset-[-10px] border border-red-500/50 rounded-full"
-                   />
-                 )}
-               </AnimatePresence>
+              {/* Click Glitch Lines */}
+              <AnimatePresence>
+                {isClicking && (
+                  <motion.div
+                    key="click-glitch"
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1.5 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-[-10px] border border-red-500/50 rounded-full"
+                  />
+                )}
+              </AnimatePresence>
             </motion.div>
 
             {/* Inner Dot */}

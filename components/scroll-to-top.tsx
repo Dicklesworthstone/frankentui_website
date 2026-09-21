@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowUp } from "lucide-react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { useCallback, useEffect, useState } from "react";
 
 const CIRCLE_RADIUS = 20;
 const CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS;

@@ -45,8 +45,22 @@ export interface FrankenTerminalHandle {
 // ---------------------------------------------------------------------------
 
 export type FrankenTerminalInputEvent =
-  | { kind: "key"; phase: "down" | "up"; key: string; code: string; mods?: number; repeat?: boolean }
-  | { kind: "mouse"; phase: "down" | "up" | "move"; button: number; x: number; y: number; mods?: number }
+  | {
+      kind: "key";
+      phase: "down" | "up";
+      key: string;
+      code: string;
+      mods?: number;
+      repeat?: boolean;
+    }
+  | {
+      kind: "mouse";
+      phase: "down" | "up" | "move";
+      button: number;
+      x: number;
+      y: number;
+      mods?: number;
+    }
   | { kind: "wheel"; x: number; y: number; dx: number; dy: number; mods?: number }
   | { kind: "paste"; data: string }
   | { kind: "focus"; focused: boolean };
@@ -145,13 +159,13 @@ export interface FrankenTerminalProps {
 
 /** Loading lifecycle states. */
 export type FrankenTerminalState =
-  | "checking-webgpu"   // Detecting navigator.gpu
-  | "loading-font"      // Waiting for Pragmasevka NF font
-  | "loading-wasm"      // Fetching and instantiating WASM modules
-  | "initializing"      // FrankenTermWeb.init() + ShowcaseRunner.init()
-  | "running"           // Frame loop active
-  | "error"             // Unrecoverable error
-  | "unsupported";      // WebGPU not available
+  | "checking-webgpu" // Detecting navigator.gpu
+  | "loading-font" // Waiting for Pragmasevka NF font
+  | "loading-wasm" // Fetching and instantiating WASM modules
+  | "initializing" // FrankenTermWeb.init() + ShowcaseRunner.init()
+  | "running" // Frame loop active
+  | "error" // Unrecoverable error
+  | "unsupported"; // WebGPU not available
 
 // ---------------------------------------------------------------------------
 // Asset paths (configurable for CDN / versioned deploys)

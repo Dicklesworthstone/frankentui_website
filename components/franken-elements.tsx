@@ -1,19 +1,19 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { motion, useAnimationControls } from "framer-motion";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 /**
  * A small industrial bolt-like element for corners
  * Enhanced with galvanic electrical arcs on hover
  */
-export function FrankenBolt({ 
-  className, 
+export function FrankenBolt({
+  className,
   color = "#4ade80",
-  baseScale = 1
-}: { 
-  className?: string; 
+  baseScale = 1,
+}: {
+  className?: string;
   color?: string;
   baseScale?: number;
 }) {
@@ -46,12 +46,12 @@ export function FrankenBolt({
       whileHover={{ scale: baseScale * 1.15 }}
       className={cn(
         "group relative h-3.5 w-3.5 rounded-full bg-gradient-to-br from-slate-700 via-slate-900 to-black border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_1px_3px_rgba(0,0,0,0.6)] flex items-center justify-center",
-        className
+        className,
       )}
     >
       <div className="h-[60%] w-[1.5px] bg-slate-800 rotate-45 absolute" />
       <div className="h-[60%] w-[1.5px] bg-slate-800 -rotate-45 absolute" />
-      
+
       {/* Electrical Arc SVG */}
       <svg
         className="absolute inset-[-6px] w-[calc(100%+12px)] h-[calc(100%+12px)] pointer-events-none overflow-visible"
@@ -101,9 +101,9 @@ export function FrankenStitch({
       transition: {
         type: "spring" as const,
         stiffness: 400,
-        damping: 15
-      }
-    }
+        damping: 15,
+      },
+    },
   };
 
   if (orientation === "horizontal") {
@@ -156,10 +156,19 @@ export function FrankenStitch({
 /**
  * A traveling spark that moves along the border of a container
  */
-export function NeuralPulse({ className, color = "#4ade80" }: { className?: string; color?: string }) {
+export function NeuralPulse({
+  className,
+  color = "#4ade80",
+}: {
+  className?: string;
+  color?: string;
+}) {
   return (
-    <div 
-      className={cn("absolute inset-0 pointer-events-none overflow-hidden rounded-[inherit]", className)}
+    <div
+      className={cn(
+        "absolute inset-0 pointer-events-none overflow-hidden rounded-[inherit]",
+        className,
+      )}
       style={{ ["--pulse-color" as string]: color }}
     >
       <motion.div
@@ -216,19 +225,30 @@ export function FrankenContainer({
   accentColor?: string;
 }) {
   return (
-    <div className={cn("relative group/container rounded-2xl border border-white/5 bg-black/40", className)}>
+    <div
+      className={cn(
+        "relative group/container rounded-2xl border border-white/5 bg-black/40",
+        className,
+      )}
+    >
       {/* Internal Skin Layer - Handles texture and pulses without clipping bolts */}
       <div className="absolute inset-0 overflow-hidden rounded-[inherit] pointer-events-none z-0">
         {/* Background Stitched Texture */}
-        <div className="absolute inset-0 opacity-[0.05]" 
-             style={{ 
-               backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h40v40H0z' fill='none'/%3E%3Cpath d='M10 0v5M10 15v10M10 35v5M30 0v5M30 15v10M30 35v5M0 10h5M15 10h10M35 10h5M0 30h5M15 30h10M35 30h5' stroke='%23ffffff' stroke-width='1'/%3E%3C/svg%3E")`,
-               backgroundSize: '80px 80px'
-             }} 
+        <div
+          className="absolute inset-0 opacity-[0.05]"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h40v40H0z' fill='none'/%3E%3Cpath d='M10 0v5M10 15v10M10 35v5M30 0v5M30 15v10M30 35v5M0 10h5M15 10h10M35 10h5M0 30h5M15 30h10M35 30h5' stroke='%23ffffff' stroke-width='1'/%3E%3C/svg%3E")`,
+            backgroundSize: "80px 80px",
+          }}
         />
-        {withPulse && <NeuralPulse color={accentColor} className="opacity-0 group-hover/container:opacity-100 transition-opacity duration-700" />}
+        {withPulse && (
+          <NeuralPulse
+            color={accentColor}
+            className="opacity-0 group-hover/container:opacity-100 transition-opacity duration-700"
+          />
+        )}
       </div>
-      
+
       {withBolts && (
         <>
           <FrankenBolt color={accentColor} className="absolute -left-1.5 -top-1.5 z-30" />
@@ -240,17 +260,28 @@ export function FrankenContainer({
 
       {withStitches && (
         <>
-          <FrankenStitch color={accentColor} className="absolute top-0 left-1/4 right-1/4 w-1/2 opacity-20 group-hover/container:opacity-60 transition-opacity z-20" />
-          <FrankenStitch color={accentColor} className="absolute bottom-0 left-1/4 right-1/4 w-1/2 rotate-180 opacity-20 group-hover/container:opacity-60 transition-opacity z-20" />
-          <FrankenStitch color={accentColor} orientation="vertical" className="absolute left-0 top-1/4 bottom-1/4 h-1/2 opacity-10 group-hover/container:opacity-40 transition-opacity z-20" />
-          <FrankenStitch color={accentColor} orientation="vertical" className="absolute right-0 top-1/4 bottom-1/4 h-1/2 rotate-180 opacity-10 group-hover/container:opacity-40 transition-opacity z-20" />
+          <FrankenStitch
+            color={accentColor}
+            className="absolute top-0 left-1/4 right-1/4 w-1/2 opacity-20 group-hover/container:opacity-60 transition-opacity z-20"
+          />
+          <FrankenStitch
+            color={accentColor}
+            className="absolute bottom-0 left-1/4 right-1/4 w-1/2 rotate-180 opacity-20 group-hover/container:opacity-60 transition-opacity z-20"
+          />
+          <FrankenStitch
+            color={accentColor}
+            orientation="vertical"
+            className="absolute left-0 top-1/4 bottom-1/4 h-1/2 opacity-10 group-hover/container:opacity-40 transition-opacity z-20"
+          />
+          <FrankenStitch
+            color={accentColor}
+            orientation="vertical"
+            className="absolute right-0 top-1/4 bottom-1/4 h-1/2 rotate-180 opacity-10 group-hover/container:opacity-40 transition-opacity z-20"
+          />
         </>
       )}
 
-      <div className="relative z-10 h-full w-full">
-        {children}
-      </div>
+      <div className="relative z-10 h-full w-full">{children}</div>
     </div>
   );
 }
-

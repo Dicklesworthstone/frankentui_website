@@ -1,10 +1,10 @@
 "use client";
 
-import { Package, Clock, ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowRight, Clock, Package } from "lucide-react";
 import { crates } from "@/lib/content";
 import { cn } from "@/lib/utils";
 import { FrankenContainer } from "./franken-elements";
-import { motion } from "framer-motion";
 
 export default function CrateGrid() {
   return (
@@ -21,30 +21,34 @@ export default function CrateGrid() {
             withStitches={false}
             className={cn(
               "group h-full glass-modern transition-all duration-500 hover:bg-white/[0.03] hover:border-green-500/20 hover:-translate-y-1",
-              crate.status === "reserved" && "opacity-50 grayscale contrast-75"
+              crate.status === "reserved" && "opacity-50 grayscale contrast-75",
             )}
           >
             <div className="flex flex-col h-full p-6 lg:p-8">
               <div className="flex items-start justify-between mb-8">
-                <div className={cn(
-                  "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border transition-all duration-500 group-hover:scale-110 group-hover:rotate-3",
-                  crate.status === "implemented"
-                    ? "bg-green-500/10 text-green-400 border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.1)]"
-                    : "bg-slate-800/50 text-slate-500 border-slate-700"
-                )}>
+                <div
+                  className={cn(
+                    "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border transition-all duration-500 group-hover:scale-110 group-hover:rotate-3",
+                    crate.status === "implemented"
+                      ? "bg-green-500/10 text-green-400 border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.1)]"
+                      : "bg-slate-800/50 text-slate-500 border-slate-700",
+                  )}
+                >
                   {crate.status === "implemented" ? (
                     <Package className="h-5 w-5" />
                   ) : (
                     <Clock className="h-5 w-5" />
                   )}
                 </div>
-                
-                <span className={cn(
-                  "px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border",
-                  crate.status === "implemented"
-                    ? "text-green-500 border-green-500/20 bg-green-500/5"
-                    : "text-slate-500 border-slate-700 bg-slate-800/30"
-                )}>
+
+                <span
+                  className={cn(
+                    "px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border",
+                    crate.status === "implemented"
+                      ? "text-green-500 border-green-500/20 bg-green-500/5"
+                      : "text-slate-500 border-slate-700 bg-slate-800/30",
+                  )}
+                >
                   {crate.status}
                 </span>
               </div>
@@ -59,8 +63,10 @@ export default function CrateGrid() {
               </div>
 
               <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-2 group-hover:translate-y-0">
-                 <span className="text-[9px] font-black uppercase tracking-[0.2em] text-green-500">View Module</span>
-                 <ArrowRight className="h-3 w-3 text-green-500" />
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-green-500">
+                  View Module
+                </span>
+                <ArrowRight className="h-3 w-3 text-green-500" />
               </div>
             </div>
           </FrankenContainer>

@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { ChevronLeft, ChevronRight, Maximize2, Monitor, X } from "lucide-react";
 import Image from "next/image";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { X, ChevronLeft, ChevronRight, Maximize2, Monitor } from "lucide-react";
-import type { Screenshot } from "@/lib/content";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
+import type { Screenshot } from "@/lib/content";
 import { cn } from "@/lib/utils";
 import { FrankenContainer } from "./franken-elements";
-
-import { createPortal } from "react-dom";
 
 /* ── Portal Helper ───────────────────────────────────────── */
 function Portal({ children }: { children: React.ReactNode }) {
@@ -87,7 +86,9 @@ export default function ScreenshotGallery({
   const goPrev = useCallback(() => {
     if (screenshots.length === 0) return;
     setDirection(-1);
-    setLightboxIndex((prev) => (prev !== null ? (prev - 1 + screenshots.length) % screenshots.length : null));
+    setLightboxIndex((prev) =>
+      prev !== null ? (prev - 1 + screenshots.length) % screenshots.length : null,
+    );
   }, [screenshots.length]);
 
   // Global Keyboard Navigation
@@ -107,13 +108,16 @@ export default function ScreenshotGallery({
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
   }, []);
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    const dx = e.changedTouches[0].clientX - touchStartX.current;
-    if (Math.abs(dx) > 60) {
-      if (dx < 0) goNext();
-      else goPrev();
-    }
-  }, [goNext, goPrev]);
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      const dx = e.changedTouches[0].clientX - touchStartX.current;
+      if (Math.abs(dx) > 60) {
+        if (dx < 0) goNext();
+        else goPrev();
+      }
+    },
+    [goNext, goPrev],
+  );
 
   const variants = prefersReduced ? reducedVariants : slideVariants;
   const imageSizes =
@@ -123,10 +127,12 @@ export default function ScreenshotGallery({
 
   return (
     <>
-      <div className={cn(
-        "grid gap-6 lg:gap-8",
-        columns === 3 ? "sm:grid-cols-2 md:grid-cols-3" : "sm:grid-cols-2"
-      )}>
+      <div
+        className={cn(
+          "grid gap-6 lg:gap-8",
+          columns === 3 ? "sm:grid-cols-2 md:grid-cols-3" : "sm:grid-cols-2",
+        )}
+      >
         {screenshots.map((screenshot, index) => (
           <motion.div
             key={screenshot.src}
@@ -141,7 +147,11 @@ export default function ScreenshotGallery({
               aria-label={`View larger version of ${screenshot.title}`}
               className="group relative w-full text-left focus:outline-none rounded-2xl"
             >
-              <FrankenContainer withBolts={false} withPulse={true} className="overflow-hidden glass-modern group-hover:border-green-500/30 transition-all duration-500 group-hover:shadow-[0_0_40px_rgba(34,197,94,0.15)] group-hover:-translate-y-1">
+              <FrankenContainer
+                withBolts={false}
+                withPulse={true}
+                className="overflow-hidden glass-modern group-hover:border-green-500/30 transition-all duration-500 group-hover:shadow-[0_0_40px_rgba(34,197,94,0.15)] group-hover:-translate-y-1"
+              >
                 <div className="relative aspect-[16/10] overflow-hidden">
                   <Image
                     src={screenshot.src}
@@ -157,16 +167,20 @@ export default function ScreenshotGallery({
 
                   {/* Expand Icon */}
                   <div className="absolute top-4 right-4 h-10 w-10 rounded-full glass-modern flex items-center justify-center text-white opacity-0 group-hover:opacity-100 translate-y-[-10px] group-hover:translate-y-0 transition-all duration-500">
-                     <Maximize2 className="h-4 w-4" />
+                    <Maximize2 className="h-4 w-4" />
                   </div>
 
                   {/* Content Info */}
                   <div className="absolute bottom-6 left-6 right-6 opacity-0 group-hover:opacity-100 translate-y-[10px] group-hover:translate-y-0 transition-all duration-500">
-                     <div className="flex items-center gap-2 mb-2 text-green-500">
-                        <Monitor className="h-3 w-3" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Terminal Render</span>
-                     </div>
-                     <h4 className="text-xl font-black text-white leading-tight tracking-tight">{screenshot.title}</h4>
+                    <div className="flex items-center gap-2 mb-2 text-green-500">
+                      <Monitor className="h-3 w-3" />
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em]">
+                        Terminal Render
+                      </span>
+                    </div>
+                    <h4 className="text-xl font-black text-white leading-tight tracking-tight">
+                      {screenshot.title}
+                    </h4>
                   </div>
                 </div>
               </FrankenContainer>
@@ -190,53 +204,63 @@ export default function ScreenshotGallery({
             >
               {/* Cinematic Background Detail */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
-                 <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-green-500/10 rounded-full blur-[100px]" />
-                 <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[80px]" />
+                <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-green-500/10 rounded-full blur-[100px]" />
+                <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[80px]" />
               </div>
 
               {/* Top Bar */}
               <div className="absolute top-8 left-8 right-8 flex items-center justify-between z-20 pointer-events-none">
-                 <AnimatePresence mode="wait">
-                   <motion.div
-                     key={lightboxIndex}
-                     initial={{ opacity: 0, y: -8 }}
-                     animate={{ opacity: 1, y: 0 }}
-                     exit={{ opacity: 0, y: 8 }}
-                     transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                     className="flex flex-col"
-                   >
-                      <span className="text-[10px] font-black uppercase tracking-[0.4em] text-green-500 mb-1">Technical Snapshot</span>
-                      <h3 className="text-2xl font-black text-white tracking-tight leading-none">{screenshots[lightboxIndex].title}</h3>
-                   </motion.div>
-                 </AnimatePresence>
-                 <button
-                   type="button"
-                   onClick={closeLightbox}
-                   className="h-12 w-12 rounded-full glass-modern flex items-center justify-center text-white hover:bg-white/10 transition-colors pointer-events-auto shadow-2xl"
-                   aria-label="Close image"
-                 >
-                    <X className="h-6 w-6" />
-                 </button>
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={lightboxIndex}
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                    className="flex flex-col"
+                  >
+                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-green-500 mb-1">
+                      Technical Snapshot
+                    </span>
+                    <h3 className="text-2xl font-black text-white tracking-tight leading-none">
+                      {screenshots[lightboxIndex].title}
+                    </h3>
+                  </motion.div>
+                </AnimatePresence>
+                <button
+                  type="button"
+                  onClick={closeLightbox}
+                  className="h-12 w-12 rounded-full glass-modern flex items-center justify-center text-white hover:bg-white/10 transition-colors pointer-events-auto shadow-2xl"
+                  aria-label="Close image"
+                >
+                  <X className="h-6 w-6" />
+                </button>
               </div>
 
               {/* Navigation Controls */}
               <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 flex items-center justify-between pointer-events-none z-20">
-                 <button
-                   type="button"
-                   aria-label="Previous screenshot"
-                   onClick={(e) => { e.stopPropagation(); goPrev(); }}
-                   className="h-16 w-16 rounded-full glass-modern flex items-center justify-center text-white pointer-events-auto hover:bg-white/10 transition-all hover:scale-110 active:scale-95 shadow-2xl"
-                 >
-                    <ChevronLeft className="h-8 w-8" />
-                 </button>
-                 <button
-                   type="button"
-                   aria-label="Next screenshot"
-                   onClick={(e) => { e.stopPropagation(); goNext(); }}
-                   className="h-16 w-16 rounded-full glass-modern flex items-center justify-center text-white pointer-events-auto hover:bg-white/10 transition-all hover:scale-110 active:scale-95 shadow-2xl"
-                 >
-                    <ChevronRight className="h-8 w-8" />
-                 </button>
+                <button
+                  type="button"
+                  aria-label="Previous screenshot"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    goPrev();
+                  }}
+                  className="h-16 w-16 rounded-full glass-modern flex items-center justify-center text-white pointer-events-auto hover:bg-white/10 transition-all hover:scale-110 active:scale-95 shadow-2xl"
+                >
+                  <ChevronLeft className="h-8 w-8" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Next screenshot"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    goNext();
+                  }}
+                  className="h-16 w-16 rounded-full glass-modern flex items-center justify-center text-white pointer-events-auto hover:bg-white/10 transition-all hover:scale-110 active:scale-95 shadow-2xl"
+                >
+                  <ChevronRight className="h-8 w-8" />
+                </button>
               </div>
 
               {/* Main Image — GPU-accelerated directional slide */}
@@ -267,13 +291,12 @@ export default function ScreenshotGallery({
 
               {/* Bottom Indicator */}
               <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-full glass-modern border-white/5 text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 shadow-2xl">
-                 {lightboxIndex + 1} / {screenshots.length}
+                {lightboxIndex + 1} / {screenshots.length}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </Portal>
-
     </>
   );
 }

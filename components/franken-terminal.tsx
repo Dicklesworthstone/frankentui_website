@@ -14,25 +14,25 @@
 
 import {
   forwardRef,
+  type ReactNode,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useRef,
   useState,
-  useCallback,
-  type ReactNode,
 } from "react";
-import type {
-  FrankenTerminalProps,
-  FrankenTerminalHandle,
-  FrankenTerminalState,
-} from "./franken-terminal.types";
 import {
-  loadWasmModules,
+  type FrankenTermWebInstance,
   loadFont,
   loadTextAssets,
-  type FrankenTermWebInstance,
+  loadWasmModules,
   type ShowcaseRunnerInstance,
 } from "@/lib/wasm-loader";
+import type {
+  FrankenTerminalHandle,
+  FrankenTerminalProps,
+  FrankenTerminalState,
+} from "./franken-terminal.types";
 
 // ---------------------------------------------------------------------------
 // Default loading/error/fallback UI
@@ -134,56 +134,77 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
       resizeObserverRef.current?.disconnect();
       resizeObserverRef.current = null;
       applyZoomRef.current = null;
-      try { runnerRef.current?.destroy(); } catch { /* already freed */ }
-      try { termRef.current?.destroy(); } catch { /* already freed */ }
+      try {
+        runnerRef.current?.destroy();
+      } catch {
+        /* already freed */
+      }
+      try {
+        termRef.current?.destroy();
+      } catch {
+        /* already freed */
+      }
       runnerRef.current = null;
       termRef.current = null;
     }, []);
 
     // ── Imperative handle ──────────────────────────────────────────────
-    useImperativeHandle(ref, () => ({
-      goToScreen(screen: number) {
-        const runner = runnerRef.current;
-        if (!runner) return;
-        // Select directly. The previous digit-key / repeated-Tab approach
-        // landed one screen late from screen 11 on, because Tab advances from
-        // the guided tour's active screen rather than from current_screen.
-        if (runner.gotoScreen) {
-          runner.gotoScreen(screen - 1);
-          return;
-        }
-        // Bundle predates gotoScreen: fall back to the digit keys, which were
-        // correct for the first ten screens.
-        const screenIdx = screen - 1;
-        if (screenIdx < 10) {
-          const key = screenIdx === 9 ? "0" : String(screenIdx + 1);
-          runner.pushEncodedInput(JSON.stringify({ kind: "key", phase: "down", key, code: `Digit${key}`, mods: 0, repeat: false }));
-        }
-      },
-      sendInput(event) {
-        termRef.current?.input(event);
-      },
-      getGeometry() {
-        return dimensions ?? { cols: 80, rows: 24 };
-      },
-      getCanvas() {
-        return canvasRef.current;
-      },
-      setZoom(zoom: number) {
-        userZoomRef.current = zoom;
-        if (applyZoomRef.current) {
-          applyZoomRef.current();
-        } else {
-          termRef.current?.setZoom(zoom);
-        }
-      },
-      forceRender() {
-        termRef.current?.render();
-      },
-      destroy() {
-        cleanup();
-      },
-    }), [dimensions, cleanup]);
+    useImperativeHandle(
+      ref,
+      () => ({
+        goToScreen(screen: number) {
+          const runner = runnerRef.current;
+          if (!runner) return;
+          // Select directly. The previous digit-key / repeated-Tab approach
+          // landed one screen late from screen 11 on, because Tab advances from
+          // the guided tour's active screen rather than from current_screen.
+          if (runner.gotoScreen) {
+            runner.gotoScreen(screen - 1);
+            return;
+          }
+          // Bundle predates gotoScreen: fall back to the digit keys, which were
+          // correct for the first ten screens.
+          const screenIdx = screen - 1;
+          if (screenIdx < 10) {
+            const key = screenIdx === 9 ? "0" : String(screenIdx + 1);
+            runner.pushEncodedInput(
+              JSON.stringify({
+                kind: "key",
+                phase: "down",
+                key,
+                code: `Digit${key}`,
+                mods: 0,
+                repeat: false,
+              }),
+            );
+          }
+        },
+        sendInput(event) {
+          termRef.current?.input(event);
+        },
+        getGeometry() {
+          return dimensions ?? { cols: 80, rows: 24 };
+        },
+        getCanvas() {
+          return canvasRef.current;
+        },
+        setZoom(zoom: number) {
+          userZoomRef.current = zoom;
+          if (applyZoomRef.current) {
+            applyZoomRef.current();
+          } else {
+            termRef.current?.setZoom(zoom);
+          }
+        },
+        forceRender() {
+          termRef.current?.render();
+        },
+        destroy() {
+          cleanup();
+        },
+      }),
+      [dimensions, cleanup],
+    );
 
     // ── Main initialization effect ─────────────────────────────────────
     useEffect(() => {
@@ -243,11 +264,7 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
           }
 
           // 6. Fit to container
-          const geo = term.fitToContainer(
-            container.clientWidth,
-            container.clientHeight,
-            dpr
-          );
+          const geo = term.fitToContainer(container.clientWidth, container.clientHeight, dpr);
           let currentCols = geo.cols;
           let currentRows = geo.rows;
           setDimensions({ cols: currentCols, rows: currentRows });
@@ -297,7 +314,9 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
               onResize?.(currentCols, currentRows);
             }
             if (Math.abs(z - 1.0) > 0.01) {
-              setStatusText(`${currentCols}\u00d7${currentRows} \u2014 zoom ${Math.round(z * 100)}%`);
+              setStatusText(
+                `${currentCols}\u00d7${currentRows} \u2014 zoom ${Math.round(z * 100)}%`,
+              );
             } else {
               setStatusText(`${currentCols}\u00d7${currentRows}`);
             }
@@ -350,7 +369,7 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
           rafRef.current = requestAnimationFrame(frame);
 
           // 12. ResizeObserver for container changes
-          const resizeObserver = resizeObserverRef.current = new ResizeObserver(() => {
+          const resizeObserver = (resizeObserverRef.current = new ResizeObserver(() => {
             const t = termRef.current;
             const r = runnerRef.current;
             const c = containerRef.current;
@@ -365,21 +384,27 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
               setDimensions({ cols: currentCols, rows: currentRows });
               const z = userZoomRef.current;
               if (Math.abs(z - 1.0) > 0.01) {
-                setStatusText(`${currentCols}\u00d7${currentRows} \u2014 zoom ${Math.round(z * 100)}%`);
+                setStatusText(
+                  `${currentCols}\u00d7${currentRows} \u2014 zoom ${Math.round(z * 100)}%`,
+                );
               } else {
                 setStatusText(`${currentCols}\u00d7${currentRows}`);
               }
               onResize?.(currentCols, currentRows);
             }
-          });
+          }));
           resizeObserver.observe(container);
 
           // 13. Input event listeners
-          const abortController = abortControllerRef.current = new AbortController();
+          const abortController = (abortControllerRef.current = new AbortController());
           const signal = abortController.signal;
 
           function safeInput(ev: unknown) {
-            try { termRef.current?.input(ev); } catch { /* ignore */ }
+            try {
+              termRef.current?.input(ev);
+            } catch {
+              /* ignore */
+            }
           }
 
           function domKeyToInput(e: KeyboardEvent, phase: string) {
@@ -388,7 +413,11 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
               phase,
               key: typeof e.key === "string" ? e.key : "",
               code: typeof e.code === "string" ? e.code : "",
-              mods: (e.shiftKey ? 1 : 0) | (e.altKey ? 2 : 0) | (e.ctrlKey ? 4 : 0) | (e.metaKey ? 8 : 0),
+              mods:
+                (e.shiftKey ? 1 : 0) |
+                (e.altKey ? 2 : 0) |
+                (e.ctrlKey ? 4 : 0) |
+                (e.metaKey ? 8 : 0),
               repeat: e.repeat || false,
             };
           }
@@ -405,7 +434,11 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
               button: e.button,
               x: Math.max(0, Math.min(x, currentCols - 1)),
               y: Math.max(0, Math.min(y, currentRows - 1)),
-              mods: (e.shiftKey ? 1 : 0) | (e.altKey ? 2 : 0) | (e.ctrlKey ? 4 : 0) | (e.metaKey ? 8 : 0),
+              mods:
+                (e.shiftKey ? 1 : 0) |
+                (e.altKey ? 2 : 0) |
+                (e.ctrlKey ? 4 : 0) |
+                (e.metaKey ? 8 : 0),
             };
           }
 
@@ -419,7 +452,11 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
               y: Math.max(0, Math.min(Math.floor((e.clientY - rect.top) / ch), currentRows - 1)),
               dx: Math.round(e.deltaX),
               dy: Math.round(e.deltaY),
-              mods: (e.shiftKey ? 1 : 0) | (e.altKey ? 2 : 0) | (e.ctrlKey ? 4 : 0) | (e.metaKey ? 8 : 0),
+              mods:
+                (e.shiftKey ? 1 : 0) |
+                (e.altKey ? 2 : 0) |
+                (e.ctrlKey ? 4 : 0) |
+                (e.metaKey ? 8 : 0),
             };
           }
 
@@ -435,41 +472,49 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
               return e.shiftKey && !e.ctrlKey && !e.metaKey && e.key === "Insert";
             };
 
-            canvas.addEventListener("keydown", (e) => {
-              if (e.isComposing || e.key === "Process") return;
-              if (isClipboardPasteShortcut(e)) return;
+            canvas.addEventListener(
+              "keydown",
+              (e) => {
+                if (e.isComposing || e.key === "Process") return;
+                if (isClipboardPasteShortcut(e)) return;
 
-              // Zoom: Ctrl/Cmd +/-/0
-              const zoomMod = e.ctrlKey || e.metaKey;
-              if (zoomMod && (e.key === "+" || e.key === "=")) {
-                e.preventDefault();
-                userZoomRef.current = Math.min(3.0, userZoomRef.current * 1.1);
-                applyZoom();
-                return;
-              }
-              if (zoomMod && e.key === "-") {
-                e.preventDefault();
-                userZoomRef.current = Math.max(0.3, userZoomRef.current / 1.1);
-                applyZoom();
-                return;
-              }
-              if (zoomMod && e.key === "0") {
-                e.preventDefault();
-                userZoomRef.current = 1.0;
-                applyZoom();
-                return;
-              }
+                // Zoom: Ctrl/Cmd +/-/0
+                const zoomMod = e.ctrlKey || e.metaKey;
+                if (zoomMod && (e.key === "+" || e.key === "=")) {
+                  e.preventDefault();
+                  userZoomRef.current = Math.min(3.0, userZoomRef.current * 1.1);
+                  applyZoom();
+                  return;
+                }
+                if (zoomMod && e.key === "-") {
+                  e.preventDefault();
+                  userZoomRef.current = Math.max(0.3, userZoomRef.current / 1.1);
+                  applyZoom();
+                  return;
+                }
+                if (zoomMod && e.key === "0") {
+                  e.preventDefault();
+                  userZoomRef.current = 1.0;
+                  applyZoom();
+                  return;
+                }
 
-              e.preventDefault();
-              safeInput(domKeyToInput(e, "down"));
-            }, { signal, capture: true });
+                e.preventDefault();
+                safeInput(domKeyToInput(e, "down"));
+              },
+              { signal, capture: true },
+            );
 
-            canvas.addEventListener("keyup", (e) => {
-              if (e.isComposing || e.key === "Process") return;
-              if (isClipboardPasteShortcut(e)) return;
-              e.preventDefault();
-              safeInput(domKeyToInput(e, "up"));
-            }, { signal, capture: true });
+            canvas.addEventListener(
+              "keyup",
+              (e) => {
+                if (e.isComposing || e.key === "Process") return;
+                if (isClipboardPasteShortcut(e)) return;
+                e.preventDefault();
+                safeInput(domKeyToInput(e, "up"));
+              },
+              { signal, capture: true },
+            );
           }
 
           // Mouse events with drag tracking
@@ -498,7 +543,11 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
             selectionActive = false;
             if (!hasSelection) return;
             hasSelection = false;
-            try { termRef.current?.clearSelection?.(); } catch { /* torn down */ }
+            try {
+              termRef.current?.clearSelection?.();
+            } catch {
+              /* torn down */
+            }
           };
           const updateSelection = (e: MouseEvent) => {
             if (selectionAnchor === null) return;
@@ -509,93 +558,153 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
                 Math.max(selectionAnchor, head) + 1,
               );
               hasSelection = true;
-            } catch { hasSelection = false; }
+            } catch {
+              hasSelection = false;
+            }
           };
 
-          canvas.addEventListener("copy", ((e: ClipboardEvent) => {
-            let text: string | undefined;
-            try { text = termRef.current?.copySelection?.(); } catch { text = undefined; }
-            if (!text) return;
-            e.preventDefault();
-            e.clipboardData?.setData("text/plain", text);
-          }) as EventListener, { signal });
-
-          canvas.addEventListener("mousedown", (e) => {
-            e.preventDefault();
-            canvas.focus();
-            if (e.shiftKey) {
-              selectionAnchor = cellOffsetFromEvent(e);
-              selectionActive = true;
-              updateSelection(e);
-              return;
-            }
-            clearSelection();
-            mouseButtonsDown = e.buttons;
-            dragButton = e.button;
-            safeInput(domMouseToInput(e, "down"));
-          }, { signal });
-          canvas.addEventListener("mouseup", (e) => {
-            e.preventDefault();
-            if (selectionActive) {
-              updateSelection(e);
-              selectionActive = false;
-              return;
-            }
-            mouseButtonsDown = e.buttons;
-            safeInput(domMouseToInput(e, "up"));
-          }, { signal });
-          canvas.addEventListener("mousemove", (e) => {
-            if (selectionActive) {
+          canvas.addEventListener(
+            "copy",
+            ((e: ClipboardEvent) => {
+              let text: string | undefined;
+              try {
+                text = termRef.current?.copySelection?.();
+              } catch {
+                text = undefined;
+              }
+              if (!text) return;
               e.preventDefault();
-              updateSelection(e);
-              return;
-            }
-            mouseButtonsDown = e.buttons;
-            if (mouseButtonsDown) {
-              const ev = domMouseToInput(e, "drag");
-              ev.button = dragButton;
-              safeInput(ev);
-            } else {
-              safeInput(domMouseToInput(e, "move"));
-            }
-          }, { signal });
-          canvas.addEventListener("contextmenu", (e) => { e.preventDefault(); }, { signal });
+              e.clipboardData?.setData("text/plain", text);
+            }) as EventListener,
+            { signal },
+          );
 
-          canvas.addEventListener("wheel", (e) => {
-            e.preventDefault();
-            safeInput(domWheelToInput(e));
-          }, { signal, passive: false });
+          canvas.addEventListener(
+            "mousedown",
+            (e) => {
+              e.preventDefault();
+              canvas.focus();
+              if (e.shiftKey) {
+                selectionAnchor = cellOffsetFromEvent(e);
+                selectionActive = true;
+                updateSelection(e);
+                return;
+              }
+              clearSelection();
+              mouseButtonsDown = e.buttons;
+              dragButton = e.button;
+              safeInput(domMouseToInput(e, "down"));
+            },
+            { signal },
+          );
+          canvas.addEventListener(
+            "mouseup",
+            (e) => {
+              e.preventDefault();
+              if (selectionActive) {
+                updateSelection(e);
+                selectionActive = false;
+                return;
+              }
+              mouseButtonsDown = e.buttons;
+              safeInput(domMouseToInput(e, "up"));
+            },
+            { signal },
+          );
+          canvas.addEventListener(
+            "mousemove",
+            (e) => {
+              if (selectionActive) {
+                e.preventDefault();
+                updateSelection(e);
+                return;
+              }
+              mouseButtonsDown = e.buttons;
+              if (mouseButtonsDown) {
+                const ev = domMouseToInput(e, "drag");
+                ev.button = dragButton;
+                safeInput(ev);
+              } else {
+                safeInput(domMouseToInput(e, "move"));
+              }
+            },
+            { signal },
+          );
+          canvas.addEventListener(
+            "contextmenu",
+            (e) => {
+              e.preventDefault();
+            },
+            { signal },
+          );
+
+          canvas.addEventListener(
+            "wheel",
+            (e) => {
+              e.preventDefault();
+              safeInput(domWheelToInput(e));
+            },
+            { signal, passive: false },
+          );
 
           // Paste
-          canvas.addEventListener("paste", ((e: ClipboardEvent) => {
-            const text = e.clipboardData?.getData("text");
-            if (!text) return;
-            e.preventDefault();
-            safeInput({ kind: "paste", data: text });
-          }) as EventListener, { signal });
+          canvas.addEventListener(
+            "paste",
+            ((e: ClipboardEvent) => {
+              const text = e.clipboardData?.getData("text");
+              if (!text) return;
+              e.preventDefault();
+              safeInput({ kind: "paste", data: text });
+            }) as EventListener,
+            { signal },
+          );
 
           // Focus/blur
-          canvas.addEventListener("focus", () => safeInput({ kind: "focus", focused: true }), { signal });
-          canvas.addEventListener("blur", () => safeInput({ kind: "focus", focused: false }), { signal });
+          canvas.addEventListener("focus", () => safeInput({ kind: "focus", focused: true }), {
+            signal,
+          });
+          canvas.addEventListener("blur", () => safeInput({ kind: "focus", focused: false }), {
+            signal,
+          });
 
           // IME composition
-          canvas.addEventListener("compositionstart", () => {
-            safeInput({ kind: "composition", phase: "start" });
-          }, { signal });
-          canvas.addEventListener("compositionupdate", ((e: CompositionEvent) => {
-            safeInput({ kind: "composition", phase: "update", data: e.data || "" });
-          }) as EventListener, { signal });
-          canvas.addEventListener("compositionend", ((e: CompositionEvent) => {
-            safeInput({ kind: "composition", phase: "end", data: e.data || "" });
-          }) as EventListener, { signal });
+          canvas.addEventListener(
+            "compositionstart",
+            () => {
+              safeInput({ kind: "composition", phase: "start" });
+            },
+            { signal },
+          );
+          canvas.addEventListener(
+            "compositionupdate",
+            ((e: CompositionEvent) => {
+              safeInput({ kind: "composition", phase: "update", data: e.data || "" });
+            }) as EventListener,
+            { signal },
+          );
+          canvas.addEventListener(
+            "compositionend",
+            ((e: CompositionEvent) => {
+              safeInput({ kind: "composition", phase: "end", data: e.data || "" });
+            }) as EventListener,
+            { signal },
+          );
 
           // ── Touch state machine ───────────────────────────────────────
-          const TOUCH_IDLE = 0, TOUCH_TRACKING = 1, TOUCH_SCROLLING = 2, TOUCH_PINCHING = 3;
+          const TOUCH_IDLE = 0,
+            TOUCH_TRACKING = 1,
+            TOUCH_SCROLLING = 2,
+            TOUCH_PINCHING = 3;
           let touchState = TOUCH_IDLE;
-          let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
-          let touchLastX = 0, touchLastY = 0;
-          let touchScrollAccX = 0, touchScrollAccY = 0;
-          let pinchStartDist = 0, pinchStartZoom = 1.0;
+          let touchStartX = 0,
+            touchStartY = 0,
+            touchStartTime = 0;
+          let touchLastX = 0,
+            touchLastY = 0;
+          let touchScrollAccX = 0,
+            touchScrollAccY = 0;
+          let pinchStartDist = 0,
+            pinchStartZoom = 1.0;
           const TAP_MAX_DIST = 10;
           const TAP_MAX_TIME = 300;
 
@@ -649,151 +758,182 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
             return Math.sqrt(dx * dx + dy * dy);
           }
 
-          canvas.addEventListener("touchstart", (e) => {
-            e.preventDefault();
-            canvas!.focus();
-            const touches = e.touches;
-            if (touches.length === 1) {
-              touchState = TOUCH_TRACKING;
-              touchStartX = touchLastX = touches[0].clientX;
-              touchStartY = touchLastY = touches[0].clientY;
-              touchStartTime = Date.now();
-              touchScrollAccX = 0;
-              touchScrollAccY = 0;
-              const bounds = canvas!.getBoundingClientRect();
-              const localX = touches[0].clientX - bounds.left;
-              const zone = Math.max(EDGE_SWIPE_ZONE_PX, bounds.width * 0.07);
-              edgeSwipeArmed = false;
-              edgeSwipeFrom =
-                localX <= zone ? -1 : localX >= bounds.width - zone ? 1 : 0;
-            } else if (touches.length === 2) {
-              edgeSwipeFrom = 0;
-              edgeSwipeArmed = false;
-              touchState = TOUCH_PINCHING;
-              pinchStartDist = pinchDistance(touches[0], touches[1]);
-              pinchStartZoom = userZoomRef.current;
-            }
-          }, { signal, passive: false });
-
-          canvas.addEventListener("touchmove", (e) => {
-            e.preventDefault();
-            const touches = e.touches;
-
-            if (touches.length === 2 && touchState !== TOUCH_IDLE) {
-              if (touchState !== TOUCH_PINCHING) {
+          canvas.addEventListener(
+            "touchstart",
+            (e) => {
+              e.preventDefault();
+              canvas!.focus();
+              const touches = e.touches;
+              if (touches.length === 1) {
+                touchState = TOUCH_TRACKING;
+                touchStartX = touchLastX = touches[0].clientX;
+                touchStartY = touchLastY = touches[0].clientY;
+                touchStartTime = Date.now();
+                touchScrollAccX = 0;
+                touchScrollAccY = 0;
+                const bounds = canvas!.getBoundingClientRect();
+                const localX = touches[0].clientX - bounds.left;
+                const zone = Math.max(EDGE_SWIPE_ZONE_PX, bounds.width * 0.07);
+                edgeSwipeArmed = false;
+                edgeSwipeFrom = localX <= zone ? -1 : localX >= bounds.width - zone ? 1 : 0;
+              } else if (touches.length === 2) {
+                edgeSwipeFrom = 0;
+                edgeSwipeArmed = false;
                 touchState = TOUCH_PINCHING;
                 pinchStartDist = pinchDistance(touches[0], touches[1]);
                 pinchStartZoom = userZoomRef.current;
+              }
+            },
+            { signal, passive: false },
+          );
+
+          canvas.addEventListener(
+            "touchmove",
+            (e) => {
+              e.preventDefault();
+              const touches = e.touches;
+
+              if (touches.length === 2 && touchState !== TOUCH_IDLE) {
+                if (touchState !== TOUCH_PINCHING) {
+                  touchState = TOUCH_PINCHING;
+                  pinchStartDist = pinchDistance(touches[0], touches[1]);
+                  pinchStartZoom = userZoomRef.current;
+                  return;
+                }
+                const dist = pinchDistance(touches[0], touches[1]);
+                if (pinchStartDist > 0) {
+                  const scale = dist / pinchStartDist;
+                  userZoomRef.current = Math.max(0.3, Math.min(3.0, pinchStartZoom * scale));
+                  applyZoom();
+                }
                 return;
               }
-              const dist = pinchDistance(touches[0], touches[1]);
-              if (pinchStartDist > 0) {
-                const scale = dist / pinchStartDist;
-                userZoomRef.current = Math.max(0.3, Math.min(3.0, pinchStartZoom * scale));
-                applyZoom();
-              }
-              return;
-            }
 
-            if (touches.length === 1 && (touchState === TOUCH_TRACKING || touchState === TOUCH_SCROLLING)) {
-              const cx = touches[0].clientX;
-              const cy = touches[0].clientY;
-              const dx = cx - touchLastX;
-              const dy = cy - touchLastY;
-              touchLastX = cx;
-              touchLastY = cy;
+              if (
+                touches.length === 1 &&
+                (touchState === TOUCH_TRACKING || touchState === TOUCH_SCROLLING)
+              ) {
+                const cx = touches[0].clientX;
+                const cy = touches[0].clientY;
+                const dx = cx - touchLastX;
+                const dy = cy - touchLastY;
+                touchLastX = cx;
+                touchLastY = cy;
 
-              // Claim bezel drags before the scroll accumulator sees them, so
-              // the two gestures never fight over the same finger.
-              if (edgeSwipeFrom !== 0) {
-                const totalDx = cx - touchStartX;
-                const totalDy = cy - touchStartY;
-                const inward = Math.sign(totalDx) === -edgeSwipeFrom;
-                if (
-                  !edgeSwipeArmed &&
-                  inward &&
-                  Math.abs(totalDx) >= EDGE_SWIPE_ARM_PX &&
-                  Math.abs(totalDx) > Math.abs(totalDy)
-                ) {
-                  edgeSwipeArmed = true;
-                } else if (!edgeSwipeArmed && Math.abs(totalDy) > Math.abs(totalDx)) {
-                  // Mostly vertical: an ordinary scroll that began near an edge.
-                  edgeSwipeFrom = 0;
+                // Claim bezel drags before the scroll accumulator sees them, so
+                // the two gestures never fight over the same finger.
+                if (edgeSwipeFrom !== 0) {
+                  const totalDx = cx - touchStartX;
+                  const totalDy = cy - touchStartY;
+                  const inward = Math.sign(totalDx) === -edgeSwipeFrom;
+                  if (
+                    !edgeSwipeArmed &&
+                    inward &&
+                    Math.abs(totalDx) >= EDGE_SWIPE_ARM_PX &&
+                    Math.abs(totalDx) > Math.abs(totalDy)
+                  ) {
+                    edgeSwipeArmed = true;
+                  } else if (!edgeSwipeArmed && Math.abs(totalDy) > Math.abs(totalDx)) {
+                    // Mostly vertical: an ordinary scroll that began near an edge.
+                    edgeSwipeFrom = 0;
+                  }
+                  if (edgeSwipeArmed) {
+                    touchState = TOUCH_SCROLLING;
+                    return;
+                  }
                 }
-                if (edgeSwipeArmed) {
-                  touchState = TOUCH_SCROLLING;
-                  return;
+
+                if (touchState === TOUCH_TRACKING) {
+                  const totalDx = cx - touchStartX;
+                  const totalDy = cy - touchStartY;
+                  if (Math.abs(totalDx) > TAP_MAX_DIST || Math.abs(totalDy) > TAP_MAX_DIST) {
+                    touchState = TOUCH_SCROLLING;
+                  } else {
+                    return;
+                  }
+                }
+
+                touchScrollAccX += dx;
+                touchScrollAccY += dy;
+                const scrollStep = touchScrollStepsPx();
+                const cell = touchCellCoords(cx, cy);
+                while (Math.abs(touchScrollAccY) >= scrollStep.y) {
+                  const sign = touchScrollAccY > 0 ? -1 : 1;
+                  safeInput({ kind: "wheel", x: cell.x, y: cell.y, dx: 0, dy: sign, mods: 0 });
+                  touchScrollAccY -= touchScrollAccY > 0 ? scrollStep.y : -scrollStep.y;
+                }
+                while (Math.abs(touchScrollAccX) >= scrollStep.x) {
+                  const sign = touchScrollAccX > 0 ? -1 : 1;
+                  safeInput({ kind: "wheel", x: cell.x, y: cell.y, dx: sign, dy: 0, mods: 0 });
+                  touchScrollAccX -= touchScrollAccX > 0 ? scrollStep.x : -scrollStep.x;
                 }
               }
+            },
+            { signal, passive: false },
+          );
 
-              if (touchState === TOUCH_TRACKING) {
-                const totalDx = cx - touchStartX;
-                const totalDy = cy - touchStartY;
-                if (Math.abs(totalDx) > TAP_MAX_DIST || Math.abs(totalDy) > TAP_MAX_DIST) {
-                  touchState = TOUCH_SCROLLING;
-                } else {
-                  return;
+          canvas.addEventListener(
+            "touchend",
+            (e) => {
+              e.preventDefault();
+              // An armed edge swipe owns the gesture and must not also tap.
+              if (edgeSwipeArmed) {
+                const t = e.changedTouches[0];
+                if (t) commitEdgeSwipe(t.clientX - touchStartX);
+                edgeSwipeArmed = false;
+                edgeSwipeFrom = 0;
+                if (e.touches.length === 0) touchState = TOUCH_IDLE;
+                return;
+              }
+              edgeSwipeFrom = 0;
+              if (touchState === TOUCH_TRACKING && e.changedTouches.length > 0) {
+                const elapsed = Date.now() - touchStartTime;
+                const t = e.changedTouches[0];
+                const dist = Math.hypot(t.clientX - touchStartX, t.clientY - touchStartY);
+                if (elapsed < TAP_MAX_TIME && dist < TAP_MAX_DIST) {
+                  const cell = touchCellCoords(t.clientX, t.clientY);
+                  safeInput({
+                    kind: "mouse",
+                    phase: "down",
+                    button: 0,
+                    x: cell.x,
+                    y: cell.y,
+                    mods: 0,
+                  });
+                  safeInput({
+                    kind: "mouse",
+                    phase: "up",
+                    button: 0,
+                    x: cell.x,
+                    y: cell.y,
+                    mods: 0,
+                  });
                 }
               }
-
-              touchScrollAccX += dx;
-              touchScrollAccY += dy;
-              const scrollStep = touchScrollStepsPx();
-              const cell = touchCellCoords(cx, cy);
-              while (Math.abs(touchScrollAccY) >= scrollStep.y) {
-                const sign = touchScrollAccY > 0 ? -1 : 1;
-                safeInput({ kind: "wheel", x: cell.x, y: cell.y, dx: 0, dy: sign, mods: 0 });
-                touchScrollAccY -= (touchScrollAccY > 0 ? scrollStep.y : -scrollStep.y);
+              if (e.touches.length === 0) {
+                touchState = TOUCH_IDLE;
+              } else if (e.touches.length === 1 && touchState === TOUCH_PINCHING) {
+                touchState = TOUCH_TRACKING;
+                touchStartX = touchLastX = e.touches[0].clientX;
+                touchStartY = touchLastY = e.touches[0].clientY;
+                touchStartTime = Date.now();
+                touchScrollAccX = 0;
+                touchScrollAccY = 0;
               }
-              while (Math.abs(touchScrollAccX) >= scrollStep.x) {
-                const sign = touchScrollAccX > 0 ? -1 : 1;
-                safeInput({ kind: "wheel", x: cell.x, y: cell.y, dx: sign, dy: 0, mods: 0 });
-                touchScrollAccX -= (touchScrollAccX > 0 ? scrollStep.x : -scrollStep.x);
-              }
-            }
-          }, { signal, passive: false });
+            },
+            { signal, passive: false },
+          );
 
-          canvas.addEventListener("touchend", (e) => {
-            e.preventDefault();
-            // An armed edge swipe owns the gesture and must not also tap.
-            if (edgeSwipeArmed) {
-              const t = e.changedTouches[0];
-              if (t) commitEdgeSwipe(t.clientX - touchStartX);
+          canvas.addEventListener(
+            "touchcancel",
+            (e) => {
+              e.preventDefault();
+              touchState = TOUCH_IDLE;
               edgeSwipeArmed = false;
               edgeSwipeFrom = 0;
-              if (e.touches.length === 0) touchState = TOUCH_IDLE;
-              return;
-            }
-            edgeSwipeFrom = 0;
-            if (touchState === TOUCH_TRACKING && e.changedTouches.length > 0) {
-              const elapsed = Date.now() - touchStartTime;
-              const t = e.changedTouches[0];
-              const dist = Math.hypot(t.clientX - touchStartX, t.clientY - touchStartY);
-              if (elapsed < TAP_MAX_TIME && dist < TAP_MAX_DIST) {
-                const cell = touchCellCoords(t.clientX, t.clientY);
-                safeInput({ kind: "mouse", phase: "down", button: 0, x: cell.x, y: cell.y, mods: 0 });
-                safeInput({ kind: "mouse", phase: "up", button: 0, x: cell.x, y: cell.y, mods: 0 });
-              }
-            }
-            if (e.touches.length === 0) {
-              touchState = TOUCH_IDLE;
-            } else if (e.touches.length === 1 && touchState === TOUCH_PINCHING) {
-              touchState = TOUCH_TRACKING;
-              touchStartX = touchLastX = e.touches[0].clientX;
-              touchStartY = touchLastY = e.touches[0].clientY;
-              touchStartTime = Date.now();
-              touchScrollAccX = 0;
-              touchScrollAccY = 0;
-            }
-          }, { signal, passive: false });
-
-          canvas.addEventListener("touchcancel", (e) => {
-            e.preventDefault();
-            touchState = TOUCH_IDLE;
-            edgeSwipeArmed = false;
-            edgeSwipeFrom = 0;
-          }, { signal, passive: false });
-
+            },
+            { signal, passive: false },
+          );
         } catch (e) {
           if (cancelled) return;
           const err = e instanceof Error ? e : new Error(String(e));
@@ -810,7 +950,7 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
         mountedRef.current = false;
         cleanup();
       };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // Mount-only effect — config is read from refs/props at init time
 
     // ── Render ─────────────────────────────────────────────────────────
@@ -874,7 +1014,7 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
         )}
       </div>
     );
-  }
+  },
 );
 
 export default FrankenTerminal;

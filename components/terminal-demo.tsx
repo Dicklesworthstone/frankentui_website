@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, useMemo, useCallback } from "react";
-import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
-import { Terminal, Activity } from "lucide-react";
 import { useReducedMotion } from "framer-motion";
+import { Activity, Terminal } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -24,17 +24,59 @@ interface TerminalLine {
 const LINES: TerminalLine[] = [
   { text: "$ cargo add ftui", style: "command", delay: 400, speed: 1, typed: true },
   { text: "    Updating crates.io index", style: "dim", delay: 600, speed: 2, typed: false },
-  { text: "      Adding ftui v0.1.1 to dependencies", style: "green", delay: 400, speed: 2, typed: false },
+  {
+    text: "      Adding ftui v0.1.1 to dependencies",
+    style: "green",
+    delay: 400,
+    speed: 2,
+    typed: false,
+  },
   { text: "", style: "dim", delay: 300, speed: 1, typed: false },
   { text: "$ cargo run --example dashboard", style: "command", delay: 600, speed: 1, typed: true },
   { text: "    Compiling ftui v0.1.1", style: "dim", delay: 500, speed: 2, typed: false },
-  { text: "     Running target/debug/examples/dashboard", style: "dim", delay: 400, speed: 2, typed: false },
+  {
+    text: "     Running target/debug/examples/dashboard",
+    style: "dim",
+    delay: 400,
+    speed: 2,
+    typed: false,
+  },
   { text: "", style: "dim", delay: 300, speed: 1, typed: false },
-  { text: "┌─ Metrics ──────┐ ┌─ Events ──────────┐", style: "dashboard-border", delay: 200, speed: 3, typed: false },
-  { text: "│ CPU    ██▓░ 54%│ │ 14:32 task.done   │", style: "dashboard-mixed", delay: 100, speed: 3, typed: false },
-  { text: "│ Memory ███░ 71%│ │ 14:31 deploy.ok   │", style: "dashboard-mixed", delay: 100, speed: 3, typed: false },
-  { text: "│ Disk   █░░░ 22%│ │ 14:30 build.pass  │", style: "dashboard-mixed", delay: 100, speed: 3, typed: false },
-  { text: "└────────────────┘ └───────────────────┘", style: "dashboard-border", delay: 100, speed: 3, typed: false },
+  {
+    text: "┌─ Metrics ──────┐ ┌─ Events ──────────┐",
+    style: "dashboard-border",
+    delay: 200,
+    speed: 3,
+    typed: false,
+  },
+  {
+    text: "│ CPU    ██▓░ 54%│ │ 14:32 task.done   │",
+    style: "dashboard-mixed",
+    delay: 100,
+    speed: 3,
+    typed: false,
+  },
+  {
+    text: "│ Memory ███░ 71%│ │ 14:31 deploy.ok   │",
+    style: "dashboard-mixed",
+    delay: 100,
+    speed: 3,
+    typed: false,
+  },
+  {
+    text: "│ Disk   █░░░ 22%│ │ 14:30 build.pass  │",
+    style: "dashboard-mixed",
+    delay: 100,
+    speed: 3,
+    typed: false,
+  },
+  {
+    text: "└────────────────┘ └───────────────────┘",
+    style: "dashboard-border",
+    delay: 100,
+    speed: 3,
+    typed: false,
+  },
 ];
 
 const TYPING_SPEED_BASE = 30; // ms per char
@@ -58,9 +100,12 @@ function renderLine(line: TerminalLine, partial?: string) {
       }
       return <span className="text-white">{content}</span>;
     }
-    case "dim": return <span className="text-slate-600">{content}</span>;
-    case "green": return <span className="text-green-400/80">{content}</span>;
-    case "dashboard-border": return <span className="text-green-500/60">{content}</span>;
+    case "dim":
+      return <span className="text-slate-600">{content}</span>;
+    case "green":
+      return <span className="text-green-400/80">{content}</span>;
+    case "dashboard-border":
+      return <span className="text-green-500/60">{content}</span>;
     case "dashboard-mixed": {
       // Batch consecutive characters with the same style into single spans
       const chars = [...content];
@@ -82,12 +127,15 @@ function renderLine(line: TerminalLine, partial?: string) {
       return (
         <span>
           {spans.map((s, i) => (
-            <span key={i} className={s.cls}>{s.text}</span>
+            <span key={i} className={s.cls}>
+              {s.text}
+            </span>
           ))}
         </span>
       );
     }
-    default: return <span className="text-slate-400">{content}</span>;
+    default:
+      return <span className="text-slate-400">{content}</span>;
   }
 }
 
@@ -170,8 +218,9 @@ export default function TerminalDemo() {
     for (let i = 0; i <= visibleLineIndex && i < LINES.length; i++) {
       const line = LINES[i];
       const isCurrentLine = i === visibleLineIndex;
-      const partial = isCurrentLine && line.typed ? line.text.slice(0, currentLineChars) : line.text;
-      
+      const partial =
+        isCurrentLine && line.typed ? line.text.slice(0, currentLineChars) : line.text;
+
       result.push(
         <div key={i} className="flex gap-2 min-h-[1.5em] items-center">
           <div className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
@@ -180,7 +229,7 @@ export default function TerminalDemo() {
               <span className="inline-block w-1.5 h-4 bg-green-500 ml-1 animate-pulse" />
             )}
           </div>
-        </div>
+        </div>,
       );
     }
     return result;
@@ -199,12 +248,16 @@ export default function TerminalDemo() {
             </div>
             <div className="flex items-center gap-2 text-slate-500">
               <Terminal className="h-3 w-3 text-green-500/50" />
-              <span className="text-[10px] font-black uppercase tracking-widest">ftui_kernel_stream</span>
+              <span className="text-[10px] font-black uppercase tracking-widest">
+                ftui_kernel_stream
+              </span>
             </div>
           </div>
           <div className="flex items-center gap-2">
-             <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-             <span className="text-[8px] font-black text-green-500 uppercase tracking-tighter">Live Session</span>
+            <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+            <span className="text-[8px] font-black text-green-500 uppercase tracking-tighter">
+              Live Session
+            </span>
           </div>
         </div>
 
@@ -212,19 +265,21 @@ export default function TerminalDemo() {
         <div className="p-8 font-mono text-sm leading-relaxed min-h-[300px] flex flex-col justify-start">
           {renderedLines}
           {visibleLineIndex === -1 && (
-             <div className="flex items-center gap-2">
-                <span className="text-green-500 select-none">$</span>
-                <span className="inline-block w-1.5 h-4 bg-green-500 animate-pulse" />
-             </div>
+            <div className="flex items-center gap-2">
+              <span className="text-green-500 select-none">$</span>
+              <span className="inline-block w-1.5 h-4 bg-green-500 animate-pulse" />
+            </div>
           )}
         </div>
 
         {/* Status Overlay */}
         <div className="absolute bottom-4 right-6 px-3 py-1 rounded-lg bg-green-500/5 border border-green-500/10 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-           <div className="flex items-center gap-2">
-              <Activity className="h-3 w-3 text-green-500" />
-              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Process Active</span>
-           </div>
+          <div className="flex items-center gap-2">
+            <Activity className="h-3 w-3 text-green-500" />
+            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
+              Process Active
+            </span>
+          </div>
         </div>
       </div>
     </div>

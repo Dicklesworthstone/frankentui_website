@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, useMemo } from "react";
-import type { Stat } from "@/lib/content";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatedNumber } from "@/components/animated-number";
+import type { Stat } from "@/lib/content";
 import { FrankenBolt, FrankenContainer, NeuralPulse } from "./franken-elements";
 import FrankenGlitch from "./franken-glitch";
 
@@ -30,7 +30,7 @@ export default function StatsGrid({ stats }: { stats: Stat[] }) {
 
   const parsedStats = useMemo(
     () => stats.map((stat) => ({ stat, parsed: parseStatValue(stat.value) })),
-    [stats]
+    [stats],
   );
 
   useEffect(() => {
@@ -49,7 +49,7 @@ export default function StatsGrid({ stats }: { stats: Stat[] }) {
           observer.disconnect();
         }
       },
-      { threshold: 0.3, rootMargin: "0px" }
+      { threshold: 0.3, rootMargin: "0px" },
     );
 
     observer.observe(container);
@@ -69,7 +69,10 @@ export default function StatsGrid({ stats }: { stats: Stat[] }) {
             className="group relative bg-[#020a02]/80 px-6 py-10 backdrop-blur transition-all duration-500 hover:bg-[#020a02]/40"
           >
             <NeuralPulse className="opacity-0 group-hover:opacity-40 transition-opacity" />
-            <div className="absolute inset-x-0 top-0 h-px origin-center scale-x-0 bg-gradient-to-r from-green-400 via-lime-400 to-green-400 transition-transform duration-500 group-hover:scale-x-100" aria-hidden="true" />
+            <div
+              className="absolute inset-x-0 top-0 h-px origin-center scale-x-0 bg-gradient-to-r from-green-400 via-lime-400 to-green-400 transition-transform duration-500 group-hover:scale-x-100"
+              aria-hidden="true"
+            />
 
             <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 

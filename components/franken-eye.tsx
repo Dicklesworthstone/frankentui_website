@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
-import { cn } from "@/lib/utils";
 import { motion, useReducedMotion } from "framer-motion";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 
 /**
  * A visceral, reactive "Monster" eye.
@@ -14,7 +14,7 @@ export default function FrankenEye({ className }: { className?: string }) {
   const [isBlinking, setIsBlinking] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [proximity, setProximity] = useState(0); // 0 to 1
-  
+
   const eyeRef = useRef<HTMLDivElement>(null);
   const rectRef = useRef<DOMRect | null>(null);
   const frameRef = useRef<number | null>(null);
@@ -50,7 +50,7 @@ export default function FrankenEye({ className }: { className?: string }) {
         const deltaX = e.clientX - centerX;
         const deltaY = e.clientY - centerY;
         const distance = Math.hypot(deltaX, deltaY);
-        
+
         const angle = Math.atan2(deltaY, deltaX);
         const moveDist = Math.min(rect.width / 4, distance / 15);
 
@@ -72,7 +72,7 @@ export default function FrankenEye({ className }: { className?: string }) {
         isVisibleRef.current = entry.isIntersecting;
         if (entry.isIntersecting) updateRect();
       },
-      { threshold: 0 }
+      { threshold: 0 },
     );
     observer.observe(el);
 
@@ -80,7 +80,7 @@ export default function FrankenEye({ className }: { className?: string }) {
     window.addEventListener("scroll", updateRect, { passive: true });
     window.addEventListener("resize", updateRect, { passive: true });
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
-    
+
     return () => {
       observer.disconnect();
       window.removeEventListener("mousemove", handleMouseMove);
@@ -116,14 +116,17 @@ export default function FrankenEye({ className }: { className?: string }) {
       className={cn(
         "group relative h-12 w-12 rounded-full bg-white border-2 border-slate-900 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] overflow-hidden flex items-center justify-center",
         prefersReducedMotion ? "cursor-auto" : "cursor-none",
-        className
+        className,
       )}
     >
       {/* Sclera / Whites of the eye */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,_#fff_0%,_#e2e8f0_100%)]" />
-      
+
       {/* Blood Vessels - show on proximity */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-30" viewBox="0 0 100 100">
+      <svg
+        className="absolute inset-0 w-full h-full pointer-events-none opacity-30"
+        viewBox="0 0 100 100"
+      >
         <motion.path
           d="M 15 15 Q 30 35 45 45"
           stroke="#ef4444"
@@ -153,48 +156,48 @@ export default function FrankenEye({ className }: { className?: string }) {
           animate={{ opacity: proximity }}
         />
       </svg>
-      
+
       {/* Iris + Pupil group */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <motion.div 
+        <motion.div
           className="relative h-6 w-6 rounded-full bg-green-500 border border-green-700 flex items-center justify-center shadow-[inset_0_0_10px_rgba(0,0,0,0.3)]"
           style={{ x: mousePos.x, y: mousePos.y }}
           transition={{ type: "spring", stiffness: 250, damping: 20 }}
         >
           {/* Iris pattern */}
           <div className="absolute inset-0 bg-[repeating-conic-gradient(from_0deg,_transparent_0deg_10deg,_rgba(0,0,0,0.1)_10deg_20deg)] opacity-40 rounded-full" />
-          
+
           {/* Pupil - dilates on hover */}
-          <motion.div 
-            className="h-3 w-3 rounded-full bg-slate-950" 
-            animate={{ 
+          <motion.div
+            className="h-3 w-3 rounded-full bg-slate-950"
+            animate={{
               scale: isHovered ? 1.25 : 1,
-              backgroundColor: isHovered ? "#000" : "#020617"
+              backgroundColor: isHovered ? "#000" : "#020617",
             }}
           />
-          
+
           {/* Shine */}
           <div className="absolute top-1 left-1 h-1.5 w-1.5 rounded-full bg-white/60" />
         </motion.div>
       </div>
-      
+
       {/* Eyelids - Using scaleY for maximum reliability to prevent "black stuck" eye */}
-      <motion.div 
+      <motion.div
         className="absolute inset-0 z-20 pointer-events-none flex flex-col"
         initial={false}
       >
-        <motion.div 
+        <motion.div
           className="w-full flex-1 bg-slate-950 origin-top"
           animate={{ scaleY: isBlinking ? 1 : 0 }}
           transition={{ duration: 0.1, ease: "easeInOut" }}
         />
-        <motion.div 
+        <motion.div
           className="w-full flex-1 bg-slate-950 origin-bottom"
           animate={{ scaleY: isBlinking ? 1 : 0 }}
           transition={{ duration: 0.1, ease: "easeInOut" }}
         />
       </motion.div>
-      
+
       {/* Surface Shadow / Depth Overlay */}
       <div className="absolute inset-0 shadow-[inset_0_4px_12px_rgba(0,0,0,0.4)] pointer-events-none rounded-full z-30" />
     </div>

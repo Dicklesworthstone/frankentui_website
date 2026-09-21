@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
-import { getJargon, type JargonTerm } from "@/lib/jargon";
+import { useCallback, useMemo, useState } from "react";
 import BottomSheet from "@/components/ui/bottom-sheet";
+import { getJargon, type JargonTerm } from "@/lib/jargon";
 import { cn } from "@/lib/utils";
 
 interface JargonProps {
@@ -29,7 +29,7 @@ export default function Jargon({ term, children }: JargonProps) {
         className={cn(
           "relative inline cursor-help border-b border-dashed border-green-500/40 text-green-400",
           "transition-colors hover:border-green-400 hover:text-green-300",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black",
         )}
         title={entry.short}
         aria-label={`Learn more about ${entry.term}`}
@@ -52,9 +52,7 @@ function JargonDetail({ entry }: { entry: JargonTerm }) {
       <p>{entry.long}</p>
       {entry.analogy && (
         <div className="rounded-lg border border-green-500/10 bg-green-500/5 p-4">
-          <p className="mb-1 text-xs font-bold uppercase tracking-widest text-green-400">
-            Analogy
-          </p>
+          <p className="mb-1 text-xs font-bold uppercase tracking-widest text-green-400">Analogy</p>
           <p className="text-white/80">{entry.analogy}</p>
         </div>
       )}
@@ -68,9 +66,7 @@ function JargonDetail({ entry }: { entry: JargonTerm }) {
       )}
       {entry.related && entry.related.length > 0 && (
         <div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-widest text-white/40">
-            Related
-          </p>
+          <p className="mb-2 text-xs font-bold uppercase tracking-widest text-white/40">Related</p>
           <div className="flex flex-wrap gap-2">
             {entry.related.map((r) => (
               <span

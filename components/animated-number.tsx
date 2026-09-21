@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 
 interface AnimatedNumberProps {
   value: number;
@@ -39,7 +39,7 @@ export function AnimatedNumber({
     return undefined;
   }, [prefersReducedMotion, value, hasAnimated]);
 
-  const easeOutExpo = (t: number) => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t));
+  const easeOutExpo = (t: number) => (t === 1 ? 1 : 1 - 2 ** (-10 * t));
 
   useEffect(() => {
     if (prefersReducedMotion || !isVisible || hasAnimated) return;
@@ -79,9 +79,7 @@ export function AnimatedNumber({
   if (typeof decimals === "number") {
     displayNumber = count.toFixed(decimals);
   } else {
-    displayNumber = value % 1 === 0
-      ? Math.round(count).toString()
-      : count.toFixed(1);
+    displayNumber = value % 1 === 0 ? Math.round(count).toString() : count.toFixed(1);
   }
 
   if (hasAnimated || prefersReducedMotion) {
@@ -92,15 +90,24 @@ export function AnimatedNumber({
     }
   }
 
-  const srValue = typeof decimals === "number"
-    ? value.toFixed(decimals)
-    : (value % 1 === 0 ? value.toString() : value.toFixed(1));
+  const srValue =
+    typeof decimals === "number"
+      ? value.toFixed(decimals)
+      : value % 1 === 0
+        ? value.toString()
+        : value.toFixed(1);
 
   return (
     <span className={className}>
-      <span className="sr-only">{prefix}{srValue}{suffix}</span>
+      <span className="sr-only">
+        {prefix}
+        {srValue}
+        {suffix}
+      </span>
       <span className="tabular-nums" aria-hidden="true">
-        {prefix}{displayNumber}{suffix}
+        {prefix}
+        {displayNumber}
+        {suffix}
       </span>
     </span>
   );

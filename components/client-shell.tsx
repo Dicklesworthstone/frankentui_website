@@ -1,15 +1,15 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
-import SiteHeader from "@/components/site-header";
-import SiteFooter from "@/components/site-footer";
+import { usePathname } from "next/navigation";
+import CustomCursor from "@/components/custom-cursor";
 import ErrorBoundary from "@/components/error-boundary";
 import ScrollToTop from "@/components/scroll-to-top";
-import CustomCursor from "@/components/custom-cursor";
-import { SiteProvider } from "@/lib/site-state";
-import SiteTerminal from "@/components/site-terminal";
 import SignalHUD from "@/components/signal-hud";
+import SiteFooter from "@/components/site-footer";
+import SiteHeader from "@/components/site-header";
+import SiteTerminal from "@/components/site-terminal";
+import { SiteProvider } from "@/lib/site-state";
 
 export default function ClientShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -22,9 +22,9 @@ export default function ClientShell({ children }: { children: React.ReactNode })
           <SignalHUD />
           <SiteTerminal />
           <CustomCursor />
-          
+
           <SiteHeader />
-          
+
           {/* Exit animations (AnimatePresence mode="wait") are incompatible with the App
               Router: the outgoing page's children are swapped for the new route mid-exit,
               and the presence swap can stall, leaving the page stuck at opacity 0 until an
@@ -36,14 +36,14 @@ export default function ClientShell({ children }: { children: React.ReactNode })
               opacity: 1,
               transition: {
                 duration: prefersReducedMotion ? 0 : 0.4,
-                ease: "easeOut"
-              }
+                ease: "easeOut",
+              },
             }}
             className="flex-1 relative"
           >
             {children}
           </motion.div>
-          
+
           <SiteFooter />
           <ScrollToTop />
         </div>
