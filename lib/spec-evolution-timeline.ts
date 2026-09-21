@@ -7,8 +7,8 @@
 
 export type TimelinePoint = {
   idx: number;
-  value: number;       // metric value (normalized 0..1)
-  rawValue: number;    // original metric value
+  value: number; // metric value (normalized 0..1)
+  rawValue: number; // original metric value
   reviewed: boolean;
   matchesBucketFilter: boolean;
 };
@@ -24,9 +24,14 @@ export type TimelineData = {
  * Values are clamped and the scale is monotonic.
  */
 export function buildTimelineData(
-  commits: readonly { idx: number; reviewed: boolean; bucketMask: number; magnitude: Record<string, number> }[],
+  commits: readonly {
+    idx: number;
+    reviewed: boolean;
+    bucketMask: number;
+    magnitude: Record<string, number>;
+  }[],
   metricKey: string,
-  bucketFilter: number | null
+  bucketFilter: number | null,
 ): TimelineData {
   if (commits.length === 0) {
     return { points: [], maxRawValue: 0, minRawValue: 0 };
@@ -39,7 +44,7 @@ export function buildTimelineData(
 
   const points: TimelinePoint[] = commits.map((c, i) => ({
     idx: c.idx,
-    value: range > 0 ? (rawValues[i] - minRaw) / range : (maxRaw > 0 ? 1 : 0),
+    value: range > 0 ? (rawValues[i] - minRaw) / range : maxRaw > 0 ? 1 : 0,
     rawValue: rawValues[i],
     reviewed: c.reviewed,
     matchesBucketFilter: bucketFilter === null || hasBucketBit(c.bucketMask, bucketFilter),

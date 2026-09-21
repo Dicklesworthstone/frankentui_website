@@ -68,7 +68,7 @@ export const heroContent = {
   eyebrow: "Founder • Engineer • Former Hedge Fund Analyst",
   title: "Building the tools that sit between markets and frontier AI.",
   intro:
-    "Beginning in October of 2025, I began developing what I call my \"Agentic Coding Flywheel\": a collection of 14 core tools.",
+    'Beginning in October of 2025, I began developing what I call my "Agentic Coding Flywheel": a collection of 14 core tools.',
   tools: [
     {
       name: "MCP Agent Mail",
@@ -89,14 +89,12 @@ export const heroContent = {
     {
       name: "CM",
       tagline: "CASS Memory System",
-      description:
-        "Persistent memory built on CASS - agents learn and remember across sessions",
+      description: "Persistent memory built on CASS - agents learn and remember across sessions",
     },
     {
       name: "UBS",
       tagline: "Ultimate Bug Scanner",
-      description:
-        "1,000+ pattern-based detection rules for catching bugs before they ship",
+      description: "1,000+ pattern-based detection rules for catching bugs before they ship",
     },
   ],
   highlight: {
@@ -185,7 +183,8 @@ export const endorsements: Endorsement[] = [
   },
   {
     id: "bankless-interview",
-    quote: "This is one of the most thorough analyses of a company I've ever seen. The level of detail is extraordinary.",
+    quote:
+      "This is one of the most thorough analyses of a company I've ever seen. The level of detail is extraordinary.",
     author: {
       name: "Ryan Sean Adams",
       title: "Host",
@@ -203,7 +202,8 @@ export const endorsements: Endorsement[] = [
   },
   {
     id: "slashdot-feature",
-    quote: "Emanuel's essay went viral across finance Twitter and tech circles, drawing attention from analysts and investors worldwide.",
+    quote:
+      "Emanuel's essay went viral across finance Twitter and tech circles, drawing attention from analysts and investors worldwide.",
     author: {
       name: "Slashdot Editors",
       company: "Slashdot",
@@ -267,7 +267,8 @@ export const featuredSites: FeaturedSite[] = [
   {
     id: "jeffreysprompts",
     title: "JeffreysPrompts.com",
-    tagline: "Battle-tested prompts for AI coding agents. Browse, copy, or install directly as Claude Code skills.",
+    tagline:
+      "Battle-tested prompts for AI coding agents. Browse, copy, or install directly as Claude Code skills.",
     url: "https://jeffreysprompts.com",
     ogImage: "https://jeffreysprompts.com/og-image.png",
     gradient: "from-amber-500 via-orange-500 to-red-500",
@@ -276,7 +277,8 @@ export const featuredSites: FeaturedSite[] = [
   {
     id: "agent-flywheel",
     title: "Agent-Flywheel.com",
-    tagline: "Interactive setup wizard for the complete flywheel ecosystem. One command, 30 minutes, fully configured.",
+    tagline:
+      "Interactive setup wizard for the complete flywheel ecosystem. One command, 30 minutes, fully configured.",
     url: "https://agent-flywheel.com",
     ogImage: "https://agent-flywheel.com/og-image.png",
     gradient: "from-violet-500 via-purple-500 to-fuchsia-500",
@@ -285,7 +287,8 @@ export const featuredSites: FeaturedSite[] = [
   {
     id: "brennerbot",
     title: "BrennerBot.org",
-    tagline: "Multi-agent research orchestration using Sydney Brenner's scientific methods. Harness Opus, GPT-5.2, and Gemini 3 as a collaborative research group.",
+    tagline:
+      "Multi-agent research orchestration using Sydney Brenner's scientific methods. Harness Opus, GPT-5.2, and Gemini 3 as a collaborative research group.",
     url: "https://brennerbot.org",
     ogImage: "https://brennerbot.org/og-image.png",
     gradient: "from-emerald-500 via-teal-500 to-cyan-500",
@@ -438,7 +441,8 @@ export const projects: Project[] = [
     kind: "product",
     badge: "Layer-1 protocol",
     href: "https://pastel.network",
-    short: "Cosmos-based L1 for decentralized storage, AI inference, and cross-chain interoperability.",
+    short:
+      "Cosmos-based L1 for decentralized storage, AI inference, and cross-chain interoperability.",
     description:
       "Originally launched as Pastel Network, Lumera is a sovereign Cosmos chain designed for long-lived storage of digital assets, on-chain AI authenticity, and agentic access to data and compute across ecosystems.",
     tags: ["L1", "Cosmos", "Storage", "AI", "Interoperability"],
@@ -523,7 +527,8 @@ export const projects: Project[] = [
     kind: "oss",
     badge: "446 stars",
     href: "https://github.com/Dicklesworthstone/coding_agent_session_search",
-    short: "Unified TUI for searching local history across Claude Code, Codex, Cursor, Gemini, and more.",
+    short:
+      "Unified TUI for searching local history across Claude Code, Codex, Cursor, Gemini, and more.",
     description:
       "A centralized search interface for all your AI coding sessions. Indexes conversation history from Claude Code, Codex, Cursor, Gemini, ChatGPT, and Cline using Tantivy full-text search. Find that solution you generated weeks ago and prevent re-solving problems.",
     tags: ["Rust", "TUI", "Search", "DevTools", "Agents", "Flywheel"],
@@ -540,8 +545,10 @@ export const projects: Project[] = [
         "Export sessions to Markdown",
         "Health check and index management",
       ],
-      installation: "```bash\n# Install via Cargo\ncargo install coding_agent_session_search\n\n# Or download pre-built binary from releases\n# https://github.com/Dicklesworthstone/coding_agent_session_search/releases\n```",
-      usage: "```bash\n# Interactive TUI mode\ncass\n\n# Search with query\ncass search \"Three.js performance\"\n\n# Robot mode for agents (NEVER use bare cass in agents!)\ncass search \"error handling\" --robot --limit 5\ncass health  # Check index status\n```",
+      installation:
+        "```bash\n# Install via Cargo\ncargo install coding_agent_session_search\n\n# Or download pre-built binary from releases\n# https://github.com/Dicklesworthstone/coding_agent_session_search/releases\n```",
+      usage:
+        '```bash\n# Interactive TUI mode\ncass\n\n# Search with query\ncass search "Three.js performance"\n\n# Robot mode for agents (NEVER use bare cass in agents!)\ncass search "error handling" --robot --limit 5\ncass health  # Check index status\n```',
       relatedProjects: ["cass-memory-system", "beads-viewer", "mcp-agent-mail"],
     },
   },
@@ -595,7 +602,8 @@ export const projects: Project[] = [
     kind: "oss",
     badge: "1,654 stars",
     href: "https://github.com/Dicklesworthstone/mcp_agent_mail",
-    short: "Gmail for your coding agents. A coordination layer with messaging, file leases, and audit trails.",
+    short:
+      "Gmail for your coding agents. A coordination layer with messaging, file leases, and audit trails.",
     description:
       "A complete coordination system for multi-agent workflows. Agents register identities, send/receive GitHub-flavored Markdown messages, search conversation history, and declare advisory file reservations to prevent edit conflicts. SQLite-backed for full auditability with optional web UI for human oversight.",
     tags: ["MCP", "Agents", "Developer Tools", "Python", "Collaboration", "Flywheel"],
@@ -613,8 +621,10 @@ export const projects: Project[] = [
         "FastMCP server protocol for easy integration",
         "Optional web UI for human oversight",
       ],
-      installation: "```bash\n# Clone and run locally\ngit clone https://github.com/Dicklesworthstone/mcp_agent_mail\ncd mcp_agent_mail\npip install -e .\n\n# Or install via pip\npip install mcp-agent-mail\n```",
-      usage: "Add to your Claude Code MCP settings:\n\n```json\n{\n  \"mcpServers\": {\n    \"agent-mail\": {\n      \"command\": \"npx\",\n      \"args\": [\"@anthropic/mcp-agent-mail\"]\n    }\n  }\n}\n```\n\nAgents can then register, send messages, and coordinate work through the MCP tools.",
+      installation:
+        "```bash\n# Clone and run locally\ngit clone https://github.com/Dicklesworthstone/mcp_agent_mail\ncd mcp_agent_mail\npip install -e .\n\n# Or install via pip\npip install mcp-agent-mail\n```",
+      usage:
+        'Add to your Claude Code MCP settings:\n\n```json\n{\n  "mcpServers": {\n    "agent-mail": {\n      "command": "npx",\n      "args": ["@anthropic/mcp-agent-mail"]\n    }\n  }\n}\n```\n\nAgents can then register, send messages, and coordinate work through the MCP tools.',
       relatedProjects: ["beads-viewer", "cass", "named-tmux-manager"],
     },
   },
@@ -623,7 +633,8 @@ export const projects: Project[] = [
     kind: "oss",
     badge: "1,211 stars",
     href: "https://github.com/Dicklesworthstone/beads_viewer",
-    short: "Terminal UI for Steve Yegge's Beads system with graph analytics for agent task management.",
+    short:
+      "Terminal UI for Steve Yegge's Beads system with graph analytics for agent task management.",
     description:
       "Transforms how agents visualize task dependencies using DAG-based analysis. Features nine graph metrics (PageRank, Betweenness, HITS, Critical Path), robot protocol for AI-ready JSON output, and time-travel diffing across git revisions. Built in Go with 60fps rendering via Bubble Tea.",
     tags: ["Go", "TUI", "Task Management", "Graph Analytics", "Agents", "Flywheel"],
@@ -641,8 +652,10 @@ export const projects: Project[] = [
         "Integration with bd (beads CLI)",
         "Vim-style keyboard navigation",
       ],
-      installation: "```bash\n# Install via Go\ngo install github.com/Dicklesworthstone/beads_viewer@latest\n\n# Or download pre-built binary from releases\n# https://github.com/Dicklesworthstone/beads_viewer/releases\n```",
-      usage: "```bash\n# Interactive TUI mode\nbv\n\n# Robot mode for AI agents (REQUIRED for agents)\nbv --robot-priority    # Get priority recommendations\nbv --robot-plan        # Get execution plan with parallel tracks\nbv --robot-insights    # Get graph metrics as JSON\n```",
+      installation:
+        "```bash\n# Install via Go\ngo install github.com/Dicklesworthstone/beads_viewer@latest\n\n# Or download pre-built binary from releases\n# https://github.com/Dicklesworthstone/beads_viewer/releases\n```",
+      usage:
+        "```bash\n# Interactive TUI mode\nbv\n\n# Robot mode for AI agents (REQUIRED for agents)\nbv --robot-priority    # Get priority recommendations\nbv --robot-plan        # Get execution plan with parallel tracks\nbv --robot-insights    # Get graph metrics as JSON\n```",
       relatedProjects: ["mcp-agent-mail", "cass", "ultimate-bug-scanner"],
     },
   },
@@ -651,7 +664,8 @@ export const projects: Project[] = [
     kind: "oss",
     badge: "133 stars",
     href: "https://github.com/Dicklesworthstone/ntm",
-    short: "Multi-agent tmux orchestration. Spawn and coordinate Claude Code, Codex, and Gemini agents.",
+    short:
+      "Multi-agent tmux orchestration. Spawn and coordinate Claude Code, Codex, and Gemini agents.",
     description:
       "Transform tmux into a multi-agent command center. Spawn named agent panes, broadcast prompts to specific agent types, capture outputs with regex filtering, and manage persistent SSH-compatible sessions. Features real-time dashboard, command palette, and pre/post hooks for automation.",
     tags: ["Go", "Tmux", "Multi-Agent", "Claude Code", "DevTools", "Flywheel"],
@@ -668,8 +682,10 @@ export const projects: Project[] = [
         "Pre/post hooks for automation",
         "Session persistence across reboots",
       ],
-      installation: "```bash\n# Install via Go\ngo install github.com/Dicklesworthstone/ntm@latest\n\n# Requires tmux to be installed\nsudo apt install tmux  # Debian/Ubuntu\nbrew install tmux      # macOS\n```",
-      usage: "```bash\n# Start the manager\nntm\n\n# Spawn agents\nntm spawn claude my-project\nntm spawn codex backend-work\n\n# Broadcast to all agents\nntm broadcast \"Check the latest changes\"\n```",
+      installation:
+        "```bash\n# Install via Go\ngo install github.com/Dicklesworthstone/ntm@latest\n\n# Requires tmux to be installed\nsudo apt install tmux  # Debian/Ubuntu\nbrew install tmux      # macOS\n```",
+      usage:
+        '```bash\n# Start the manager\nntm\n\n# Spawn agents\nntm spawn claude my-project\nntm spawn codex backend-work\n\n# Broadcast to all agents\nntm broadcast "Check the latest changes"\n```',
       relatedProjects: ["mcp-agent-mail", "simultaneous-launch-button", "cass"],
     },
   },
@@ -694,8 +710,10 @@ export const projects: Project[] = [
         "Configurable timeout and approval thresholds",
         "Command replay protection",
       ],
-      installation: "```bash\n# Install via Go\ngo install github.com/Dicklesworthstone/slb@latest\n```",
-      usage: "```bash\n# Request approval for a dangerous command\nslb request --command \"rm -rf /tmp/build\" --risk DANGEROUS\n\n# Approve a pending request (from another agent)\nslb approve <request-id>\n\n# List pending requests\nslb list\n```",
+      installation:
+        "```bash\n# Install via Go\ngo install github.com/Dicklesworthstone/slb@latest\n```",
+      usage:
+        '```bash\n# Request approval for a dangerous command\nslb request --command "rm -rf /tmp/build" --risk DANGEROUS\n\n# Approve a pending request (from another agent)\nslb approve <request-id>\n\n# List pending requests\nslb list\n```',
       relatedProjects: ["mcp-agent-mail", "named-tmux-manager", "ultimate-bug-scanner"],
     },
   },
@@ -704,7 +722,8 @@ export const projects: Project[] = [
     kind: "oss",
     badge: "212 stars",
     href: "https://github.com/Dicklesworthstone/cass_memory_system",
-    short: "ACE-framework persistent memory for coding agents. Stores procedural, episodic, and semantic knowledge.",
+    short:
+      "ACE-framework persistent memory for coding agents. Stores procedural, episodic, and semantic knowledge.",
     description:
       "Implements the Autonomous Cognitive Entity framework to give agents human-like memory. Stores procedural knowledge (how-to playbooks), episodic memory (session histories), and semantic facts. Exposes MCP tools so agents can recall context across sessions without re-learning.",
     tags: ["TypeScript", "MCP", "Memory", "ACE Framework", "Agents", "Flywheel"],
@@ -720,8 +739,10 @@ export const projects: Project[] = [
         "Memory consolidation and summarization",
         "Integration with CASS search",
       ],
-      installation: "```bash\n# Clone and install\ngit clone https://github.com/Dicklesworthstone/cass_memory_system\ncd cass_memory_system\nbun install\nbun run build\n```",
-      usage: "Add to your MCP settings to give agents persistent memory:\n\n```json\n{\n  \"mcpServers\": {\n    \"cass-memory\": {\n      \"command\": \"node\",\n      \"args\": [\"path/to/cass_memory_system/dist/index.js\"]\n    }\n  }\n}\n```",
+      installation:
+        "```bash\n# Clone and install\ngit clone https://github.com/Dicklesworthstone/cass_memory_system\ncd cass_memory_system\nbun install\nbun run build\n```",
+      usage:
+        'Add to your MCP settings to give agents persistent memory:\n\n```json\n{\n  "mcpServers": {\n    "cass-memory": {\n      "command": "node",\n      "args": ["path/to/cass_memory_system/dist/index.js"]\n    }\n  }\n}\n```',
       relatedProjects: ["cass", "mcp-agent-mail", "beads-viewer"],
     },
   },
@@ -922,8 +943,10 @@ export const projects: Project[] = [
         "Designed for AI agent post-processing",
         "Supports TypeScript, Python, Rust, Go, and more",
       ],
-      installation: "```bash\n# Install via pip (recommended)\npip install ultimate-bug-scanner\n\n# Or install from source\ngit clone https://github.com/Dicklesworthstone/ultimate_bug_scanner\ncd ultimate_bug_scanner\npip install -e .\n```",
-      usage: "```bash\n# Scan specific files (fastest)\nubs file.ts file2.py\n\n# Scan staged files before commit\nubs $(git diff --name-only --cached)\n\n# Scan entire project\nubs .\n\n# Language filter\nubs --only=ts,tsx components/\n```",
+      installation:
+        "```bash\n# Install via pip (recommended)\npip install ultimate-bug-scanner\n\n# Or install from source\ngit clone https://github.com/Dicklesworthstone/ultimate_bug_scanner\ncd ultimate_bug_scanner\npip install -e .\n```",
+      usage:
+        "```bash\n# Scan specific files (fastest)\nubs file.ts file2.py\n\n# Scan staged files before commit\nubs $(git diff --name-only --cached)\n\n# Scan entire project\nubs .\n\n# Language filter\nubs --only=ts,tsx components/\n```",
       relatedProjects: ["beads-viewer", "simultaneous-launch-button", "cass"],
     },
   },
@@ -1038,8 +1061,10 @@ export const projects: Project[] = [
         "Token packing for context budget optimization",
         "Graph analysis via bv for dependency insights",
       ],
-      installation: "```bash\n# Install via Cargo\ncargo install meta_skill\n\n# Or download pre-built binary from releases\n```",
-      usage: "```bash\n# Start MCP server for AI agents\nms mcp serve\n\n# Search for skills\nms search 'error handling'\n\n# Token-packed loading within budget\nms load <skill> --pack 2000\n\n# Security scan for prompt injection\nms security scan <file>\n\n# Graph analysis via bv\nms graph insights\n```",
+      installation:
+        "```bash\n# Install via Cargo\ncargo install meta_skill\n\n# Or download pre-built binary from releases\n```",
+      usage:
+        "```bash\n# Start MCP server for AI agents\nms mcp serve\n\n# Search for skills\nms search 'error handling'\n\n# Token-packed loading within budget\nms load <skill> --pack 2000\n\n# Security scan for prompt injection\nms security scan <file>\n\n# Graph analysis via bv\nms graph insights\n```",
       relatedProjects: ["cass", "mcp-agent-mail"],
     },
   },
@@ -1129,7 +1154,8 @@ export const projects: Project[] = [
     kind: "oss",
     badge: "94 stars",
     href: "https://github.com/Dicklesworthstone/frankentui",
-    short: "Minimal, high-performance terminal UI kernel focused on correctness, determinism, and clean architecture.",
+    short:
+      "Minimal, high-performance terminal UI kernel focused on correctness, determinism, and clean architecture.",
     description:
       "A kernel-level TUI foundation for Rust with a disciplined runtime, diff-based renderer, and inline-mode support that preserves scrollback while keeping UI chrome stable. Features a layered crate architecture (core → render → runtime → widgets), one-writer rule for serialized output, RAII cleanup even on panic, and snapshot/time-travel harness for deterministic testing. Designed as a foundation you build your own UI framework on top of.",
     tags: ["Rust", "TUI", "Terminal", "Rendering", "Systems"],
@@ -1147,8 +1173,10 @@ export const projects: Project[] = [
         "Optional OpenTelemetry integration for runtime instrumentation",
         "JSONL evidence logs for diff strategy and resize decisions",
       ],
-      installation: "```bash\n# Clone and build\ngit clone https://github.com/Dicklesworthstone/frankentui.git\ncd frankentui\ncargo build --release\n\n# Run the demo showcase\ncargo run -p ftui-demo-showcase\n```",
-      usage: "```bash\n# Primary demo showcase\ncargo run -p ftui-demo-showcase\n\n# Pick a specific demo view\nFTUI_HARNESS_VIEW=dashboard cargo run -p ftui-demo-showcase\nFTUI_HARNESS_VIEW=visual_effects cargo run -p ftui-demo-showcase\n```",
+      installation:
+        "```bash\n# Clone and build\ngit clone https://github.com/Dicklesworthstone/frankentui.git\ncd frankentui\ncargo build --release\n\n# Run the demo showcase\ncargo run -p ftui-demo-showcase\n```",
+      usage:
+        "```bash\n# Primary demo showcase\ncargo run -p ftui-demo-showcase\n\n# Pick a specific demo view\nFTUI_HARNESS_VIEW=dashboard cargo run -p ftui-demo-showcase\nFTUI_HARNESS_VIEW=visual_effects cargo run -p ftui-demo-showcase\n```",
       relatedProjects: ["beads-rust", "beads-viewer", "named-tmux-manager"],
     },
   },
@@ -1157,7 +1185,8 @@ export const projects: Project[] = [
     kind: "oss",
     badge: "489 stars",
     href: "https://github.com/Dicklesworthstone/beads_rust",
-    short: "Fast Rust port of Steve Yegge's beads — a local-first, non-invasive issue tracker for git repos.",
+    short:
+      "Fast Rust port of Steve Yegge's beads — a local-first, non-invasive issue tracker for git repos.",
     description:
       "A high-performance reimplementation of the beads issue tracker in Rust. Provides dependency-aware issue tracking that exports to JSONL for version control, with JSON output for AI agent integration. Features ready-work detection, discovered-from linking, and seamless git-friendly state management without ever running git commands itself.",
     tags: ["Rust", "CLI", "Issue Tracking", "Git", "Agents", "Flywheel"],
@@ -1175,8 +1204,10 @@ export const projects: Project[] = [
         "Non-invasive — never executes git commands",
         "Compatible with bv (Beads Viewer) for graph analytics",
       ],
-      installation: "```bash\n# Install via Cargo\ncargo install beads_rust\n\n# Or download pre-built binary from releases\n# https://github.com/Dicklesworthstone/beads_rust/releases\n```",
-      usage: "```bash\n# Check for ready work\nbr ready --json\n\n# Create an issue\nbr create \"Fix rendering bug\" -t bug -p 1 --json\n\n# Update status\nbr update br-42 --status in_progress\n\n# Close when done\nbr close br-42 --reason \"Fixed in commit abc123\"\n```",
+      installation:
+        "```bash\n# Install via Cargo\ncargo install beads_rust\n\n# Or download pre-built binary from releases\n# https://github.com/Dicklesworthstone/beads_rust/releases\n```",
+      usage:
+        '```bash\n# Check for ready work\nbr ready --json\n\n# Create an issue\nbr create "Fix rendering bug" -t bug -p 1 --json\n\n# Update status\nbr update br-42 --status in_progress\n\n# Close when done\nbr close br-42 --reason "Fixed in commit abc123"\n```',
       relatedProjects: ["beads-viewer", "mcp-agent-mail", "cass"],
     },
   },
@@ -1185,7 +1216,8 @@ export const projects: Project[] = [
     kind: "oss",
     badge: "22 stars",
     href: "https://github.com/Dicklesworthstone/wezterm_automata",
-    short: "Terminal hypervisor for AI agent swarms with pattern detection and event-driven workflows.",
+    short:
+      "Terminal hypervisor for AI agent swarms with pattern detection and event-driven workflows.",
     description:
       "Coordinates fleets of AI coding agents across WezTerm panes. Features real-time pane output capture, pattern-matching state detection, event-driven workflows, FTS5 full-text search, and a policy engine for safe multi-agent control. Includes a Robot Mode JSON API for programmatic orchestration.",
     tags: ["Rust", "Terminal", "Multi-Agent", "Automation", "Flywheel"],
@@ -1245,7 +1277,8 @@ export const projects: Project[] = [
     kind: "oss",
     badge: "16 stars",
     href: "https://github.com/Dicklesworthstone/toon_rust",
-    short: "Reference Rust implementation of TOON, a token-optimized serialization format for LLMs.",
+    short:
+      "Reference Rust implementation of TOON, a token-optimized serialization format for LLMs.",
     description:
       "Spec-first Rust port of Token-Optimized Object Notation. Features streaming decode, deterministic output, native binary with no Node.js dependency, and token-efficiency optimizations including key folding and delimiter support. 100% spec conformance.",
     tags: ["Rust", "Serialization", "LLM", "Performance"],
@@ -1265,7 +1298,8 @@ export const projects: Project[] = [
     kind: "rust-port",
     badge: "9 stars",
     href: "https://github.com/Dicklesworthstone/fastmcp_rust",
-    short: "High-performance MCP framework for Rust with attribute macros and cancel-correct async.",
+    short:
+      "High-performance MCP framework for Rust with attribute macros and cancel-correct async.",
     description:
       "A zero-boilerplate Model Context Protocol framework built on asupersync. Features attribute macros for tools and resources, automatic timeout budgets, structured concurrency, and a 4-valued Outcome type. No unsafe code.",
     tags: ["Rust", "MCP", "Async", "AI Tools", "Rust Port"],
@@ -1825,7 +1859,8 @@ export const mediaItems: MediaItem[] = [
   // NEWS ARTICLES
   // =============================================================================
   {
-    title: "Jeffrey Emanuel and the lessons we should all learn from the $2 trillion DeepSeek AI market correction",
+    title:
+      "Jeffrey Emanuel and the lessons we should all learn from the $2 trillion DeepSeek AI market correction",
     href: "https://diginomica.com/jeffrey-emanuel-and-lessons-we-should-all-learn-2-trillion-deepseek-ai-market-correction",
     outlet: "Diginomica",
     kind: "Article",
@@ -1852,7 +1887,8 @@ export const mediaItems: MediaItem[] = [
       "Matt Levine's Money Stuff column where he characterized my analysis as 'a candidate for the most impactful short research report ever' and noted the online chatter claiming my post 'was an important catalyst' for the stock-market selloff.",
   },
   {
-    title: "Is CoreWeave another WeWork? Blogger who caused Nvidia market cap to drop by $600 billion thinks so",
+    title:
+      "Is CoreWeave another WeWork? Blogger who caused Nvidia market cap to drop by $600 billion thinks so",
     href: "https://www.techradar.com/pro/is-coreweave-another-wework-blogger-who-caused-nvidia-market-capitalization-to-drop-by-usd600-billion-in-a-day-thinks-so",
     outlet: "TechRadar",
     kind: "Article",
@@ -1861,7 +1897,8 @@ export const mediaItems: MediaItem[] = [
       "Coverage of my analysis calling CoreWeave 'the WeWork of AI' due to its reliance on quickly depreciating GPUs, lack of durable moat, and structural disadvantages versus hyperscalers. I noted: 'If it really IPOs for $30b+ then it's a much better short than NVDA ever was.'",
   },
   {
-    title: "A bear case for Nvidia: hardware competitors, LLM code translation, DeepSeek breakthroughs",
+    title:
+      "A bear case for Nvidia: hardware competitors, LLM code translation, DeepSeek breakthroughs",
     href: "https://www.techmeme.com/250126/p10",
     outlet: "Techmeme",
     kind: "Article",
@@ -2246,8 +2283,7 @@ export const nvidiaStoryData = {
       date: "2025-01-27",
       displayDate: "January 27, 2025",
       title: "The Drop",
-      description:
-        "$600B single-day market cap decline. The largest in stock market history.",
+      description: "$600B single-day market cap decline. The largest in stock market history.",
       icon: "TrendingDown",
       featured: true,
     },
@@ -2266,8 +2302,7 @@ export const nvidiaStoryData = {
       date: "2025-01-28",
       displayDate: "January 28-30, 2025",
       title: "Media Coverage",
-      description:
-        "Slashdot, TechRadar, Diginomica, Techmeme, and others cover the story.",
+      description: "Slashdot, TechRadar, Diginomica, Techmeme, and others cover the story.",
       icon: "Newspaper",
     },
   ] as NvidiaStoryTimelineEvent[],
@@ -2292,8 +2327,7 @@ export const nvidiaStoryData = {
       id: "delphi",
       title: "Viral Author of The Short Case for Nvidia Stock",
       outlet: "Delphi Digital",
-      description:
-        "AI infrastructure disruption, open-source innovation, AGI implications.",
+      description: "AI infrastructure disruption, open-source innovation, AGI implications.",
       spotifyUrl:
         "https://members.delphidigital.io/media/jeffrey-emanuel-viral-author-of-the-short-case-for-nvidia-stock-cohosted-by-pondering-durian",
     },
@@ -2457,7 +2491,8 @@ export const tldrFlywheelTools: TldrFlywheelTool[] = [
     synergies: [
       {
         toolId: "ntm",
-        description: "NTM uses CASS for duplicate detection before broadcasting and context retrieval",
+        description:
+          "NTM uses CASS for duplicate detection before broadcasting and context retrieval",
       },
       {
         toolId: "cm",
@@ -2677,8 +2712,7 @@ export const tldrFlywheelTools: TldrFlywheelTool[] = [
     synergies: [
       {
         toolId: "mail",
-        description:
-          "Conversation summaries from mail threads stored as memories",
+        description: "Conversation summaries from mail threads stored as memories",
       },
       {
         toolId: "cass",

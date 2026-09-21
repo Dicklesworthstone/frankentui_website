@@ -45,11 +45,7 @@ type CommitEntry = {
  * Search a single commit's files for a query string (case-insensitive).
  * Returns up to `maxHits` results with context snippets.
  */
-export function searchSingleCommit(
-  commit: CommitEntry,
-  query: string,
-  maxHits = 50
-): SearchHit[] {
+export function searchSingleCommit(commit: CommitEntry, query: string, maxHits = 50): SearchHit[] {
   if (!query) return [];
   const q = query.toLowerCase();
   const hits: SearchHit[] = [];
@@ -86,12 +82,16 @@ export function searchSingleCommit(
  * Extracts ~40 chars before and after the match.
  * Returns the snippet and the adjusted offset of the match within it.
  */
-function buildSnippet(line: string, matchPos: number, matchLen: number): { snippet: string; snippetMatchOffset: number } {
+function buildSnippet(
+  line: string,
+  matchPos: number,
+  matchLen: number,
+): { snippet: string; snippetMatchOffset: number } {
   const ctxBefore = 40;
   const ctxAfter = 60;
   const start = Math.max(0, matchPos - ctxBefore);
   const end = Math.min(line.length, matchPos + matchLen + ctxAfter);
-  
+
   let snippet = line.slice(start, end);
   let snippetMatchOffset = matchPos - start;
 
@@ -102,7 +102,7 @@ function buildSnippet(line: string, matchPos: number, matchLen: number): { snipp
   if (end < line.length) {
     snippet = snippet + "…";
   }
-  
+
   return { snippet, snippetMatchOffset };
 }
 

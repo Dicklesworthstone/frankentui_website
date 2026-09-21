@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
+import type React from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { cn, isTextInputLike } from "./utils";
 
 interface SiteContextType {
@@ -37,7 +38,8 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
 
     try {
       if (!audioContextRef.current) {
-        const WebkitAudioContext = (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+        const WebkitAudioContext = (window as Window & { webkitAudioContext?: typeof AudioContext })
+          .webkitAudioContext;
         const AudioCtx = window.AudioContext || WebkitAudioContext;
         if (!AudioCtx) return;
         audioContextRef.current = new AudioCtx();
@@ -100,7 +102,7 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const toggleAnatomyMode = useCallback(() => {
-    setIsAnatomyMode(prev => !prev);
+    setIsAnatomyMode((prev) => !prev);
     playSfx("click");
   }, [playSfx]);
 
@@ -125,7 +127,7 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
       if (e.key === "`") {
         if (!isTerminalOpen && typing) return;
         e.preventDefault();
-        setTerminalOpen(prev => !prev);
+        setTerminalOpen((prev) => !prev);
         playSfx("click");
       }
       // Ctrl+Shift+X for Anatomy Mode
@@ -140,21 +142,26 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
   }, [toggleAnatomyMode, playSfx, isTerminalOpen]);
 
   return (
-    <SiteContext.Provider 
-      value={{ 
-        isAnatomyMode, 
-        toggleAnatomyMode, 
-        isTerminalOpen, 
+    <SiteContext.Provider
+      value={{
+        isAnatomyMode,
+        toggleAnatomyMode,
+        isTerminalOpen,
         setTerminalOpen,
         isAudioEnabled,
         toggleAudio,
-        playSfx
+        playSfx,
       }}
     >
-      <div className={cn("min-h-screen transition-colors duration-700", isAnatomyMode ? "anatomy-mode" : "")}>
+      <div
+        className={cn(
+          "min-h-screen transition-colors duration-700",
+          isAnatomyMode ? "anatomy-mode" : "",
+        )}
+      >
         {children}
       </div>
-      
+
       <style jsx global>{`
         .anatomy-mode [class*="FrankenContainer"],
         .anatomy-mode [class*="glass-modern"],
@@ -203,7 +210,6 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
           animation: scanline 12s linear infinite;
         }
       `}</style>
-
     </SiteContext.Provider>
   );
 }

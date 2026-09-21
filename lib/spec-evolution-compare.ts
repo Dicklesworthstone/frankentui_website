@@ -20,7 +20,10 @@ export function indexSpecFiles(files: SpecFile[]): Map<string, string> {
   return out;
 }
 
-export function computeFileChangeSummary(aFiles: SpecFile[], bFiles: SpecFile[]): FileChangeSummary {
+export function computeFileChangeSummary(
+  aFiles: SpecFile[],
+  bFiles: SpecFile[],
+): FileChangeSummary {
   const a = indexSpecFiles(aFiles);
   const b = indexSpecFiles(bFiles);
 
@@ -84,7 +87,7 @@ export type PerFileContribution = {
 
 export function computePerFileContribution(
   aFiles: SpecFile[],
-  bFiles: SpecFile[]
+  bFiles: SpecFile[],
 ): PerFileContribution[] {
   const aMap = indexSpecFiles(aFiles);
   const bMap = indexSpecFiles(bFiles);
@@ -111,7 +114,11 @@ export function computePerFileContribution(
   return result;
 }
 
-export function computeEditDistanceLines(prevText: string, nextText: string, maxCost: number): number {
+export function computeEditDistanceLines(
+  prevText: string,
+  nextText: string,
+  maxCost: number,
+): number {
   // Levenshtein distance on lines (token = line). Uses hashing for faster comparisons.
   const a = prevText ? prevText.split(/\r?\n/) : [];
   const b = nextText ? nextText.split(/\r?\n/) : [];
@@ -183,10 +190,11 @@ function backtrackMyers(trace: Int32Array[], a: string[], b: string[], max: numb
       if (k === -d || (k !== d && vKMinus1 < vKPlus1)) {
         const prevX = vKPlus1;
         const prevY = prevX - (k + 1);
-        
-        while (x > prevX && y > (prevY + 1)) {
+
+        while (x > prevX && y > prevY + 1) {
           ops.push({ kind: "equal", text: a[x - 1] });
-          x--; y--;
+          x--;
+          y--;
         }
         ops.push({ kind: "add", text: b[y - 1] });
         y--;
@@ -196,9 +204,10 @@ function backtrackMyers(trace: Int32Array[], a: string[], b: string[], max: numb
         const prevX = vKMinus1;
         const prevY = prevX - (k - 1);
 
-        while (x > (prevX + 1) && y > prevY) {
+        while (x > prevX + 1 && y > prevY) {
           ops.push({ kind: "equal", text: a[x - 1] });
-          x--; y--;
+          x--;
+          y--;
         }
         ops.push({ kind: "del", text: a[x - 1] });
         x--;
@@ -208,7 +217,8 @@ function backtrackMyers(trace: Int32Array[], a: string[], b: string[], max: numb
     } else {
       while (x > 0 && y > 0) {
         ops.push({ kind: "equal", text: a[x - 1] });
-        x--; y--;
+        x--;
+        y--;
       }
     }
   }
@@ -219,7 +229,7 @@ function backtrackMyers(trace: Int32Array[], a: string[], b: string[], max: numb
 
 /**
  * Myers O((N+M)D) diff on lines.
- * 
+ *
  * Safety: Returns a simple "all deleted, all added" diff if it takes longer than 500ms.
  */
 export function myersDiffLines(aLines: string[], bLines: string[]): DiffOp[] {
@@ -252,8 +262,8 @@ export function myersDiffLines(aLines: string[], bLines: string[]): DiffOp[] {
   for (let d = 0; d <= max; d++) {
     if (d > 0 && d % 50 === 0 && performance.now() - startTime > 500) {
       return [
-        ...aLines.map(text => ({ kind: "del" as const, text })),
-        ...bLines.map(text => ({ kind: "add" as const, text })),
+        ...aLines.map((text) => ({ kind: "del" as const, text })),
+        ...bLines.map((text) => ({ kind: "add" as const, text })),
       ];
     }
 
@@ -262,9 +272,7 @@ export function myersDiffLines(aLines: string[], bLines: string[]): DiffOp[] {
       const vKMinus1 = vNext[max + k - 1];
       const vKPlus1 = vNext[max + k + 1];
 
-      let x = (k === -d || (k !== d && vKMinus1 < vKPlus1)) 
-        ? vKPlus1 
-        : vKMinus1 + 1;
+      let x = k === -d || (k !== d && vKMinus1 < vKPlus1) ? vKPlus1 : vKMinus1 + 1;
 
       let y = x - k;
       while (x < N && y < M && ah[x] === bh[y] && aLines[x] === bLines[y]) {

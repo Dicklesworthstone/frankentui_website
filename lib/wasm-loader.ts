@@ -28,7 +28,11 @@ export interface FrankenTermModule {
 /** Instance of FrankenTermWeb after construction */
 export interface FrankenTermWebInstance {
   init(canvas: HTMLCanvasElement, options?: Record<string, unknown> | null): Promise<void>;
-  fitToContainer(widthCss: number, heightCss: number, dpr: number): {
+  fitToContainer(
+    widthCss: number,
+    heightCss: number,
+    dpr: number,
+  ): {
     cols: number;
     rows: number;
     pixelWidth: number;
@@ -307,7 +311,10 @@ async function doLoadTextAssets(paths?: FrankenTerminalAssetPaths): Promise<Text
 
     return { shakespeare, sqlite };
   } catch (e) {
-    console.warn("[wasm-loader] Failed to fetch text assets; some demo screens may be unavailable.", e);
+    console.warn(
+      "[wasm-loader] Failed to fetch text assets; some demo screens may be unavailable.",
+      e,
+    );
     return null;
   }
 }
