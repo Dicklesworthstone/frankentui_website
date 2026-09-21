@@ -1,6 +1,6 @@
 import { appendFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
-import { test, expect, type Page } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { withoutContainedErrors } from "./contained-errors";
 
 /* ─── Types ─────────────────────────────────────────────────────── */
@@ -90,7 +90,7 @@ async function scrollToWidgetAndWait(page: Page, opts?: { timeout?: number }) {
 test.describe("A. Widget rendering", () => {
   test.skip(
     ({ browserName }) => browserName !== "chromium",
-    "FrankenTerminal widget requires WebGPU (Chromium)"
+    "FrankenTerminal widget requires WebGPU (Chromium)",
   );
 
   test("A1: Widget container renders with correct dimensions", async ({ page }) => {
@@ -107,7 +107,10 @@ test.describe("A. Widget rendering", () => {
     expect(containerBox!.width).toBeGreaterThan(100);
     expect(containerBox!.height).toBeGreaterThan(100);
 
-    stepLog(`container dims: ${containerBox!.width.toFixed(0)}x${containerBox!.height.toFixed(0)}`, start);
+    stepLog(
+      `container dims: ${containerBox!.width.toFixed(0)}x${containerBox!.height.toFixed(0)}`,
+      start,
+    );
 
     logDiag({
       test: "A1",
@@ -199,7 +202,7 @@ test.describe("A. Widget rendering", () => {
             return style.display;
           }, WIDGET_CANVAS);
         },
-        { timeout: 20_000 }
+        { timeout: 20_000 },
       )
       .toBe("block");
 
@@ -222,7 +225,7 @@ test.describe("A. Widget rendering", () => {
         e.type === "error" &&
         // Ignore known non-critical messages
         !e.text.includes("favicon") &&
-        !e.text.includes("404")
+        !e.text.includes("404"),
     );
 
     stepLog(`console errors: ${errors.length}`, start, errors.length === 0 ? "pass" : "fail");
@@ -246,7 +249,7 @@ test.describe("A. Widget rendering", () => {
 test.describe("B. Interaction", () => {
   test.skip(
     ({ browserName }) => browserName !== "chromium",
-    "Interaction tests require WebGPU (Chromium)"
+    "Interaction tests require WebGPU (Chromium)",
   );
 
   test("B1: Click on widget focuses the canvas", async ({ page }) => {
@@ -412,7 +415,7 @@ test.describe("B. Interaction", () => {
 test.describe("C. Sizing", () => {
   test.skip(
     ({ browserName }) => browserName !== "chromium",
-    "Sizing tests require WebGPU (Chromium)"
+    "Sizing tests require WebGPU (Chromium)",
   );
 
   test("C1: Widget fills its container at specified dimensions", async ({ page }) => {
@@ -503,13 +506,14 @@ test.describe("C. Sizing", () => {
 
     // No crashes at small size
     const errors = consoleEvents.filter(
-      (e) =>
-        e.type === "error" &&
-        !e.text.includes("favicon") &&
-        !e.text.includes("404")
+      (e) => e.type === "error" && !e.text.includes("favicon") && !e.text.includes("404"),
     );
 
-    stepLog(`small viewport errors: ${errors.length}`, start, errors.length === 0 ? "pass" : "fail");
+    stepLog(
+      `small viewport errors: ${errors.length}`,
+      start,
+      errors.length === 0 ? "pass" : "fail",
+    );
 
     logDiag({
       test: "C3",
@@ -530,7 +534,7 @@ test.describe("C. Sizing", () => {
 test.describe("D. Lifecycle", () => {
   test.skip(
     ({ browserName }) => browserName !== "chromium",
-    "Lifecycle tests require WebGPU (Chromium)"
+    "Lifecycle tests require WebGPU (Chromium)",
   );
 
   test("D1: Navigate away — no memory leaks or console errors", async ({ page }) => {
@@ -556,7 +560,7 @@ test.describe("D. Lifecycle", () => {
         !e.text.includes("favicon") &&
         !e.text.includes("404") &&
         // Ignore generic navigation errors
-        !e.text.includes("net::ERR_ABORTED")
+        !e.text.includes("net::ERR_ABORTED"),
     );
 
     stepLog(`unmount errors: ${errors.length}`, start, errors.length === 0 ? "pass" : "fail");
@@ -603,7 +607,7 @@ test.describe("D. Lifecycle", () => {
         e.type === "error" &&
         !e.text.includes("favicon") &&
         !e.text.includes("404") &&
-        !e.text.includes("net::ERR_ABORTED")
+        !e.text.includes("net::ERR_ABORTED"),
     );
 
     stepLog(`re-init: canvas display=${canvasDisplay}, errors=${errors.length}`, start);
@@ -628,7 +632,7 @@ test.describe("D. Lifecycle", () => {
 test.describe("E. Coexistence", () => {
   test.skip(
     ({ browserName }) => browserName !== "chromium",
-    "Coexistence tests require WebGPU (Chromium)"
+    "Coexistence tests require WebGPU (Chromium)",
   );
 
   test("E1: Page content outside the widget is still interactive", async ({ page }) => {
@@ -702,7 +706,7 @@ test.describe("E. Coexistence", () => {
 test.describe("F. Browsers without WebGPU", () => {
   test.skip(
     ({ browserName }) => browserName === "chromium",
-    "These are about the browsers that have no WebGPU"
+    "These are about the browsers that have no WebGPU",
   );
 
   test("F1: the widget runs — it does not degrade to a fallback", async ({ page }) => {
@@ -743,6 +747,9 @@ test.describe("F. Browsers without WebGPU", () => {
     await expect(page.locator("#status")).toContainText("×", { timeout: 40_000 });
     await expect(page.locator("#error-overlay")).not.toHaveClass(/visible/);
     expect(pageErrors).toEqual([]);
-    stepLog(`demo ran under ${test.info().project.name}: ${await page.locator("#status").textContent()}`, start);
+    stepLog(
+      `demo ran under ${test.info().project.name}: ${await page.locator("#status").textContent()}`,
+      start,
+    );
   });
 });

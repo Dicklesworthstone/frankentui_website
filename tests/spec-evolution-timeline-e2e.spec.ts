@@ -1,13 +1,13 @@
-import { test, expect, type Page } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
 async function loadLabAndWaitForData(page: Page) {
   const baseUrl = process.env.BASE_URL ?? "http://localhost:3100";
   await page.goto(`${baseUrl}/how-it-was-built/spec-evolution-lab`, {
     waitUntil: "domcontentloaded",
   });
-  await expect(
-    page.getByRole("heading", { name: /Scrub_Node_Selector/i })
-  ).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("heading", { name: /Scrub_Node_Selector/i })).toBeVisible({
+    timeout: 30_000,
+  });
 }
 
 test.describe("spec evolution lab: timeline mini-map + playback", () => {

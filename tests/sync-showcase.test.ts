@@ -1,7 +1,15 @@
-import { describe, test, expect, beforeAll, afterAll, beforeEach } from "bun:test";
-import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync, readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import { join } from "node:path";
 
 /* ─── Helpers ───────────────────────────────────────────────────── */
 
@@ -38,11 +46,14 @@ function createFakeDist(dir: string, opts?: { omit?: string[] }) {
   mkdirSync(dir, { recursive: true });
 
   if (!omit.has("index.html")) {
-    writeFileSync(join(dir, "index.html"), `<html><head></head><body>
+    writeFileSync(
+      join(dir, "index.html"),
+      `<html><head></head><body>
 <div id="error-overlay"></div>
 <div id="status"></div>
 <script type="module">console.log("demo");</script>
-</body></html>`);
+</body></html>`,
+    );
   }
 
   if (!omit.has("pkg")) {

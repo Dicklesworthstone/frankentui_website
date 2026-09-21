@@ -1,6 +1,6 @@
 import { appendFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
-import { test, expect, type Page, type TestInfo } from "@playwright/test";
+import { expect, type Page, type TestInfo, test } from "@playwright/test";
 
 type TouchProbe = {
   cols: number;
@@ -37,9 +37,13 @@ async function observeTouchDemo(page: Page, screen = 2) {
   await page.addInitScript(() => {
     const probe: TouchProbe = { cols: 0, rows: 0, cells: [], inputs: [], trustedTouches: 0 };
     (window as unknown as { ftuiTouchProbe: TouchProbe }).ftuiTouchProbe = probe;
-    document.addEventListener("touchstart", (event) => {
-      if (event.isTrusted) probe.trustedTouches++;
-    }, { capture: true });
+    document.addEventListener(
+      "touchstart",
+      (event) => {
+        if (event.isTrusted) probe.trustedTouches++;
+      },
+      { capture: true },
+    );
 
     // Appended to the module, so `FrankenTermWeb` is the page's own binding.
     const instrument = `
@@ -78,11 +82,12 @@ async function observeTouchDemo(page: Page, screen = 2) {
     window.fetch = async function (this: unknown, ...args: Parameters<typeof fetch>) {
       const response = await realFetch.apply(this as never, args);
       const target = args[0];
-      const url = typeof target === "string"
-        ? target
-        : target instanceof URL
-          ? target.href
-          : (target as Request).url;
+      const url =
+        typeof target === "string"
+          ? target
+          : target instanceof URL
+            ? target.href
+            : (target as Request).url;
       if (!/FrankenTerm\.js/.test(url ?? "")) return response;
       // The bytes were verified by the fetch above; this copy is for the test.
       return new Response(`${await response.text()}\n${instrument}`, {
@@ -93,7 +98,9 @@ async function observeTouchDemo(page: Page, screen = 2) {
     } as typeof fetch;
   });
   await page.goto(`${BASE_URL}/web?zoom=1&screen=${screen}`);
-  await expect.poll(() => touchDemoText(page)).toContain(screen === 3 ? "Shakespeare" : "Dashboard");
+  await expect
+    .poll(() => touchDemoText(page))
+    .toContain(screen === 3 ? "Shakespeare" : "Dashboard");
   if (screen === 3) {
     // The large text asset loads after the first frame. Wait for usable
     // content, not just the screen title, before measuring scroll position.
@@ -104,36 +111,56 @@ async function observeTouchDemo(page: Page, screen = 2) {
 async function touchDemoText(page: Page) {
   return page.evaluate(() => {
     const probe = (window as unknown as { ftuiTouchProbe: TouchProbe }).ftuiTouchProbe;
-    return (probe?.cells ?? []).map((value) =>
-      value > 0 && value <= 0x10ffff ? String.fromCodePoint(value) : " "
-    ).join("");
+    return (probe?.cells ?? [])
+      .map((value) => (value > 0 && value <= 0x10ffff ? String.fromCodePoint(value) : " "))
+      .join("");
   });
 }
 
 async function touchDemoCell(page: Page, x: number, y: number) {
-  return page.evaluate(({ x, y }) => {
-    const { cols, rows } = (window as unknown as { ftuiTouchProbe: TouchProbe }).ftuiTouchProbe;
-    const rect = document.querySelector("canvas")!.getBoundingClientRect();
-    return { x: rect.left + (x + 0.5) * rect.width / cols, y: rect.top + (y + 0.5) * rect.height / rows };
-  }, { x, y });
+  return page.evaluate(
+    ({ x, y }) => {
+      const { cols, rows } = (window as unknown as { ftuiTouchProbe: TouchProbe }).ftuiTouchProbe;
+      const rect = document.querySelector("canvas")!.getBoundingClientRect();
+      return {
+        x: rect.left + ((x + 0.5) * rect.width) / cols,
+        y: rect.top + ((y + 0.5) * rect.height) / rows,
+      };
+    },
+    { x, y },
+  );
 }
 
 test.describe("G. Touch navigation — real WASM", () => {
-  test.skip(({ browserName }) => browserName !== "chromium", "Trusted multi-touch injection uses Chromium CDP");
+  test.skip(
+    ({ browserName }) => browserName !== "chromium",
+    "Trusted multi-touch injection uses Chromium CDP",
+  );
   test.use({ hasTouch: true, viewport: { width: 390, height: 844 } });
 
-  for (const viewport of [{ width: 390, height: 844 }, { width: 844, height: 390 }]) {
-    test(`tap navigates and mouse still works at ${viewport.width}x${viewport.height}`, async ({ page }) => {
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 844, height: 390 },
+  ]) {
+    test(`tap navigates and mouse still works at ${viewport.width}x${viewport.height}`, async ({
+      page,
+    }) => {
       await page.setViewportSize(viewport);
       await observeTouchDemo(page);
       const tour = await touchDemoCell(page, 5, 0);
       await page.touchscreen.tap(tour.x, tour.y);
       await expect.poll(() => touchDemoText(page)).toContain("Guided Tour");
-      expect(await page.evaluate(() => (window as unknown as { ftuiTouchProbe: TouchProbe }).ftuiTouchProbe.trustedTouches)).toBe(1);
+      expect(
+        await page.evaluate(
+          () => (window as unknown as { ftuiTouchProbe: TouchProbe }).ftuiTouchProbe.trustedTouches,
+        ),
+      ).toBe(1);
       const dashboard = await touchDemoCell(page, 15, 0);
       await page.mouse.click(dashboard.x, dashboard.y);
       await expect.poll(() => touchDemoText(page)).toContain("FRANKENTUI DASHBOARD");
-      const events = await page.evaluate(() => (window as unknown as { ftuiTouchProbe: TouchProbe }).ftuiTouchProbe.inputs);
+      const events = await page.evaluate(
+        () => (window as unknown as { ftuiTouchProbe: TouchProbe }).ftuiTouchProbe.inputs,
+      );
       expect(events.filter((e) => e.kind === "mouse" && e.phase === "down")).toHaveLength(2);
       expect(events.filter((e) => e.kind === "mouse" && e.phase === "up")).toHaveLength(2);
       await expect(page.locator("#error-overlay")).not.toHaveClass(/visible/);
@@ -148,24 +175,48 @@ test.describe("G. Touch navigation — real WASM", () => {
     const initialLine = Number(before.match(/Line (\d+)\//)?.[1]);
     expect(initialLine).toBeGreaterThan(0);
     const contact = (x: number, y: number, id = 1) => ({ x, y, id });
-    await session.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [contact(start.x, start.y)] });
+    await session.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [contact(start.x, start.y)],
+    });
     for (let i = 1; i <= 6; i++) {
-      await session.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [contact(start.x, start.y - i * 20)] });
+      await session.send("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [contact(start.x, start.y - i * 20)],
+      });
     }
     await session.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-    await expect.poll(async () => Number((await touchDemoText(page)).match(/Line (\d+)\//)?.[1])).toBeGreaterThan(initialLine);
-    let events = await page.evaluate(() => (window as unknown as { ftuiTouchProbe: TouchProbe }).ftuiTouchProbe.inputs);
+    await expect
+      .poll(async () => Number((await touchDemoText(page)).match(/Line (\d+)\//)?.[1]))
+      .toBeGreaterThan(initialLine);
+    let events = await page.evaluate(
+      () => (window as unknown as { ftuiTouchProbe: TouchProbe }).ftuiTouchProbe.inputs,
+    );
     expect(events.some((e) => e.kind === "wheel" && (e.dy ?? 0) > 0)).toBe(true);
     expect(events.some((e) => e.kind === "mouse" && e.phase === "down")).toBe(false);
 
-    await session.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [contact(100, 180)] });
+    await session.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [contact(100, 180)],
+    });
     await session.send("Input.dispatchTouchEvent", { type: "touchCancel", touchPoints: [] });
-    await session.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [contact(100, 180), contact(200, 180, 2)] });
-    await session.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [contact(70, 180), contact(230, 180, 2)] });
+    await session.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [contact(100, 180), contact(200, 180, 2)],
+    });
+    await session.send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: [contact(70, 180), contact(230, 180, 2)],
+    });
     await expect.poll(() => new URL(page.url()).searchParams.get("zoom")).not.toBe("1");
-    await session.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [contact(70, 180)] });
+    await session.send("Input.dispatchTouchEvent", {
+      type: "touchEnd",
+      touchPoints: [contact(70, 180)],
+    });
     await session.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-    events = await page.evaluate(() => (window as unknown as { ftuiTouchProbe: TouchProbe }).ftuiTouchProbe.inputs);
+    events = await page.evaluate(
+      () => (window as unknown as { ftuiTouchProbe: TouchProbe }).ftuiTouchProbe.inputs,
+    );
     expect(events.some((e) => e.kind === "mouse" && e.phase === "down")).toBe(false);
 
     const tour = await touchDemoCell(page, 5, 0);
@@ -181,11 +232,15 @@ test.describe("G. Touch navigation — real WASM", () => {
     expect(initialLine).toBeGreaterThan(0);
     await page.mouse.move(point.x, point.y);
     await page.mouse.wheel(0, 160);
-    await expect.poll(async () => Number((await touchDemoText(page)).match(/Line (\d+)\//)?.[1])).toBeGreaterThan(initialLine);
+    await expect
+      .poll(async () => Number((await touchDemoText(page)).match(/Line (\d+)\//)?.[1]))
+      .toBeGreaterThan(initialLine);
     await page.mouse.down();
     await page.mouse.move(point.x + 24, point.y + 24, { steps: 3 });
     await page.mouse.up();
-    const events = await page.evaluate(() => (window as unknown as { ftuiTouchProbe: TouchProbe }).ftuiTouchProbe.inputs);
+    const events = await page.evaluate(
+      () => (window as unknown as { ftuiTouchProbe: TouchProbe }).ftuiTouchProbe.inputs,
+    );
     for (const phase of ["move", "down", "drag", "up"]) {
       expect(events.some((e) => e.kind === "mouse" && e.phase === phase)).toBe(true);
     }
@@ -279,23 +334,32 @@ test.describe("H. Touch controls — real WASM", () => {
 
     const keysBefore = log.filter((r) => r.event === "input_admission" && r.kind === "key").length;
     await page.locator('#touch-actions-list button[data-key="g"]').tap();
-    await expect.poll(() => log.filter((r) => r.event === "touch_action" && r.key === "g").length).toBe(1);
+    await expect
+      .poll(() => log.filter((r) => r.event === "touch_action" && r.key === "g").length)
+      .toBe(1);
     // It has to arrive as a key the runner accepts - a button that only looks
     // pressed is the failure this is here to catch.
-    await expect.poll(
-      () => log.filter((r) => r.event === "input_admission" && r.kind === "key").length - keysBefore,
-    ).toBe(2);
-    const admitted = log.filter((r) => r.event === "input_admission" && r.kind === "key").slice(keysBefore);
+    await expect
+      .poll(
+        () =>
+          log.filter((r) => r.event === "input_admission" && r.kind === "key").length - keysBefore,
+      )
+      .toBe(2);
+    const admitted = log
+      .filter((r) => r.event === "input_admission" && r.kind === "key")
+      .slice(keysBefore);
     expect(admitted.every((r) => r.outcome === "accepted")).toBe(true);
     await expect(page.locator("#error-overlay")).not.toHaveClass(/visible/);
   });
 
-  test("the bar follows the screen and gives the terminal back its rows when folded", async ({ page }) => {
+  test("the bar follows the screen and gives the terminal back its rows when folded", async ({
+    page,
+  }) => {
     await openTouchDemo(page);
     const keysNow = () =>
-      page.locator("#touch-actions-list button").evaluateAll((els) =>
-        els.map((el) => (el as HTMLElement).dataset.key ?? "").join(","),
-      );
+      page
+        .locator("#touch-actions-list button")
+        .evaluateAll((els) => els.map((el) => (el as HTMLElement).dataset.key ?? "").join(","));
     const onDashboard = await keysNow();
     expect(onDashboard).toContain("g");
 
@@ -326,7 +390,10 @@ test.describe("H. Touch controls — real WASM", () => {
     const contact = (x: number, y: number) => ({ x, y, id: 1 });
     const drags = () => log.filter((r) => r.event === "touch_drag");
 
-    await session.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [contact(start.x, start.y)] });
+    await session.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [contact(start.x, start.y)],
+    });
     // Past the arm threshold, holding still. Moving before this is a scroll.
     await page.waitForTimeout(600);
     for (let step = 1; step <= 6; step++) {
@@ -345,12 +412,17 @@ test.describe("H. Touch controls — real WASM", () => {
     const [up] = drags().filter((r) => r.phase === "up");
     expect(up.x).not.toBe(down.x);
     // A drag owns the gesture: it must not also scroll what is under it.
-    const wheelDuringDrag = log.filter((r) => r.event === "input_admission" && r.kind === "wheel").length;
+    const wheelDuringDrag = log.filter(
+      (r) => r.event === "input_admission" && r.kind === "wheel",
+    ).length;
     expect(wheelDuringDrag).toBe(0);
 
     // The same movement without the hold is still a scroll, not a drag.
     const dragsBefore = drags().length;
-    await session.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [contact(start.x, start.y)] });
+    await session.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [contact(start.x, start.y)],
+    });
     for (let step = 1; step <= 8; step++) {
       await session.send("Input.dispatchTouchEvent", {
         type: "touchMove",
@@ -358,9 +430,9 @@ test.describe("H. Touch controls — real WASM", () => {
       });
     }
     await session.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-    await expect.poll(
-      () => log.filter((r) => r.event === "input_admission" && r.kind === "wheel").length,
-    ).toBeGreaterThan(0);
+    await expect
+      .poll(() => log.filter((r) => r.event === "input_admission" && r.kind === "wheel").length)
+      .toBeGreaterThan(0);
     expect(drags().length).toBe(dragsBefore);
     await expect(page.locator("#error-overlay")).not.toHaveClass(/visible/);
   });
@@ -434,10 +506,7 @@ const EXPECTED_WASM_ASSETS = [
 
 const EXPECTED_FONT_ASSETS = ["/web/fonts/pragmasevka-nf-subset.woff2"];
 
-const EXPECTED_DATA_ASSETS = [
-  "/web/assets/shakespeare.txt",
-  "/web/assets/sqlite3.c",
-];
+const EXPECTED_DATA_ASSETS = ["/web/assets/shakespeare.txt", "/web/assets/sqlite3.c"];
 
 const ALL_EXPECTED_ASSETS = [
   ...EXPECTED_WASM_ASSETS,
@@ -497,10 +566,7 @@ async function _captureFailure(page: Page, testInfo: TestInfo, label: string) {
    ═══════════════════════════════════════════════════════════════════ */
 
 test.describe("A. Page load — Chromium (WebGPU)", () => {
-  test.skip(
-    ({ browserName }) => browserName !== "chromium",
-    "WebGPU tests require Chromium"
-  );
+  test.skip(({ browserName }) => browserName !== "chromium", "WebGPU tests require Chromium");
   test.describe.configure({ mode: "serial" });
 
   test("A1: GET /web returns 200", async ({ page }) => {
@@ -553,7 +619,7 @@ test.describe("A. Page load — Chromium (WebGPU)", () => {
             return c ? c.width * c.height : 0;
           });
         },
-        { timeout: 15_000 }
+        { timeout: 15_000 },
       )
       .toBeGreaterThan(0);
 
@@ -590,7 +656,11 @@ test.describe("A. Page load — Chromium (WebGPU)", () => {
     await page.goto(`${BASE_URL}/web`, { waitUntil: "load" });
     await page.waitForTimeout(2_000);
 
-    stepLog(`request failures: ${requestFailures.length}`, start, requestFailures.length === 0 ? "pass" : "fail");
+    stepLog(
+      `request failures: ${requestFailures.length}`,
+      start,
+      requestFailures.length === 0 ? "pass" : "fail",
+    );
 
     logDiag({
       test: "A5",
@@ -634,13 +704,15 @@ test.describe("B. Asset loading", () => {
       failures: requestFailures,
     });
 
-    stepLog(`assets: ${ALL_EXPECTED_ASSETS.length - missing.length}/${ALL_EXPECTED_ASSETS.length} loaded`, start, missing.length === 0 ? "pass" : "fail");
+    stepLog(
+      `assets: ${ALL_EXPECTED_ASSETS.length - missing.length}/${ALL_EXPECTED_ASSETS.length} loaded`,
+      start,
+      missing.length === 0 ? "pass" : "fail",
+    );
 
     // Some assets (shakespeare.txt, sqlite3.c) may be loaded on-demand by the demo,
     // so only fail on the critical WASM/JS/font assets
-    const criticalMissing = missing.filter(
-      (m) => m.includes("/pkg/") || m.includes("/fonts/")
-    );
+    const criticalMissing = missing.filter((m) => m.includes("/pkg/") || m.includes("/fonts/"));
     expect(criticalMissing).toEqual([]);
   });
 
@@ -703,7 +775,7 @@ test.describe("B. Asset loading", () => {
 test.describe("C. Browser compatibility", () => {
   test.skip(
     ({ browserName }) => browserName !== "chromium",
-    "Only Chromium has WebGPU — skip in other browsers"
+    "Only Chromium has WebGPU — skip in other browsers",
   );
 
   test("C1: Chromium (WebGPU) — fallback div stays hidden", async ({ page }) => {
@@ -726,7 +798,7 @@ test.describe("C. Browser compatibility", () => {
 test.describe("C. Browser compat — no WebGPU", () => {
   test.skip(
     ({ browserName }) => browserName === "chromium",
-    "Skipped in Chromium — WebGPU is available"
+    "Skipped in Chromium — WebGPU is available",
   );
 
   // These asserted a `#webgpu-fallback` element that is visible, mentions
@@ -790,7 +862,7 @@ test.describe("C. Browser compat — no WebGPU", () => {
 test.describe("D. Responsive", () => {
   test.skip(
     ({ browserName }) => browserName !== "chromium",
-    "Responsive error checks require WebGPU (Chromium)"
+    "Responsive error checks require WebGPU (Chromium)",
   );
 
   test("D1: Small viewport — no crash", async ({ page }) => {
@@ -802,7 +874,11 @@ test.describe("D. Responsive", () => {
     await page.waitForTimeout(2_000);
 
     const pageErrors = consoleEvents.filter((e) => e.type === "error");
-    stepLog(`small viewport errors: ${pageErrors.length}`, start, pageErrors.length === 0 ? "pass" : "fail");
+    stepLog(
+      `small viewport errors: ${pageErrors.length}`,
+      start,
+      pageErrors.length === 0 ? "pass" : "fail",
+    );
     expect(pageErrors).toEqual([]);
   });
 
@@ -815,7 +891,11 @@ test.describe("D. Responsive", () => {
     await page.waitForTimeout(2_000);
 
     const pageErrors = consoleEvents.filter((e) => e.type === "error");
-    stepLog(`large viewport errors: ${pageErrors.length}`, start, pageErrors.length === 0 ? "pass" : "fail");
+    stepLog(
+      `large viewport errors: ${pageErrors.length}`,
+      start,
+      pageErrors.length === 0 ? "pass" : "fail",
+    );
     expect(pageErrors).toEqual([]);
   });
 });
@@ -860,7 +940,7 @@ test.describe("E. Performance", () => {
         },
         () => {
           /* response body not available for some requests */
-        }
+        },
       );
     });
 

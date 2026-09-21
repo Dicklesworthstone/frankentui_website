@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
 /**
  * E2E tests: Homepage /web live demo integration.
@@ -93,7 +93,8 @@ test.describe("Homepage /web integration", () => {
     // Should contain some metrics like rendering, GPU, etc.
     const tableText = await table.textContent();
     const content = tableText!.toLowerCase();
-    const hasMetrics = content.includes("gpu") || content.includes("render") || content.includes("webgpu");
+    const hasMetrics =
+      content.includes("gpu") || content.includes("render") || content.includes("webgpu");
     expect(hasMetrics).toBeTruthy();
   });
 

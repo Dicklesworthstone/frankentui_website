@@ -1,6 +1,6 @@
 import { appendFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
-import { test, expect, type Page, type TestInfo } from "@playwright/test";
+import { expect, type Page, type TestInfo, test } from "@playwright/test";
 
 /**
  * E2E tests for the FrankenTerminal React widget embedded on the showcase page.
@@ -22,7 +22,7 @@ import { test, expect, type Page, type TestInfo } from "@playwright/test";
 // Widget tests only make sense in Chromium (WebGPU flags configured)
 test.skip(
   ({ browserName }) => browserName !== "chromium",
-  "FrankenTerminal widget requires Chromium"
+  "FrankenTerminal widget requires Chromium",
 );
 
 const SHOWCASE_URL = "/showcase";
@@ -48,7 +48,9 @@ async function captureFailureDiag(page: Page, testInfo: TestInfo, label: string)
       path: screenshotPath,
       contentType: "image/png",
     });
-  } catch { /* page may have navigated */ }
+  } catch {
+    /* page may have navigated */
+  }
 }
 
 /** Filter out expected WebGPU/WASM errors. */
@@ -89,8 +91,6 @@ async function patchIntersectionObserver(page: Page) {
         if (this.elements.has(target)) return;
         this.elements.add(target);
         const cb = this.callback;
-        // eslint-disable-next-line @typescript-eslint/no-this-alias -- needed to pass mock as observer arg
-        const observer = this;
         // Fire callback on next animation frame so React has time to mount
         requestAnimationFrame(() => {
           cb(
@@ -105,7 +105,7 @@ async function patchIntersectionObserver(page: Page) {
                 time: performance.now(),
               } as IntersectionObserverEntry,
             ],
-            observer as unknown as IntersectionObserver
+            this as unknown as IntersectionObserver,
           );
         });
       }
@@ -259,7 +259,12 @@ test.describe("Widget rendering", () => {
       );
     });
 
-    logDiag({ test: "A4-loading", ts: new Date().toISOString(), hasExpectedContent, elapsed_ms: Date.now() - start });
+    logDiag({
+      test: "A4-loading",
+      ts: new Date().toISOString(),
+      hasExpectedContent,
+      elapsed_ms: Date.now() - start,
+    });
     stepLog("loading", `expected content present: ${hasExpectedContent}`, start);
     expect(hasExpectedContent).toBe(true);
   });
@@ -271,7 +276,12 @@ test.describe("Widget rendering", () => {
 
     const state = await waitForStableWidgetState(page);
 
-    logDiag({ test: "A5-transition", ts: new Date().toISOString(), state, elapsed_ms: Date.now() - start });
+    logDiag({
+      test: "A5-transition",
+      ts: new Date().toISOString(),
+      state,
+      elapsed_ms: Date.now() - start,
+    });
     stepLog("transition", `widget state: ${state}`, start);
 
     if (state === "running") {

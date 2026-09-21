@@ -1,8 +1,8 @@
-import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import { existsSync, readFileSync, rmSync, mkdirSync } from "node:fs";
-import { join } from "node:path";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
+import { join } from "node:path";
 
 /* ─── Constants ─────────────────────────────────────────────────── */
 
@@ -47,7 +47,8 @@ function sha256File(filePath: string): string {
 /* ─── Test suite ────────────────────────────────────────────────── */
 
 describe("update-web-demo.sh", () => {
-  const distAvailable = existsSync(FRANKENTUI_DIST) && existsSync(join(FRANKENTUI_DIST, "index.html"));
+  const distAvailable =
+    existsSync(FRANKENTUI_DIST) && existsSync(join(FRANKENTUI_DIST, "index.html"));
   let webBackupDir: string;
 
   beforeAll(() => {

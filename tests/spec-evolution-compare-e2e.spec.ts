@@ -1,6 +1,6 @@
 import { appendFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
-import { test, expect, type Page } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
 type ConsoleEvent = {
   ts: string;
@@ -26,9 +26,9 @@ async function loadLabAndWaitForData(page: Page) {
 
   // Wait for an element that only appears once data is loaded and the main UI renders.
   // "Scrub_Node_Selector" h2 is only present after dataset + commits + selectedCommit are ready.
-  await expect(
-    page.getByRole("heading", { name: /Scrub_Node_Selector/i })
-  ).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("heading", { name: /Scrub_Node_Selector/i })).toBeVisible({
+    timeout: 30_000,
+  });
 }
 
 test.describe("spec evolution lab: compare mode", () => {
@@ -79,10 +79,15 @@ test.describe("spec evolution lab: compare mode", () => {
     await nextBtn.click();
 
     // Wait for the B badge to update to a different SHA
-    await expect.poll(async () => {
-      const text = await bBadge.textContent();
-      return text?.trim() !== initialCommitSHA?.trim();
-    }, { timeout: 5_000 }).toBe(true);
+    await expect
+      .poll(
+        async () => {
+          const text = await bBadge.textContent();
+          return text?.trim() !== initialCommitSHA?.trim();
+        },
+        { timeout: 5_000 },
+      )
+      .toBe(true);
 
     const newBSHA = await bBadge.textContent();
     expect(newBSHA).toBeTruthy();
@@ -108,10 +113,15 @@ test.describe("spec evolution lab: compare mode", () => {
     await swapBtn.click();
 
     // After swap: old B becomes new A, old A becomes new B
-    await expect.poll(async () => {
-      const aText = await aBadge.textContent();
-      return aText?.trim();
-    }, { timeout: 5_000 }).toBe(newBSHA?.trim());
+    await expect
+      .poll(
+        async () => {
+          const aText = await aBadge.textContent();
+          return aText?.trim();
+        },
+        { timeout: 5_000 },
+      )
+      .toBe(newBSHA?.trim());
 
     // --- Step 6: Clear compare mode ---
     const clearBtn = page.getByTestId("compare-clear-a");
@@ -185,9 +195,9 @@ test.describe("spec evolution lab: deep-linkable state", () => {
     await page.goto(`${baseUrl}/how-it-was-built/spec-evolution-lab`, {
       waitUntil: "domcontentloaded",
     });
-    await expect(
-      page.getByRole("heading", { name: /Scrub_Node_Selector/i })
-    ).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole("heading", { name: /Scrub_Node_Selector/i })).toBeVisible({
+      timeout: 30_000,
+    });
 
     // Navigate to a different commit
     await page.getByTitle("Next Node").click();
@@ -211,9 +221,9 @@ test.describe("spec evolution lab: deep-linkable state", () => {
     await page.goto(`${baseUrl}/how-it-was-built/spec-evolution-lab${hash}`, {
       waitUntil: "domcontentloaded",
     });
-    await expect(
-      page.getByRole("heading", { name: /Scrub_Node_Selector/i })
-    ).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole("heading", { name: /Scrub_Node_Selector/i })).toBeVisible({
+      timeout: 30_000,
+    });
 
     // Verify the commit SHA is restored in the B badge
     const bBadge = page.getByTestId("compare-b-badge");
@@ -231,13 +241,13 @@ test.describe("spec evolution lab: deep-linkable state", () => {
     // Load with a completely invalid hash
     await page.goto(
       `${baseUrl}/how-it-was-built/spec-evolution-lab#c=INVALID&tab=nope&b=999&ro=banana`,
-      { waitUntil: "domcontentloaded" }
+      { waitUntil: "domcontentloaded" },
     );
 
     // Should still load successfully (invalid values are ignored/clamped)
-    await expect(
-      page.getByRole("heading", { name: /Scrub_Node_Selector/i })
-    ).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole("heading", { name: /Scrub_Node_Selector/i })).toBeVisible({
+      timeout: 30_000,
+    });
 
     expect(pageErrors).toEqual([]);
   });

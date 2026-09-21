@@ -1,6 +1,6 @@
 import { appendFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
-import { test, expect, type Page } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
 function getDiagnosticsLogPath() {
   const diagnosticsDir = path.join(process.cwd(), "test-results", "logs");
@@ -17,9 +17,9 @@ async function loadLabAndWaitForData(page: Page) {
   await page.goto(`${baseUrl}/how-it-was-built/spec-evolution-lab`, {
     waitUntil: "domcontentloaded",
   });
-  await expect(
-    page.getByRole("heading", { name: /Scrub_Node_Selector/i })
-  ).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("heading", { name: /Scrub_Node_Selector/i })).toBeVisible({
+    timeout: 30_000,
+  });
 }
 
 test.describe("spec evolution lab: performance", () => {
@@ -80,7 +80,13 @@ test.describe("spec evolution lab: performance", () => {
     // Also measure tab switching performance
     const tabSwitchTimings: { tab: string; ms: number }[] = [];
 
-    for (const tabName of ["MD_Snapshot", "Raw_Archive", "Evidence_Ledger", "Changed_Nodes", "Diff_Stream"]) {
+    for (const tabName of [
+      "MD_Snapshot",
+      "Raw_Archive",
+      "Evidence_Ledger",
+      "Changed_Nodes",
+      "Diff_Stream",
+    ]) {
       const tab = page.getByRole("tab", { name: new RegExp(tabName, "i") }).first();
       const t0 = Date.now();
       await tab.click();
@@ -132,13 +138,19 @@ test.describe("spec evolution lab: performance", () => {
     await expect(snapshotHeading).not.toBeVisible();
 
     // Switch to snapshot tab
-    await page.getByRole("tab", { name: /MD_Snapshot/i }).first().click();
+    await page
+      .getByRole("tab", { name: /MD_Snapshot/i })
+      .first()
+      .click();
 
     // Now the snapshot markdown should render (heading visible once marked parses)
     await expect(snapshotHeading.first()).toBeVisible({ timeout: 15_000 });
 
     // Switch back to diff tab
-    await page.getByRole("tab", { name: /Diff_Stream/i }).first().click();
+    await page
+      .getByRole("tab", { name: /Diff_Stream/i })
+      .first()
+      .click();
     await page.waitForTimeout(500);
 
     // Snapshot heading should be gone (lazy rendering removes it)

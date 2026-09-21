@@ -1,5 +1,5 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import { mkdirSync, writeFileSync, rmSync, existsSync } from "node:fs";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 /**
@@ -14,11 +14,11 @@ import { join } from "node:path";
 
 import {
   isWebGPUSupported,
-  loadWasmModules,
-  resetWasmCache,
-  loadTextAssets,
-  resetTextAssetsCache,
   loadFont,
+  loadTextAssets,
+  loadWasmModules,
+  resetTextAssetsCache,
+  resetWasmCache,
 } from "../lib/wasm-loader";
 
 // ---------------------------------------------------------------------------
@@ -123,7 +123,11 @@ function restoreGlobals() {
     Object.defineProperty(globalThis, "document", savedDocumentDesc);
   } else if (!hadDocument && "document" in globalThis) {
     // Test added document when it didn't exist — remove it
-    try { delete (globalThis as Record<string, unknown>).document; } catch { /* non-configurable */ }
+    try {
+      delete (globalThis as Record<string, unknown>).document;
+    } catch {
+      /* non-configurable */
+    }
   }
   // window — always exists in Bun (alias for globalThis)
   if (savedWindowDesc) {
@@ -134,7 +138,11 @@ function restoreGlobals() {
   if (hadFontFace && savedFontFace !== undefined) {
     (globalThis as Record<string, unknown>).FontFace = savedFontFace;
   } else if (!hadFontFace && "FontFace" in globalThis) {
-    try { delete (globalThis as Record<string, unknown>).FontFace; } catch { /* non-configurable */ }
+    try {
+      delete (globalThis as Record<string, unknown>).FontFace;
+    } catch {
+      /* non-configurable */
+    }
   }
 }
 
@@ -534,8 +542,7 @@ describe("wasm-loader", () => {
         const url = typeof input === "string" ? input : input.toString();
         return {
           ok: true,
-          text: async () =>
-            url.includes("shakespeare") ? "hamlet" : "sqlite",
+          text: async () => (url.includes("shakespeare") ? "hamlet" : "sqlite"),
         };
       }) as typeof fetch;
 

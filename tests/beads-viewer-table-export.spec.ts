@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import * as path from "path";
 
 async function loadMarkdownPipeline(page: Page) {
@@ -55,7 +55,8 @@ test.describe("beads-viewer: table export (TSV/CSV)", () => {
     await loadMarkdownPipeline(page);
 
     const result = await page.evaluate(() => {
-      const md = "| Name | Age | City |\n| --- | --- | --- |\n| Alice | 30 | NYC |\n| Bob | 25 | LA |";
+      const md =
+        "| Name | Age | City |\n| --- | --- | --- |\n| Alice | 30 | NYC |\n| Bob | 25 | LA |";
       const html = window.renderMarkdown!(md);
       const container = document.createElement("div");
       container.innerHTML = html;
@@ -71,7 +72,8 @@ test.describe("beads-viewer: table export (TSV/CSV)", () => {
 
     const result = await page.evaluate(() => {
       const container = document.createElement("div");
-      container.innerHTML = "<table><thead><tr><th>Key</th><th>Value</th></tr></thead><tbody><tr><td>a\tb</td><td>normal</td></tr></tbody></table>";
+      container.innerHTML =
+        "<table><thead><tr><th>Key</th><th>Value</th></tr></thead><tbody><tr><td>a\tb</td><td>normal</td></tr></tbody></table>";
       const table = container.querySelector("table")!;
       return window.tableToTSV!(table);
     });
@@ -99,7 +101,8 @@ test.describe("beads-viewer: table export (TSV/CSV)", () => {
 
     const result = await page.evaluate(() => {
       const container = document.createElement("div");
-      container.innerHTML = '<table><thead><tr><th>Key</th><th>Value</th></tr></thead><tbody><tr><td>hello, world</td><td>say "hi"</td></tr></tbody></table>';
+      container.innerHTML =
+        '<table><thead><tr><th>Key</th><th>Value</th></tr></thead><tbody><tr><td>hello, world</td><td>say "hi"</td></tr></tbody></table>';
       const table = container.querySelector("table")!;
       return window.tableToCSV!(table);
     });
@@ -142,7 +145,8 @@ test.describe("beads-viewer: table export (TSV/CSV)", () => {
 
     const result = await page.evaluate(() => {
       const container = document.createElement("div");
-      container.innerHTML = "<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td></td><td>x</td></tr></tbody></table>";
+      container.innerHTML =
+        "<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td></td><td>x</td></tr></tbody></table>";
       const table = container.querySelector("table")!;
       return window.tableToCSV!(table);
     });
@@ -155,7 +159,8 @@ test.describe("beads-viewer: table export (TSV/CSV)", () => {
 
     const result = await page.evaluate(() => {
       const container = document.createElement("div");
-      container.innerHTML = "<table><tbody><tr><td>a</td><td>b</td></tr><tr><td>c</td><td>d</td></tr></tbody></table>";
+      container.innerHTML =
+        "<table><tbody><tr><td>a</td><td>b</td></tr><tr><td>c</td><td>d</td></tr></tbody></table>";
       const table = container.querySelector("table")!;
       return window.tableToTSV!(table);
     });
@@ -221,7 +226,7 @@ test.describe("beads-viewer: table controls injection", () => {
 
     // Initially no forced mode
     const initialCards = await page.evaluate(() =>
-      document.querySelector("table")!.classList.contains("bv-table--force-cards")
+      document.querySelector("table")!.classList.contains("bv-table--force-cards"),
     );
     expect(initialCards).toBe(false);
 
@@ -231,7 +236,7 @@ test.describe("beads-viewer: table controls injection", () => {
 
     // Should now have force-cards class
     const afterClick = await page.evaluate(() =>
-      document.querySelector("table")!.classList.contains("bv-table--force-cards")
+      document.querySelector("table")!.classList.contains("bv-table--force-cards"),
     );
     expect(afterClick).toBe(true);
 
@@ -242,7 +247,7 @@ test.describe("beads-viewer: table controls injection", () => {
     // Click again to switch to table mode
     await toggleBtn.click();
     const afterSecondClick = await page.evaluate(() =>
-      document.querySelector("table")!.classList.contains("bv-table--force-table")
+      document.querySelector("table")!.classList.contains("bv-table--force-table"),
     );
     expect(afterSecondClick).toBe(true);
 
@@ -267,7 +272,7 @@ test.describe("beads-viewer: table controls injection", () => {
 
     // Table should have force-cards class from localStorage preference
     const hasForceCards = await page.evaluate(() =>
-      document.querySelector("table")!.classList.contains("bv-table--force-cards")
+      document.querySelector("table")!.classList.contains("bv-table--force-cards"),
     );
     expect(hasForceCards).toBe(true);
   });
@@ -287,8 +292,8 @@ test.describe("beads-viewer: table controls injection", () => {
     const toggleBtn = page.getByTestId("bv-table-view-toggle");
     await toggleBtn.focus();
 
-    const hasFocus = await page.evaluate(() =>
-      document.activeElement?.getAttribute("data-testid") === "bv-table-view-toggle"
+    const hasFocus = await page.evaluate(
+      () => document.activeElement?.getAttribute("data-testid") === "bv-table-view-toggle",
     );
     expect(hasFocus).toBe(true);
 
@@ -323,7 +328,9 @@ test.describe("beads-viewer: table a11y (bd-17l.1.5)", () => {
     expect(outlineColor).not.toBe("initial");
   });
 
-  test("mobile: thead is sr-only (not display:none) so screen readers see headers", async ({ page }) => {
+  test("mobile: thead is sr-only (not display:none) so screen readers see headers", async ({
+    page,
+  }) => {
     await loadWithStyles(page, { width: 375, height: 812 });
 
     await page.evaluate(() => {
@@ -400,7 +407,13 @@ test.describe("beads-viewer: issue type badge system (bd-17l.2)", () => {
       const types = ["bug", "feature", "task", "epic", "docs", "chore"];
       return types.map((t) => {
         const meta = window.getIssueTypeMeta!(t);
-        return { type: t, label: meta.label, hasColor: !!meta.color, hasIcon: !!meta.icon, hasBg: !!meta.bg };
+        return {
+          type: t,
+          label: meta.label,
+          hasColor: !!meta.color,
+          hasIcon: !!meta.icon,
+          hasBg: !!meta.bg,
+        };
       });
     });
 
@@ -460,10 +473,12 @@ test.describe("beads-viewer: issue type badge system (bd-17l.2)", () => {
     await loadMarkdownPipeline(page);
 
     const descriptions = await page.evaluate(() => {
-      return Object.entries(window.ISSUE_TYPE_META!).map(([key, meta]: [string, { description: string }]) => ({
-        key,
-        hasDesc: typeof meta.description === "string" && meta.description.length > 5,
-      }));
+      return Object.entries(window.ISSUE_TYPE_META!).map(
+        ([key, meta]: [string, { description: string }]) => ({
+          key,
+          hasDesc: typeof meta.description === "string" && meta.description.length > 5,
+        }),
+      );
     });
 
     for (const d of descriptions) {

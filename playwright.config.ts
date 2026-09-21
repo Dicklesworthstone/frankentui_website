@@ -65,10 +65,7 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         launchOptions: {
-          args: [
-            "--enable-unsafe-webgpu",
-            "--enable-features=Vulkan",
-          ],
+          args: ["--enable-unsafe-webgpu", "--enable-features=Vulkan"],
         },
       },
     },

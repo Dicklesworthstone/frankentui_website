@@ -1,13 +1,13 @@
-import { test, expect, describe } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import {
   buildCorpusText,
   computeEditDistanceLines,
   computeFileChangeSummary,
   computePerFileContribution,
   computeTextStats,
-  myersDiffTextLines,
-  myersDiffLines,
   indexSpecFiles,
+  myersDiffLines,
+  myersDiffTextLines,
   type SpecFile,
 } from "../lib/spec-evolution-compare";
 
@@ -299,8 +299,8 @@ describe("myersDiffTextLines", () => {
 
     // "two" → "TWO" is a substitution (1 del + 1 add), "four" is an addition
     expect(counts.equal).toBe(2); // "one" and "three"
-    expect(counts.del).toBe(1);   // "two"
-    expect(counts.add).toBe(2);   // "TWO" and "four"
+    expect(counts.del).toBe(1); // "two"
+    expect(counts.add).toBe(2); // "TWO" and "four"
   });
 });
 

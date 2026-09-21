@@ -1,13 +1,19 @@
-import { test, expect, describe } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import {
   buildTimelineData,
-  positionToCommitIndex,
   commitIndexToPosition,
-  playbackIntervalMs,
   type PlaybackSpeed,
+  playbackIntervalMs,
+  positionToCommitIndex,
 } from "../lib/spec-evolution-timeline";
 
-const makeCommit = (idx: number, groups: number, lines: number, reviewed = false, bucketMask = 0) => ({
+const makeCommit = (
+  idx: number,
+  groups: number,
+  lines: number,
+  reviewed = false,
+  bucketMask = 0,
+) => ({
   idx,
   reviewed,
   bucketMask,
@@ -19,11 +25,7 @@ const makeCommit = (idx: number, groups: number, lines: number, reviewed = false
 /* ------------------------------------------------------------------ */
 describe("buildTimelineData", () => {
   test("normalizes values to 0..1 range", () => {
-    const commits = [
-      makeCommit(0, 1, 10),
-      makeCommit(1, 3, 30),
-      makeCommit(2, 2, 20),
-    ];
+    const commits = [makeCommit(0, 1, 10), makeCommit(1, 3, 30), makeCommit(2, 2, 20)];
     const data = buildTimelineData(commits, "groups", null);
     expect(data.points.length).toBe(3);
     expect(data.points[0].value).toBeCloseTo(1 / 3);
@@ -53,10 +55,7 @@ describe("buildTimelineData", () => {
   });
 
   test("tracks reviewed status", () => {
-    const commits = [
-      makeCommit(0, 1, 10, false),
-      makeCommit(1, 1, 10, true),
-    ];
+    const commits = [makeCommit(0, 1, 10, false), makeCommit(1, 1, 10, true)];
     const data = buildTimelineData(commits, "groups", null);
     expect(data.points[0].reviewed).toBe(false);
     expect(data.points[1].reviewed).toBe(true);
@@ -89,9 +88,7 @@ describe("buildTimelineData", () => {
   });
 
   test("scale mapping is monotonic", () => {
-    const commits = Array.from({ length: 20 }, (_, i) =>
-      makeCommit(i, i + 1, (i + 1) * 10)
-    );
+    const commits = Array.from({ length: 20 }, (_, i) => makeCommit(i, i + 1, (i + 1) * 10));
     const data = buildTimelineData(commits, "groups", null);
     for (let i = 1; i < data.points.length; i++) {
       expect(data.points[i].value).toBeGreaterThan(data.points[i - 1].value);

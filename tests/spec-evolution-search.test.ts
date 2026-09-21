@@ -1,11 +1,11 @@
-import { test, expect, describe } from "bun:test";
-import {
-  searchSingleCommit,
-  tokenize,
-  CorpusIndex,
-} from "../lib/spec-evolution-search";
+import { describe, expect, test } from "bun:test";
+import { CorpusIndex, searchSingleCommit, tokenize } from "../lib/spec-evolution-search";
 
-const makeCommit = (idx: number, files: { path: string; content: string }[], extra?: Partial<{ short: string; date: string; subject: string }>) => ({
+const makeCommit = (
+  idx: number,
+  files: { path: string; content: string }[],
+  extra?: Partial<{ short: string; date: string; subject: string }>,
+) => ({
   idx,
   short: extra?.short ?? `abc${idx}`,
   date: extra?.date ?? "2026-01-01T00:00:00",
@@ -73,18 +73,14 @@ describe("searchSingleCommit", () => {
   });
 
   test("is case-insensitive", () => {
-    const commit = makeCommit(0, [
-      { path: "a.md", content: "Hello World" },
-    ]);
+    const commit = makeCommit(0, [{ path: "a.md", content: "Hello World" }]);
     const hits = searchSingleCommit(commit, "hello");
     expect(hits.length).toBe(1);
     expect(hits[0].snippet).toContain("Hello World");
   });
 
   test("finds multiple matches in same line", () => {
-    const commit = makeCommit(0, [
-      { path: "a.md", content: "foo foo foo" },
-    ]);
+    const commit = makeCommit(0, [{ path: "a.md", content: "foo foo foo" }]);
     const hits = searchSingleCommit(commit, "foo");
     expect(hits.length).toBe(3);
   });
@@ -100,33 +96,25 @@ describe("searchSingleCommit", () => {
   });
 
   test("returns empty for no match", () => {
-    const commit = makeCommit(0, [
-      { path: "a.md", content: "nothing here" },
-    ]);
+    const commit = makeCommit(0, [{ path: "a.md", content: "nothing here" }]);
     const hits = searchSingleCommit(commit, "xyz");
     expect(hits).toEqual([]);
   });
 
   test("returns empty for empty query", () => {
-    const commit = makeCommit(0, [
-      { path: "a.md", content: "hello" },
-    ]);
+    const commit = makeCommit(0, [{ path: "a.md", content: "hello" }]);
     expect(searchSingleCommit(commit, "")).toEqual([]);
   });
 
   test("respects maxHits limit", () => {
-    const commit = makeCommit(0, [
-      { path: "a.md", content: Array(100).fill("match").join("\n") },
-    ]);
+    const commit = makeCommit(0, [{ path: "a.md", content: Array(100).fill("match").join("\n") }]);
     const hits = searchSingleCommit(commit, "match", 5);
     expect(hits.length).toBe(5);
   });
 
   test("snippet includes context around match", () => {
     const longLine = "A".repeat(80) + "TARGET" + "B".repeat(80);
-    const commit = makeCommit(0, [
-      { path: "a.md", content: longLine },
-    ]);
+    const commit = makeCommit(0, [{ path: "a.md", content: longLine }]);
     const hits = searchSingleCommit(commit, "TARGET");
     expect(hits.length).toBe(1);
     expect(hits[0].snippet).toContain("TARGET");
@@ -135,9 +123,11 @@ describe("searchSingleCommit", () => {
   });
 
   test("populates commit metadata in hits", () => {
-    const commit = makeCommit(42, [
-      { path: "x.md", content: "found it" },
-    ], { short: "deadbeef", date: "2026-02-01T12:00:00", subject: "Important commit" });
+    const commit = makeCommit(42, [{ path: "x.md", content: "found it" }], {
+      short: "deadbeef",
+      date: "2026-02-01T12:00:00",
+      subject: "Important commit",
+    });
     const hits = searchSingleCommit(commit, "found");
     expect(hits[0].commitIdx).toBe(42);
     expect(hits[0].commitShort).toBe("deadbeef");
@@ -146,9 +136,7 @@ describe("searchSingleCommit", () => {
   });
 
   test("is deterministic", () => {
-    const commit = makeCommit(0, [
-      { path: "a.md", content: "foo bar\nbaz foo\nqux" },
-    ]);
+    const commit = makeCommit(0, [{ path: "a.md", content: "foo bar\nbaz foo\nqux" }]);
     const r1 = searchSingleCommit(commit, "foo");
     const r2 = searchSingleCommit(commit, "foo");
     expect(r1).toEqual(r2);
@@ -209,9 +197,7 @@ describe("CorpusIndex", () => {
 
   test("search is case-insensitive", () => {
     const index = new CorpusIndex();
-    const commits = [
-      makeCommit(0, [{ path: "a.md", content: "Hello World" }]),
-    ];
+    const commits = [makeCommit(0, [{ path: "a.md", content: "Hello World" }])];
     index.init(commits);
     index.indexBatch(100);
 
@@ -236,9 +222,7 @@ describe("CorpusIndex", () => {
 
   test("search returns empty for unknown terms", () => {
     const index = new CorpusIndex();
-    const commits = [
-      makeCommit(0, [{ path: "a.md", content: "hello world" }]),
-    ];
+    const commits = [makeCommit(0, [{ path: "a.md", content: "hello world" }])];
     index.init(commits);
     index.indexBatch(100);
 
@@ -247,9 +231,7 @@ describe("CorpusIndex", () => {
 
   test("search returns empty for empty query", () => {
     const index = new CorpusIndex();
-    const commits = [
-      makeCommit(0, [{ path: "a.md", content: "hello" }]),
-    ];
+    const commits = [makeCommit(0, [{ path: "a.md", content: "hello" }])];
     index.init(commits);
     index.indexBatch(100);
 
@@ -274,7 +256,7 @@ describe("CorpusIndex", () => {
   test("respects maxHits", () => {
     const index = new CorpusIndex();
     const commits = Array.from({ length: 20 }, (_, i) =>
-      makeCommit(i, [{ path: "a.md", content: "common term here" }])
+      makeCommit(i, [{ path: "a.md", content: "common term here" }]),
     );
     index.init(commits);
     index.indexBatch(100);
@@ -285,9 +267,7 @@ describe("CorpusIndex", () => {
 
   test("clear resets the index", () => {
     const index = new CorpusIndex();
-    const commits = [
-      makeCommit(0, [{ path: "a.md", content: "hello" }]),
-    ];
+    const commits = [makeCommit(0, [{ path: "a.md", content: "hello" }])];
     index.init(commits);
     index.indexBatch(100);
     expect(index.search("hello").length).toBe(1);

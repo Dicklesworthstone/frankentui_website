@@ -1,5 +1,5 @@
-import { test, expect, type Page } from "@playwright/test";
 import path from "node:path";
+import { expect, type Page, test } from "@playwright/test";
 
 declare global {
   interface Window {
@@ -30,7 +30,7 @@ async function loadMarkdownPipeline(page: Page) {
 async function loadBeadsViewerStyles(page: Page, viewport: { width: number; height: number }) {
   await page.setViewportSize(viewport);
   await page.setContent(
-    "<!doctype html><html class='dark'><head></head><body style='margin:0'><div id='root' class='prose'></div></body></html>"
+    "<!doctype html><html class='dark'><head></head><body style='margin:0'><div id='root' class='prose'></div></body></html>",
   );
   await page.addStyleTag({ path: path.join(process.cwd(), "public/beads-viewer/styles.css") });
 }
@@ -40,11 +40,7 @@ test.describe("beads-viewer: markdown table enhancement", () => {
     await loadMarkdownPipeline(page);
 
     const result = await page.evaluate(() => {
-      const md = [
-        "| Alpha | Beta | Gamma |",
-        "|---|---|---|",
-        "| a1 | b1 | c1 |",
-      ].join("\n");
+      const md = ["| Alpha | Beta | Gamma |", "|---|---|---|", "| a1 | b1 | c1 |"].join("\n");
 
       const html = window.renderMarkdown!(md);
       const container = document.createElement("div");
@@ -189,10 +185,10 @@ test.describe("beads-viewer: markdown table enhancement", () => {
       if (!outer || !inner) return { ok: false };
 
       const outerLabels = Array.from(outer.querySelectorAll("tbody td")).map((td) =>
-        td.getAttribute("data-label")
+        td.getAttribute("data-label"),
       );
       const innerLabels = Array.from(inner.querySelectorAll("tbody td")).map((td) =>
-        td.getAttribute("data-label")
+        td.getAttribute("data-label"),
       );
 
       return {
@@ -302,7 +298,7 @@ test.describe("beads-viewer: responsive table CSS", () => {
       return {
         ok: true,
         tdDisplay: getComputedStyle(td).display,
-        beforeContent: before.replace(/^['\"]|['\"]$/g, ""),
+        beforeContent: before.replace(/^['"]|['"]$/g, ""),
       };
     });
 

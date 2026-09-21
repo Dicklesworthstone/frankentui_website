@@ -1,4 +1,4 @@
-import { test, expect, describe } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { LRUCache } from "../lib/lru-cache";
 
 describe("LRUCache", () => {
@@ -81,9 +81,9 @@ describe("LRUCache", () => {
     cache.set("b", 2); // order: a, b
     cache.set("c", 3); // order: a, b, c
     cache.set("d", 4); // order: a, b, c, d
-    cache.get("b");     // order: a, c, d, b
+    cache.get("b"); // order: a, c, d, b
     cache.set("a", 10); // order: c, d, b, a (update refreshes)
-    cache.set("e", 5);  // order: d, b, a, e (evicts c)
+    cache.set("e", 5); // order: d, b, a, e (evicts c)
     expect(cache.get("c")).toBeUndefined();
     expect(cache.get("d")).toBe(4);
     expect(cache.get("b")).toBe(2);

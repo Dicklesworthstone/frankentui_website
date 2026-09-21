@@ -1,6 +1,6 @@
 import { appendFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
-import { test, expect, type Page, type TestInfo } from "@playwright/test";
+import { expect, type Page, type TestInfo, test } from "@playwright/test";
 import { withoutContainedErrors } from "./contained-errors";
 
 type Viewport = { width: number; height: number };
@@ -40,7 +40,7 @@ async function runStaticSpecEvolutionSmoke(
   page: Page,
   testInfo: TestInfo,
   viewport: Viewport,
-  viewportName: "desktop" | "mobile"
+  viewportName: "desktop" | "mobile",
 ) {
   const baseUrl = process.env.BASE_URL ?? "http://localhost:3100";
   const url = `${baseUrl}${STATIC_SPEC_EVOLUTION_PATH}`;
@@ -122,10 +122,10 @@ async function runStaticSpecEvolutionSmoke(
       for (let idx = 0; idx < dataset.commits.length; idx++) {
         const commit = dataset.commits[idx];
         const hasMarkdownTable = (commit.files ?? []).some(
-          (file) => typeof file.content === "string" && tableRegex.test(file.content)
+          (file) => typeof file.content === "string" && tableRegex.test(file.content),
         );
         const hasBucketReview = (commit.review?.groups ?? []).some(
-          (group) => Array.isArray(group.buckets) && group.buckets.length > 0
+          (group) => Array.isArray(group.buckets) && group.buckets.length > 0,
         );
 
         if (hasMarkdownTable && hasBucketReview) {
@@ -151,9 +151,12 @@ async function runStaticSpecEvolutionSmoke(
 
     await page.locator('[data-tab="diff"]').click();
     await expect
-      .poll(() => page.locator("#diffTarget .d2h-file-wrapper, #diffTarget .d2h-file-diff").count(), {
-        timeout: 60_000,
-      })
+      .poll(
+        () => page.locator("#diffTarget .d2h-file-wrapper, #diffTarget .d2h-file-diff").count(),
+        {
+          timeout: 60_000,
+        },
+      )
       .toBeGreaterThan(0);
 
     await page.locator('[data-tab="snapshot"]').click();
@@ -177,7 +180,7 @@ async function runStaticSpecEvolutionSmoke(
 
       expect(mobileSnapshotTableState.hasTable).toBe(true);
       expect(
-        mobileSnapshotTableState.hasDataLabel || mobileSnapshotTableState.hasEnhancedClass
+        mobileSnapshotTableState.hasDataLabel || mobileSnapshotTableState.hasEnhancedClass,
       ).toBe(true);
     }
 
@@ -195,7 +198,7 @@ async function runStaticSpecEvolutionSmoke(
         page.evaluate(() => {
           const dialog = document.getElementById("bucketInfoDialog") as HTMLDialogElement | null;
           return dialog?.open ?? false;
-        })
+        }),
       )
       .toBe(true);
     await page.locator('#bucketInfoDialog [data-close="bucketInfoDialog"]').click();
@@ -204,7 +207,7 @@ async function runStaticSpecEvolutionSmoke(
         page.evaluate(() => {
           const dialog = document.getElementById("bucketInfoDialog") as HTMLDialogElement | null;
           return dialog?.open ?? false;
-        })
+        }),
       )
       .toBe(false);
 
@@ -224,7 +227,9 @@ async function runStaticSpecEvolutionSmoke(
   } catch (error) {
     status = "failed";
     failureReason = error instanceof Error ? error.message : String(error);
-    failureScreenshotPath = testInfo.outputPath(`spec-evolution-static-${viewportName}-failure.png`);
+    failureScreenshotPath = testInfo.outputPath(
+      `spec-evolution-static-${viewportName}-failure.png`,
+    );
     if (!page.isClosed()) {
       try {
         await page.screenshot({ path: failureScreenshotPath, fullPage: true });
@@ -281,9 +286,7 @@ test("navbar: /architecture -> /how-it-was-built renders without refresh", async
   await page.locator("header").first().getByRole("link", { name: "Built in 5 Days" }).click();
 
   await expect(page).toHaveURL(/\/how-it-was-built\/?$/);
-  await expect(
-    page.getByRole("heading", { level: 1, name: /built\s+in/i }).first()
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: /built\s+in/i }).first()).toBeVisible();
   // Guard against the historical failure mode: URL changes but you're still scrolled to "nowhere",
   // making the page look blank until a refresh resets scroll.
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(200);
@@ -304,28 +307,32 @@ test("spec evolution lab: loads and renders core UI without console errors", asy
     if (msg.type() === "error") errors.push(msg.text());
   });
 
-  await page.goto(`${baseUrl}/how-it-was-built/spec-evolution-lab`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${baseUrl}/how-it-was-built/spec-evolution-lab`, {
+    waitUntil: "domcontentloaded",
+  });
   await expect(page.getByRole("heading", { name: /spec evolution lab/i }).first()).toBeVisible();
 
   // This heading only appears after the dataset is loaded and the main UI is rendered.
-  await expect(
-    page.getByRole("heading", { name: /Scrub_Node_Selector/i })
-  ).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole("heading", { name: /Scrub_Node_Selector/i })).toBeVisible({
+    timeout: 20_000,
+  });
 
   // Basic interaction: verify the forensic inspector section rendered.
-  await expect(
-    page.getByRole("heading", { name: /Forensics_Inspector/i })
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Forensics_Inspector/i })).toBeVisible();
 
   expect(errors).toEqual([]);
 });
 
-test("spec evolution static html: desktop smoke + diagnostics logging", async ({ page }, testInfo) => {
+test("spec evolution static html: desktop smoke + diagnostics logging", async ({
+  page,
+}, testInfo) => {
   test.setTimeout(120_000);
   await runStaticSpecEvolutionSmoke(page, testInfo, { width: 1440, height: 900 }, "desktop");
 });
 
-test("spec evolution static html: mobile smoke + diagnostics logging", async ({ page }, testInfo) => {
+test("spec evolution static html: mobile smoke + diagnostics logging", async ({
+  page,
+}, testInfo) => {
   test.setTimeout(120_000);
   await runStaticSpecEvolutionSmoke(page, testInfo, { width: 390, height: 844 }, "mobile");
 });
