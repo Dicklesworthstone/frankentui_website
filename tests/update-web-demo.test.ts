@@ -57,6 +57,13 @@ function runUpdate(args: string[], env: Record<string, string> = {}) {
   return { exitCode: r.status ?? -1, stdout: r.stdout ?? "", stderr: r.stderr ?? "" };
 }
 
+/** Assert a run succeeded, showing the script's output when it did not. */
+function expectOk(r: ReturnType<typeof runUpdate>) {
+  if (r.exitCode !== 0) {
+    throw new Error(`exit ${r.exitCode}\n--- stdout\n${r.stdout}\n--- stderr\n${r.stderr}`);
+  }
+}
+
 function sha256(data: string | Buffer): string {
   return createHash("sha256").update(data).digest("hex");
 }
@@ -160,7 +167,7 @@ describe("update-web-demo.sh", () => {
   });
 
   test("records the frankentui commit, and an explicit FRANKENTUI_GIT_SHA wins", () => {
-    expect(runUpdate(["--skip-build", `--site=${BUNDLE}`, "--no-push"]).exitCode).toBe(0);
+    expectOk(runUpdate(["--skip-build", `--site=${BUNDLE}`, "--no-push"]));
     expect(versionSha()).toBe(ftuiHead);
 
     writeBundle(BUNDLE, "export default function init() { return 2; }\n");
@@ -168,7 +175,7 @@ describe("update-web-demo.sh", () => {
     const r = runUpdate(["--skip-build", `--site=${BUNDLE}`, "--no-push"], {
       FRANKENTUI_GIT_SHA: built,
     });
-    expect(r.exitCode).toBe(0);
+    expectOk(r);
     expect(versionSha()).toBe(built);
     expect(git(SITE_REPO, "log", "-1", "--format=%s")).toContain("[aaaaaaaa]");
   });

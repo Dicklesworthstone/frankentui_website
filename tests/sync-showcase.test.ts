@@ -8,6 +8,7 @@ import {
   readFileSync,
   rmSync,
   statSync,
+  utimesSync,
   writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
@@ -122,6 +123,9 @@ function cleanupTestDest() {
   }
 }
 
+/** Written by the custom-source test, which removes it only if it gets that far. */
+const CUSTOM_DIST = join(import.meta.dir, "__fixtures__", "custom-dist");
+
 function countFiles(dir: string): number {
   if (!existsSync(dir)) return 0;
   let count = 0;
@@ -141,6 +145,7 @@ describe("sync-showcase.sh", () => {
   afterAll(() => {
     cleanupTestDest();
     cleanupFakeDist();
+    rmSync(CUSTOM_DIST, { recursive: true, force: true });
   });
 
   beforeEach(() => {
@@ -261,7 +266,7 @@ describe("sync-showcase.sh", () => {
 
   /* (5) Custom source path */
   test("custom source path: uses explicit path argument", () => {
-    const customDist = join(import.meta.dir, "__fixtures__", "custom-dist");
+    const customDist = CUSTOM_DIST;
     if (existsSync(customDist)) rmSync(customDist, { recursive: true, force: true });
     createFakeDist(customDist);
 
@@ -330,6 +335,29 @@ describe("sync-showcase.sh", () => {
     expect(updatedContent).toContain("v2");
 
     stepLog("delta-sync", "PASS");
+  });
+
+  test("same size and mtime: a changed package and manifest are still copied", () => {
+    // rsync's quick check compares size and mtime only, and a manifest is the
+    // same size in every build. Pin both to the previous sync's values: only a
+    // content comparison notices, and without one the old manifest stays next
+    // to the new package - a bundle the page refuses to load.
+    createFakeDist(FAKE_DIST);
+    expect(runSync(FAKE_DIST).exitCode).toBe(0);
+
+    const pkg = join(FAKE_DIST, "pkg");
+    const stamps = ["FrankenTerm.js", "manifest.json"].map((name) => {
+      const { atime, mtime } = statSync(join(pkg, name));
+      return { name, atime, mtime };
+    });
+    writeFileSync(join(pkg, "FrankenTerm.js"), "// wasm LOADER"); // same length
+    writeManifest(FAKE_DIST);
+    for (const { name, atime, mtime } of stamps) utimesSync(join(pkg, name), atime, mtime);
+
+    const { exitCode, stderr } = runSync(FAKE_DIST);
+    stepLog("same-size-mtime", `exit=${exitCode}, stderr=${stderr.substring(0, 200)}`);
+    expect(exitCode).toBe(0);
+    expect(readFileSync(join(TEST_DEST, "pkg", "FrankenTerm.js"), "utf-8")).toBe("// wasm LOADER");
   });
 
   /* (8) Stale artifacts are reported, never deleted */

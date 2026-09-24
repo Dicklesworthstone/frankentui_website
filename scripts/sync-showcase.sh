@@ -91,7 +91,14 @@ mkdir -p "$DEST"
 
 # No --delete: removing files is a human decision (see header). og.png and
 # version.json are owned by this repo and are never sourced from the build.
-RSYNC_ARGS=(-av --exclude='og.png' --exclude='version.json')
+#
+# --checksum: rsync's default quick check skips a file whose size and mtime
+# match, and pkg/manifest.json is the same size in every build (fixed-length
+# digests over the same file names). A new manifest with a coinciding mtime
+# was left behind while the packages it describes were replaced, which is a
+# bundle the page refuses to load; the post-sync verify_pkg caught it. The
+# bundle is ~20 MB, so hashing it costs little.
+RSYNC_ARGS=(-av --checksum --exclude='og.png' --exclude='version.json')
 if $DRY_RUN; then
   RSYNC_ARGS+=(--dry-run)
   echo "=== DRY RUN ==="
