@@ -14,10 +14,15 @@ set -euo pipefail
 #
 # This script never deletes files in public/web/. Artifacts that the build no
 # longer emits are reported as stale and left in place for a human to remove.
+#
+# SYNC_SHOWCASE_DEST overrides the destination. The tests use it so they never
+# touch the checked-in bundle: a test run that cleared and restored public/web/
+# could, if interrupted, leave fake packages where the deployed ones belong.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-DEST="$REPO_ROOT/public/web/"
+DEST="${SYNC_SHOWCASE_DEST:-$REPO_ROOT/public/web}"
+[[ "$DEST" != */ ]] && DEST="$DEST/"
 
 DRY_RUN=false
 SRC=""

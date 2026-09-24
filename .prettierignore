@@ -1,0 +1,5 @@
+# Generated or vendored payloads. Reformatting them changes their bytes, and
+# /web verifies public/web/pkg against SHA-256 hashes in pkg/manifest.json: a
+# formatter pass over it (29c653c) took frankentui.com/web down.
+public/web/
+public/beads-viewer/

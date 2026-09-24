@@ -263,6 +263,11 @@ The site deploys automatically to Vercel on push to `main`.
 1. Ensure `bun run build` succeeds locally
 2. Check for TypeScript errors with `bun tsc --noEmit`
 3. Verify the dev server works: `bun dev`
+4. Run `bun test tests/web-pkg-manifest.test.ts` (milliseconds). `/web` checks
+   every file in `public/web/pkg/` against a SHA-256 in `pkg/manifest.json`,
+   so a single changed byte takes the demo down with "Failed to load the
+   browser packages". Those files are generated: never format or hand-edit
+   them; rebuild with frankentui's `build-wasm.sh` and `scripts/sync-showcase.sh`.
 
 **Vercel Configuration:**
 * Framework: Next.js

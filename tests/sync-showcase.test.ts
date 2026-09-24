@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
+import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import {
   existsSync,
@@ -15,7 +15,12 @@ import { join } from "node:path";
 
 const REPO_ROOT = join(import.meta.dir, "..");
 const SYNC_SCRIPT = join(REPO_ROOT, "scripts", "sync-showcase.sh");
-const TEST_DEST = join(REPO_ROOT, "public", "web");
+/**
+ * Where the tests sync to, passed to the script as SYNC_SHOWCASE_DEST. Never
+ * public/web/: these tests clear the destination before every case, and doing
+ * that to the checked-in bundle meant an interrupted run could deploy fakes.
+ */
+const TEST_DEST = join(import.meta.dir, "__fixtures__", "web-dest");
 
 /** Temporary fake dist directory for tests. */
 const FAKE_DIST = join(import.meta.dir, "__fixtures__", "fake-dist");
@@ -29,7 +34,7 @@ function runSync(...args: string[]) {
     cwd: REPO_ROOT,
     encoding: "utf-8",
     timeout: 30_000,
-    env: { ...process.env, PATH: process.env.PATH },
+    env: { ...process.env, PATH: process.env.PATH, SYNC_SHOWCASE_DEST: TEST_DEST },
   });
   return {
     exitCode: result.status ?? -1,
@@ -98,23 +103,9 @@ function cleanupFakeDist() {
   }
 }
 
-/** Backup the real public/web/ content and restore after tests. */
-let webBackupDir: string;
-
-function backupWeb() {
-  webBackupDir = join(import.meta.dir, "__fixtures__", "web-backup");
+function cleanupTestDest() {
   if (existsSync(TEST_DEST)) {
-    mkdirSync(webBackupDir, { recursive: true });
-    spawnSync("cp", ["-a", `${TEST_DEST}/.`, webBackupDir], { timeout: 10_000 });
-  }
-}
-
-function restoreWeb() {
-  if (existsSync(webBackupDir)) {
     rmSync(TEST_DEST, { recursive: true, force: true });
-    mkdirSync(TEST_DEST, { recursive: true });
-    spawnSync("cp", ["-a", `${webBackupDir}/.`, TEST_DEST], { timeout: 10_000 });
-    rmSync(webBackupDir, { recursive: true, force: true });
   }
 }
 
@@ -134,21 +125,14 @@ function countFiles(dir: string): number {
 /* ─── Test suite ────────────────────────────────────────────────── */
 
 describe("sync-showcase.sh", () => {
-  beforeAll(() => {
-    backupWeb();
-  });
-
   afterAll(() => {
-    restoreWeb();
+    cleanupTestDest();
     cleanupFakeDist();
   });
 
   beforeEach(() => {
     cleanupFakeDist();
-    // Clear destination for each test
-    if (existsSync(TEST_DEST)) {
-      rmSync(TEST_DEST, { recursive: true, force: true });
-    }
+    cleanupTestDest();
   });
 
   /* (1) Happy path */
