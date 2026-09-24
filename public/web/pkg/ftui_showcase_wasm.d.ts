@@ -250,6 +250,14 @@ export class ShowcaseRunner {
      */
     screenSlugs(): Array<any>;
     /**
+     * Enable or disable bounded accessibility collection for a host bridge.
+     *
+     * Enable before init for first-frame feedback. In the packaged browser
+     * adapter an explicit call selects manual delivery and detaches automatic
+     * DOM speech, preventing the callback and host from speaking twice.
+     */
+    setAccessibilityEnabled(enabled: boolean): void;
+    /**
      * Provide the evidence JSONL for the `ExplainabilityCockpit` screen.
      *
      * Native builds poll this log from a local path; a browser has no such
@@ -281,6 +289,14 @@ export class ShowcaseRunner {
      * Returns `{ running, rendered, events_processed, events_pending, frame_idx }`.
      */
     step(): any;
+    /**
+     * Read the bounded mirror and drain the latest frame's announcements.
+     *
+     * Returns schema-v1 JSON with lossless string frame/node IDs. Read after
+     * init and each rendered step; a second drain has no speech. This local
+     * channel is independent of patch/log output and never logs its content.
+     */
+    takeAccessibilityUpdateJson(): string;
     /**
      * Take flat patch batch for GPU upload.
      * Returns `{ cells: Uint32Array, spans: Uint32Array }`.
@@ -368,11 +384,13 @@ export interface InitOutput {
     readonly showcaserunner_pushEncodedInput: (a: number, b: number, c: number) => number;
     readonly showcaserunner_resize: (a: number, b: number, c: number) => number;
     readonly showcaserunner_screenSlugs: (a: number) => number;
+    readonly showcaserunner_setAccessibilityEnabled: (a: number, b: number) => void;
     readonly showcaserunner_setEvidenceJsonl: (a: number, b: number, c: number) => number;
     readonly showcaserunner_setShakespeareText: (a: number, b: number, c: number) => number;
     readonly showcaserunner_setSqliteSource: (a: number, b: number, c: number) => number;
     readonly showcaserunner_setTime: (a: number, b: number) => void;
     readonly showcaserunner_step: (a: number) => number;
+    readonly showcaserunner_takeAccessibilityUpdateJson: (a: number, b: number) => void;
     readonly showcaserunner_takeFlatPatches: (a: number) => number;
     readonly showcaserunner_takeLogs: (a: number) => number;
     readonly showcaserunner_takePendingInputTrace: (a: number, b: number) => void;

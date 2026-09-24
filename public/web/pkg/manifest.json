@@ -7,12 +7,12 @@
     "lock_sha256": "86bc2e58e019d10c029c1081a271db4eb71378ac6e525314a32ce522ddc47ebb",
     "license": "MIT License (with OpenAI/Anthropic Rider)"
   },
-  "source_inputs_sha256": "e4c877a52fa47376b94e4904e6c4fd1289767767ebb3abb6682858732248471c",
-  "runner_lock_sha256": "57509bcba747e142e674f1d727693f3f8a0714b94b08cf17ec5ffbeaa08fe83c",
+  "source_inputs_sha256": "c3718ff663d8a561bc5a3fb21b4d0a5b2391bb0a5bc4131ed9bb7c714fffe9ef",
+  "runner_lock_sha256": "132544c5ed7ad6f83525559ce0bd9032f62f0cdfce3f291f484e2b3a4cdfa379",
   "files": {
     "FrankenTerm.js": "28c8d76037198d9aae7a4268d8819deb94c91e4e5f6965190e32995e45b1883e",
     "FrankenTerm_bg.wasm": "6bc646ad14722abcd4a5d997e702d44fe06d79e0cef4e5f8b473c2e57def994f",
-    "ftui_showcase_wasm.js": "90652d95468d73c8277f79f0d42cd985890e9f3e9004e41c946104b7fca4fb58",
-    "ftui_showcase_wasm_bg.wasm": "0fd67c0462328acc99b63816b9f891c5c21cc25617f1956da63e4a7d62d7bda7"
+    "ftui_showcase_wasm.js": "057810d41872c8b818eb1e4a81a9a4098c57c4b93efbc0ffec23e8f02de3862e",
+    "ftui_showcase_wasm_bg.wasm": "88e8b5d3f9700c0dae697efc358b37ea237f92301a93440b7b90a0ac2ba07f82"
   }
 }

@@ -1,11 +1,11 @@
 {
-  "synced_at": "2026-09-18T22:10:58-04:00",
-  "source_dir": "/private/tmp/claude-501/-Users-jemanuel-projects-frankentui/945addf3-d108-450e-8e00-64fc33f38eb4/scratchpad/deploy-220547/site/",
-  "frankentui_git_sha": "20d095200584f0f5d3d3679e95f76087ca1730c8",
+  "synced_at": "2026-09-24T08:50:43-04:00",
+  "source_dir": "/private/tmp/claude-501/-Users-jemanuel-projects-frankentui/30e37ade-e5c8-451d-827a-b6410d7cd735/scratchpad/wasm-da28f4e5/site/",
+  "frankentui_git_sha": "da28f4e52df2d5d38e5919ce309685cb0a2d613c",
   "toolchain": "nightly-2026-08-31",
   "renderer_revision": "88b402b8be9c70a4405895d4172e449940cab2fe",
-  "source_inputs_sha256": "e4c877a52fa47376b94e4904e6c4fd1289767767ebb3abb6682858732248471c",
-  "runner_lock_sha256": "57509bcba747e142e674f1d727693f3f8a0714b94b08cf17ec5ffbeaa08fe83c",
+  "source_inputs_sha256": "c3718ff663d8a561bc5a3fb21b4d0a5b2391bb0a5bc4131ed9bb7c714fffe9ef",
+  "runner_lock_sha256": "132544c5ed7ad6f83525559ce0bd9032f62f0cdfce3f291f484e2b3a4cdfa379",
   "file_count": 20,
   "files": {
     "LICENSE": {
@@ -37,8 +37,8 @@
       "sha256": "54bfc636093de7506c5785d9d08c7aa4b79bed672a2b5c9345d7b079d4f2cb00"
     },
     "index.html": {
-      "size_bytes": 121811,
-      "sha256": "6a019a5e4606abc19133fbc2747cf7daefcb45ab0ae1f2919914942d151af700"
+      "size_bytes": 122881,
+      "sha256": "33ef60785f0e199a73d97545de05b912d035a64164c81a6152dc4c27a4e3595c"
     },
     "og.png": {
       "size_bytes": 87362,
@@ -65,24 +65,24 @@
       "sha256": "88ed0761cae798febe0c50f16cb01d051845e86b457b332403a35141754b147a"
     },
     "pkg/ftui_showcase_wasm.d.ts": {
-      "size_bytes": 17594,
-      "sha256": "4d6cc8329818a7b8f9e780ea21ba89ce97bef74a42ab1998e1d73b9ff68fdd13"
+      "size_bytes": 18523,
+      "sha256": "ee8244a895fd6731115e5851006a5beff4cdf474de044383dce7c4cbac62d949"
     },
     "pkg/ftui_showcase_wasm.js": {
-      "size_bytes": 37296,
-      "sha256": "90652d95468d73c8277f79f0d42cd985890e9f3e9004e41c946104b7fca4fb58"
+      "size_bytes": 62466,
+      "sha256": "057810d41872c8b818eb1e4a81a9a4098c57c4b93efbc0ffec23e8f02de3862e"
     },
     "pkg/ftui_showcase_wasm_bg.wasm": {
-      "size_bytes": 4578241,
-      "sha256": "0fd67c0462328acc99b63816b9f891c5c21cc25617f1956da63e4a7d62d7bda7"
+      "size_bytes": 4804500,
+      "sha256": "88e8b5d3f9700c0dae697efc358b37ea237f92301a93440b7b90a0ac2ba07f82"
     },
     "pkg/ftui_showcase_wasm_bg.wasm.d.ts": {
-      "size_bytes": 5389,
-      "sha256": "10298df910501f11267b5ac19799de488d198d66e42e306184f8f78025e4ac0b"
+      "size_bytes": 5563,
+      "sha256": "b47e49ad8f099a9be38fccc563fefaae9e2664746c0524e09952a3cfb8763944"
     },
     "pkg/manifest.json": {
       "size_bytes": 983,
-      "sha256": "fcad7252fde70268349e04b47c22e4e384dc1e8866d07a3a85a76dc516b1ebe0"
+      "sha256": "1df49a0ea85ae74ded786afc47c2f8abe9a2d6b04fa43db215f32c58ba3748ba"
     },
     "pkg/package.json": {
       "size_bytes": 557,

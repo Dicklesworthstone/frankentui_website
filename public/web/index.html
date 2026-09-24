@@ -1603,6 +1603,9 @@ function forwardSurfaceInput(ev) {
 }
 
 function safeTermInput(ev) {
+  // A pointer event with no terminal meaning is not input to reject; there is
+  // simply nothing to send.
+  if (!ev) return true;
   const sequence = inputSequence++;
   let reason = null;
   let result = { normalized: [], vt_chunks_discarded: 0, ime_records_discarded: 0 };
@@ -2007,12 +2010,31 @@ function domKeyToInput(e, phase) {
   };
 }
 
+// The terminal has events for the left, middle and right buttons only. Back
+// (3) and Forward (4) are browser navigation; the input parser drops them.
+function isTerminalMouseButton(button) {
+  return Number.isFinite(button) && button >= 0 && button <= 2;
+}
+
+// A pointer event to send to the terminal, or null when the button has no
+// terminal meaning. Coercing those buttons to 0 made each one a left click at
+// the pointer.
+//
+// The pointer handlers still call `preventDefault`, so Back and Forward do
+// nothing here rather than navigating: the showcase runs a live session in the
+// page, and leaving it on a stray thumb press would throw that session away.
+function termMouseInput(e, phase) {
+  const ev = domMouseToInput(e, phase);
+  if (phase !== "move" && !isTerminalMouseButton(ev.button)) return null;
+  return ev;
+}
+
 function domMouseToInput(e, phase) {
   flushPendingGeometrySync("pointer_input");
   const normalizedButton = (() => {
     const raw = Number.isFinite(e.button) ? Math.trunc(e.button) : 0;
-    if (phase === "move" && raw < 0) return 0;
-    if (raw < 0 || raw > 2) return 0;
+    // A move carries no button; browsers report 0 or -1 for it.
+    if (phase === "move" || raw < 0) return 0;
     return raw;
   })();
   const rect = canvas.getBoundingClientRect();
@@ -2312,7 +2334,7 @@ if ("PointerEvent" in window) {
 	    }
 	    syncPaneOverlayFromRunner();
 	    if (e.pointerType === "mouse") {
-	      safeTermInput(domMouseToInput(e, "down"));
+	      safeTermInput(termMouseInput(e, "down"));
 	    }
 	  });
 
@@ -2338,7 +2360,7 @@ if ("PointerEvent" in window) {
     persistPaneWorkspace();
     syncPaneOverlayFromRunner();
     if (e.pointerType === "mouse") {
-      safeTermInput(domMouseToInput(e, "up"));
+      safeTermInput(termMouseInput(e, "up"));
     }
   });
 
@@ -2358,13 +2380,13 @@ if ("PointerEvent" in window) {
           paneDispatchPointerMove(e);
           syncPaneOverlayFromRunner();
         }
-        safeTermInput(ev);
+        safeTermInput(isTerminalMouseButton(dragButton) ? ev : null);
       } else {
         if (paneActivePointers.has(pointerId)) {
           paneDispatchPointerMove(e);
           syncPaneOverlayFromRunner();
         }
-        safeTermInput(domMouseToInput(e, "move"));
+        safeTermInput(termMouseInput(e, "move"));
       }
       return;
 	    }
@@ -2395,7 +2417,7 @@ if ("PointerEvent" in window) {
     syncPaneOverlayFromRunner();
     if (hadMouseButtonsDown) {
       mouseButtonsDown = 0;
-      safeTermInput(domMouseToInput(e, "up"));
+      safeTermInput(termMouseInput(e, "up"));
     }
   });
 
@@ -2440,7 +2462,7 @@ if ("PointerEvent" in window) {
     }
     if (e.pointerType === "mouse") {
       if (hadMouseButtonsDown) {
-        safeTermInput(domMouseToInput(e, "up"));
+        safeTermInput(termMouseInput(e, "up"));
       }
       mouseButtonsDown = 0;
 	    }
@@ -2461,7 +2483,7 @@ if ("PointerEvent" in window) {
     dragButton = e.button;
     paneDispatchPointerDown(e);
     syncPaneOverlayFromRunner();
-    safeTermInput(domMouseToInput(e, "down"));
+    safeTermInput(termMouseInput(e, "down"));
   });
   canvas.addEventListener("mouseup", (e) => {
     e.preventDefault();
@@ -2474,7 +2496,7 @@ if ("PointerEvent" in window) {
     paneDispatchPointerUp(e);
     persistPaneWorkspace();
     syncPaneOverlayFromRunner();
-    safeTermInput(domMouseToInput(e, "up"));
+    safeTermInput(termMouseInput(e, "up"));
   });
   canvas.addEventListener("mousemove", (e) => {
     if (selectionActive) {
@@ -2488,16 +2510,16 @@ if ("PointerEvent" in window) {
       ev.button = dragButton;
       paneDispatchPointerMove(e);
       syncPaneOverlayFromRunner();
-      safeTermInput(ev);
+      safeTermInput(isTerminalMouseButton(dragButton) ? ev : null);
     } else {
-      safeTermInput(domMouseToInput(e, "move"));
+      safeTermInput(termMouseInput(e, "move"));
     }
   });
   window.addEventListener("mouseup", (e) => {
     const hadMouseButtonsDown = mouseButtonsDown !== 0;
     mouseButtonsDown = 0;
     if (hadMouseButtonsDown) {
-      safeTermInput(domMouseToInput(e, "up"));
+      safeTermInput(termMouseInput(e, "up"));
     }
   });
 }
