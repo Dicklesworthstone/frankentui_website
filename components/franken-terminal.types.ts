@@ -124,6 +124,15 @@ export interface FrankenTerminalProps {
    */
   loadTextAssets?: boolean;
 
+  /**
+   * localStorage key under which the pane workspace (split ratios, docking,
+   * layout history) is saved as it changes and restored on load, as /web does.
+   * Default: "ftui-pane-workspace-react-v1", separate from /web's key so an
+   * embed does not overwrite the full demo's layout. `null` disables
+   * persistence. Widgets that share a key share a layout.
+   */
+  workspaceStorageKey?: string | null;
+
   // ── Callbacks ──────────────────────────────────────────────────────
 
   /** Fired when WASM loads and the first frame renders. */

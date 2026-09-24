@@ -28,11 +28,20 @@ import {
   loadWasmModules,
   type ShowcaseRunnerInstance,
 } from "@/lib/wasm-loader";
+import {
+  browserStorage,
+  PanePointerRouter,
+  restoreWorkspace,
+  WorkspaceSaver,
+} from "@/lib/pane-workspace";
 import type {
   FrankenTerminalHandle,
   FrankenTerminalProps,
   FrankenTerminalState,
 } from "./franken-terminal.types";
+
+/** Separate from /web's "ftui-pane-workspace-v1": an embed must not overwrite the full demo's layout. */
+const DEFAULT_WORKSPACE_KEY = "ftui-pane-workspace-react-v1";
 
 // ---------------------------------------------------------------------------
 // Default loading/error/fallback UI
@@ -91,6 +100,7 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
       captureKeys = true,
       showStatus = true,
       loadTextAssets: shouldLoadTextAssets = true,
+      workspaceStorageKey = DEFAULT_WORKSPACE_KEY,
       onReady,
       onError,
       onResize,
@@ -274,6 +284,15 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
           runnerRef.current = runner;
           runner.init();
 
+          // 7b. Restore the saved pane layout, then keep saving it as it changes.
+          const workspaceStorage = workspaceStorageKey === null ? null : browserStorage();
+          const workspaceKey = workspaceStorageKey ?? "";
+          restoreWorkspace(runner, workspaceStorage, workspaceKey);
+          const workspaceSaver = new WorkspaceSaver(runner, workspaceStorage, workspaceKey);
+          // Mouse drags on splitters go through the pane API too, which is
+          // what makes the layout a workspace the saver can persist.
+          const paneRouter = new PanePointerRouter(runner);
+
           // 8. Apply initial patches and render first frame
           const initPatches = runner.takeFlatPatches();
           if (initPatches.cells.length > 0) {
@@ -348,6 +367,7 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
             }
 
             const result = r.step();
+            workspaceSaver.maybeSave(timestamp);
 
             if (result.rendered) {
               const patches = r.takeFlatPatches();
@@ -593,7 +613,31 @@ const FrankenTerminal = forwardRef<FrankenTerminalHandle, FrankenTerminalProps>(
               clearSelection();
               mouseButtonsDown = e.buttons;
               dragButton = e.button;
-              safeInput(domMouseToInput(e, "down"));
+              const point = domMouseToInput(e, "down");
+              if (e.button >= 0 && e.button <= 2) {
+                paneRouter.down(e.button, point.x, point.y, point.mods);
+              }
+              safeInput(point);
+            },
+            { signal },
+          );
+          // While a pane drag is active, follow the mouse on window so the
+          // drag survives leaving the canvas; canvas events bubble here too.
+          window.addEventListener(
+            "mousemove",
+            (e) => {
+              if (!paneRouter.isActive) return;
+              const point = domMouseToInput(e, "move");
+              paneRouter.move(point.x, point.y, point.mods);
+            },
+            { signal },
+          );
+          window.addEventListener(
+            "mouseup",
+            (e) => {
+              if (!paneRouter.isActive) return;
+              const point = domMouseToInput(e, "up");
+              paneRouter.up(e.button, point.x, point.y, point.mods);
             },
             { signal },
           );

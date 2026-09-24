@@ -81,6 +81,27 @@ export interface ShowcaseRunnerInstance {
   patchStats(): { dirty_cells: number; patch_count: number; bytes_uploaded: number } | null;
   destroy(): void;
   free(): void;
+  // Pane workspace persistence (lib/pane-workspace.ts). Optional: absent in
+  // bundles built before the pane workspace existed.
+  paneExportWorkspaceSnapshot?(): string | undefined;
+  paneImportWorkspaceSnapshot?(json: string): boolean;
+  paneWorkspaceDirty?(): boolean;
+  paneWorkspaceGeneration?(): bigint;
+  paneMarkWorkspaceSaved?(generation: bigint): boolean;
+  paneActivePointerId?(): number | undefined;
+  // Pane pointer input (PanePointerRouter). Coordinates are terminal cells;
+  // each returns a PaneDispatch, or undefined when unsupported.
+  panePointerDownAt?(pointerId: number, button: number, x: number, y: number, mods: number): PaneDispatch | undefined;
+  panePointerMoveAt?(pointerId: number, x: number, y: number, mods: number): PaneDispatch | undefined;
+  panePointerUpAt?(pointerId: number, button: number, x: number, y: number, mods: number): PaneDispatch | undefined;
+  panePointerCancel?(pointerId: number): PaneDispatch | undefined;
+  panePointerCaptureAcquired?(pointerId: number): PaneDispatch | undefined;
+}
+
+/** The fields of a pane pointer dispatch result the widget reads. */
+export interface PaneDispatch {
+  accepted?: boolean;
+  capture_command?: { kind: "acquire" | "release"; pointer_id: number } | null;
 }
 
 /** pkg/manifest.json, emitted by frankentui's build-wasm.sh alongside the bundle */
