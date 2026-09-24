@@ -69,7 +69,29 @@ if ! $DRY_RUN; then
   fi
 fi
 
-echo "FrankenTUI: $FRANKENTUI_ROOT"
+# Pushing from anything but main would deploy nothing, or the wrong thing.
+if ! $NO_PUSH && ! $DRY_RUN; then
+  BRANCH=$(git -C "$WEBSITE_ROOT" rev-parse --abbrev-ref HEAD)
+  if [[ "$BRANCH" != main ]]; then
+    echo "ERROR: website repo is on '$BRANCH'; deploys push main (use --no-push to only commit)" >&2
+    exit 1
+  fi
+fi
+
+# The commit being built, captured now: build-wasm.sh records none, and HEAD
+# can move while it compiles when other agents push to frankentui. An explicit
+# FRANKENTUI_GIT_SHA wins, which is how a --skip-build bundle names its source.
+if [[ -z "${FRANKENTUI_GIT_SHA:-}" ]]; then
+  FRANKENTUI_GIT_SHA=$(git -C "$FRANKENTUI_ROOT" rev-parse HEAD 2>/dev/null || true)
+  if $SKIP_BUILD; then
+    echo "NOTE: --skip-build records frankentui HEAD as the bundle's source commit;"
+    echo "      set FRANKENTUI_GIT_SHA if it was built from another commit."
+  fi
+fi
+FRANKENTUI_SHA="${FRANKENTUI_GIT_SHA:0:8}"
+FRANKENTUI_SHA="${FRANKENTUI_SHA:-unknown}"
+
+echo "FrankenTUI: $FRANKENTUI_ROOT ($FRANKENTUI_SHA)"
 echo "Website:    $WEBSITE_ROOT"
 elapsed
 
@@ -111,20 +133,22 @@ else
   if $DRY_RUN; then
     SYNC_ARGS+=("--dry-run")
   fi
-  FRANKENTUI_ROOT="$FRANKENTUI_ROOT" "$SCRIPT_DIR/sync-showcase.sh" "${SYNC_ARGS[@]}"
+  FRANKENTUI_ROOT="$FRANKENTUI_ROOT" FRANKENTUI_GIT_SHA="$FRANKENTUI_GIT_SHA" \
+    "$SCRIPT_DIR/sync-showcase.sh" "${SYNC_ARGS[@]}"
 fi
 elapsed
 
 # ── Step 4: Commit ────────────────────────────────────────────────
 step "Commit"
-FRANKENTUI_SHA=$(git -C "$FRANKENTUI_ROOT" rev-parse --short HEAD 2>/dev/null || echo "unknown")
 
 if $DRY_RUN; then
   echo "Would commit public/web/ with message: chore(web): sync WASM showcase [$FRANKENTUI_SHA]"
 else
   git -C "$WEBSITE_ROOT" add public/web/
-  # Check if there's anything to commit
-  if git -C "$WEBSITE_ROOT" diff --cached --quiet; then
+  # Only public/web/ counts, and only public/web/ is committed: the index is
+  # shared with other agents, and a bare `git commit` would sweep whatever they
+  # have staged into a deploy.
+  if git -C "$WEBSITE_ROOT" diff --cached --quiet -- public/web/; then
     echo "No changes to commit — artifacts are already up to date."
   else
     git -C "$WEBSITE_ROOT" commit -m "$(cat <<EOF
@@ -132,7 +156,7 @@ chore(web): sync WASM showcase [$FRANKENTUI_SHA]
 
 Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
 EOF
-)"
+)" -- public/web/
     echo "Committed."
   fi
 fi
@@ -142,10 +166,12 @@ elapsed
 if ! $NO_PUSH; then
   step "Push"
   if $DRY_RUN; then
-    echo "Would push to origin/main (Vercel auto-deploys)"
+    echo "Would push to origin/main and origin/master (Vercel auto-deploys)"
   else
-    git -C "$WEBSITE_ROOT" push
-    echo "Pushed. Vercel will auto-deploy."
+    # master exists for legacy URLs and must stay identical to main.
+    git -C "$WEBSITE_ROOT" push origin main
+    git -C "$WEBSITE_ROOT" push origin main:master
+    echo "Pushed main and master. Vercel will auto-deploy."
   fi
   elapsed
 else

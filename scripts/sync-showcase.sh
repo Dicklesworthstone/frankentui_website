@@ -59,6 +59,33 @@ for f in "${EXPECTED_FILES[@]}"; do
   fi
 done
 
+# The page fetches every package with a SHA-256 integrity check against
+# pkg/manifest.json, so a bundle whose files disagree with its manifest cannot
+# load ("Failed to load the browser packages ... Failed to fetch"). 29c653c
+# shipped exactly that by formatting pkg/. Refuse such a bundle here: the
+# source before copying, and the destination after.
+verify_pkg() {
+  python3 - "$1" <<'PY'
+import hashlib, json, pathlib, sys
+
+pkg = pathlib.Path(sys.argv[1]) / "pkg"
+files = json.loads((pkg / "manifest.json").read_text())["files"]
+bad = []
+for name, expected in sorted(files.items()):
+    path = pkg / name
+    actual = hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else "missing"
+    if actual != expected:
+        bad.append(f"  {path}: manifest {expected[:16]}…, file {actual[:16]}…")
+if not files:
+    bad.append(f"  {pkg / 'manifest.json'} lists no files")
+if bad:
+    print("ERROR: package files do not match pkg/manifest.json:", *bad, sep="\n", file=sys.stderr)
+    sys.exit(1)
+print(f"Verified {len(files)} package files against pkg/manifest.json")
+PY
+}
+verify_pkg "$SRC"
+
 # Create destination if needed
 mkdir -p "$DEST"
 
@@ -75,6 +102,7 @@ echo "Dest:   $DEST"
 echo ""
 
 rsync "${RSYNC_ARGS[@]}" "$SRC" "$DEST"
+$DRY_RUN || verify_pkg "$DEST"
 
 # Report (never remove) destination files the build no longer produces.
 if ! $DRY_RUN; then
@@ -130,9 +158,12 @@ if ! $DRY_RUN; then
   # Provenance of the frankentui checkout the bundle was built from. SRC is
   # NEW_OUTPUT_DIR/site, which lives outside the checkout, so the caller passes
   # the source repo explicitly; fall back to the conventional location.
+  # build-wasm.sh records no commit, and reading HEAD now is only right if
+  # nothing landed since the build: pass FRANKENTUI_GIT_SHA, captured before
+  # building, to record the commit that was actually built.
   FRANKENTUI_ROOT="${FRANKENTUI_ROOT:-/dp/frankentui}"
-  FRANKENTUI_GIT_SHA=""
-  if git -C "$FRANKENTUI_ROOT" rev-parse HEAD &>/dev/null; then
+  FRANKENTUI_GIT_SHA="${FRANKENTUI_GIT_SHA:-}"
+  if [[ -z "$FRANKENTUI_GIT_SHA" ]] && git -C "$FRANKENTUI_ROOT" rev-parse HEAD &>/dev/null; then
     FRANKENTUI_GIT_SHA=$(git -C "$FRANKENTUI_ROOT" rev-parse HEAD)
   fi
 

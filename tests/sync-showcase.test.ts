@@ -1,5 +1,6 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import {
   existsSync,
   mkdirSync,
@@ -66,22 +67,7 @@ function createFakeDist(dir: string, opts?: { omit?: string[] }) {
     mkdirSync(pkg, { recursive: true });
     writeFileSync(join(pkg, "FrankenTerm.js"), "// wasm loader");
     writeFileSync(join(pkg, "FrankenTerm_bg.wasm"), "fake-wasm-bytes");
-    // build-wasm.sh emits this alongside the packages, and the sync validates
-    // it: both the demo page and the React loader key their cache-busting and
-    // integrity checks off these digests.
-    if (!omit.has("pkg/manifest.json")) {
-      writeFileSync(
-        join(pkg, "manifest.json"),
-        JSON.stringify({
-          schema: "ftui-browser-package-v1",
-          toolchain: "nightly-0000-00-00",
-          renderer: { revision: "0".repeat(40) },
-          source_inputs_sha256: "0".repeat(64),
-          runner_lock_sha256: "0".repeat(64),
-          files: { "FrankenTerm.js": "0".repeat(64) },
-        }),
-      );
-    }
+    if (!omit.has("pkg/manifest.json")) writeManifest(dir);
   }
 
   if (!omit.has("fonts")) {
@@ -95,6 +81,33 @@ function createFakeDist(dir: string, opts?: { omit?: string[] }) {
     mkdirSync(assets, { recursive: true });
     writeFileSync(join(assets, "test.txt"), "hello world");
   }
+}
+
+/**
+ * build-wasm.sh emits pkg/manifest.json alongside the packages, and both the
+ * demo page and the React loader key their cache-busting and integrity checks
+ * off its digests, so the sync refuses a bundle whose files disagree with it.
+ * Rewrite it whenever a test changes a package.
+ */
+function writeManifest(dir: string) {
+  const pkg = join(dir, "pkg");
+  const files = Object.fromEntries(
+    ["FrankenTerm.js", "FrankenTerm_bg.wasm"].map((name) => [
+      name,
+      createHash("sha256").update(readFileSync(join(pkg, name))).digest("hex"),
+    ]),
+  );
+  writeFileSync(
+    join(pkg, "manifest.json"),
+    JSON.stringify({
+      schema: "ftui-browser-package-v1",
+      toolchain: "nightly-0000-00-00",
+      renderer: { revision: "0".repeat(40) },
+      source_inputs_sha256: "0".repeat(64),
+      runner_lock_sha256: "0".repeat(64),
+      files,
+    }),
+  );
 }
 
 function cleanupFakeDist() {
@@ -214,6 +227,21 @@ describe("sync-showcase.sh", () => {
     stepLog("missing-index", "PASS");
   });
 
+  test("manifest mismatch: refuses the bundle and copies nothing, even on a dry run", () => {
+    // What 29c653c shipped: package bytes changed, manifest left behind.
+    createFakeDist(FAKE_DIST);
+    writeFileSync(join(FAKE_DIST, "pkg", "FrankenTerm.js"), "// reformatted by a formatter");
+
+    for (const args of [[], ["--dry-run"]]) {
+      const { exitCode, stderr } = runSync(FAKE_DIST, ...args);
+      stepLog("manifest-mismatch", `args=${args} exit=${exitCode}`);
+      expect(exitCode).not.toBe(0);
+      expect(stderr).toContain("do not match pkg/manifest.json");
+      expect(stderr).toContain("FrankenTerm.js");
+      expect(countFiles(TEST_DEST)).toBe(0);
+    }
+  });
+
   /* (4) Dry run */
   test("dry run: no files copied", () => {
     createFakeDist(FAKE_DIST);
@@ -292,6 +320,7 @@ describe("sync-showcase.sh", () => {
     // Wait then modify one file
     Bun.sleepSync(1100);
     writeFileSync(join(FAKE_DIST, "pkg", "FrankenTerm.js"), "// updated wasm loader v2");
+    writeManifest(FAKE_DIST);
 
     const { exitCode } = runSync(FAKE_DIST);
     expect(exitCode).toBe(0);
