@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>The cinematic website for FrankenTUI (the “monster” Rust TUI kernel).</strong><br/>
-  Next.js App Router, framer-motion, interactive data viz, and static forensic datasets.
+  Next.js App Router, a live WASM + WebGPU terminal demo, framer-motion, interactive data viz, and static forensic datasets.
 </p>
 
 <p align="center">
@@ -25,12 +25,13 @@
 
 **The Problem:** Most “project sites” are either static marketing pages or heavyweight doc sites that can’t carry interactive, data-driven artifacts without turning into a bundle-size disaster.
 
-**The Solution:** This repo is a **Next.js 16** site that stays mostly static, but can still ship **high-impact interactive pages** (spec evolution lab, Beads DAG viewer) powered by **precomputed datasets** in `public/`.
+**The Solution:** This repo is a **Next.js 16** site that stays mostly static, but can still ship **high-impact interactive pages** (the live WASM + WebGPU terminal demo, spec evolution lab, Beads DAG viewer) powered by **precomputed datasets** and a WASM kernel export in `public/`.
 
 **Why Use This Repo?**
 
 | Feature | What you get |
 |---|---|
+| Live WASM + WebGPU terminal | The real FrankenTUI kernel compiled to WASM, rendering via WebGPU (canvas2d fallback) — the demo at `/web` plus an embeddable React terminal at `/web_react` |
 | App Router + static generation | Fast, CDN-friendly pages with minimal server requirements |
 | “Beads” project graph viewer | Client-side `sql.js` queries + force-graph visualization from a shipped SQLite DB |
 | Spec Evolution Lab | Forensic UI to scrub commits, diff artifacts, and render markdown snapshots |
