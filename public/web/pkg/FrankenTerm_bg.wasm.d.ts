@@ -83,9 +83,9 @@ export const frankentermweb_snapshotScrollbackFrameJsonl: (a: number, b: number,
 export const frankentermweb_textShapingState: (a: number) => number;
 export const frankentermweb_viewportLines: (a: number) => number;
 export const frankentermweb_viewportState: (a: number) => number;
-export const __wasm_bindgen_func_elem_3005: (a: number, b: number, c: number, d: number) => void;
-export const __wasm_bindgen_func_elem_3007: (a: number, b: number, c: number, d: number) => void;
-export const __wasm_bindgen_func_elem_1604: (a: number, b: number, c: number) => void;
+export const __wasm_bindgen_func_elem_3012: (a: number, b: number, c: number, d: number) => void;
+export const __wasm_bindgen_func_elem_3014: (a: number, b: number, c: number, d: number) => void;
+export const __wasm_bindgen_func_elem_1611: (a: number, b: number, c: number) => void;
 export const __wbindgen_export: (a: number, b: number) => number;
 export const __wbindgen_export2: (a: number, b: number, c: number, d: number) => number;
 export const __wbindgen_export3: (a: number) => void;

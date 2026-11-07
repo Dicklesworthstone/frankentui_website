@@ -585,9 +585,9 @@ export interface InitOutput {
     readonly frankentermweb_textShapingState: (a: number) => number;
     readonly frankentermweb_viewportLines: (a: number) => number;
     readonly frankentermweb_viewportState: (a: number) => number;
-    readonly __wasm_bindgen_func_elem_3005: (a: number, b: number, c: number, d: number) => void;
-    readonly __wasm_bindgen_func_elem_3007: (a: number, b: number, c: number, d: number) => void;
-    readonly __wasm_bindgen_func_elem_1604: (a: number, b: number, c: number) => void;
+    readonly __wasm_bindgen_func_elem_3012: (a: number, b: number, c: number, d: number) => void;
+    readonly __wasm_bindgen_func_elem_3014: (a: number, b: number, c: number, d: number) => void;
+    readonly __wasm_bindgen_func_elem_1611: (a: number, b: number, c: number) => void;
     readonly __wbindgen_export: (a: number, b: number) => number;
     readonly __wbindgen_export2: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_export3: (a: number) => void;
